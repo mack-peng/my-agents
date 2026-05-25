@@ -7,3 +7,11 @@ node_modules/
 *.jpeg
 *.gif
 *.docx
+
+# Browser session state
+*fb_state*.json
+*zendesk-state*.json
+
+# Login scripts (contain environment-specific config)
+acli-agent/login.sh
+acli-agent/login-confluence.sh
