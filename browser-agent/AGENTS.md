@@ -8,30 +8,43 @@ This directory is configured for browser automation using `playwright-cli` and P
 - Default browser: Chromium (use `--browser=firefox` or `--browser=webkit` to switch)
 - Run `playwright-cli --help` for full command list
 
-## playwright-cli Quick Reference
+## playwright-cli Quick Reference (v0.1.13)
 
-### Opening & Navigation
-| Command | Description |
-|---------|-------------|
-| `playwright-cli open <url>` | Open browser and navigate to URL (headless) |
-| `playwright-cli open <url> --headed` | Open browser with visible window |
-| `playwright-cli goto <url>` | Navigate current page to URL |
-| `playwright-cli close` | Close current page |
-| `playwright-cli go-back` | Navigate back |
-| `playwright-cli go-forward` | Navigate forward |
-| `playwright-cli reload` | Reload current page |
+All commands: `playwright-cli <command> [args] [options]`
+Named session: `playwright-cli -s=<name> <command> [args] [options]`
+Global options: `--help [command]`, `--json`, `--raw`, `--version`
+
+### Opening, Navigation & Page
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli open [url]` | Open browser and navigate | `--browser=chrome/firefox/webkit/msedge`, `--headed`, `--persistent`, `--profile <path>`, `--config <path>` |
+| `playwright-cli close` | Close the browser | |
+| `playwright-cli goto <url>` | Navigate current page to URL | |
+| `playwright-cli go-back` | Navigate back | |
+| `playwright-cli go-forward` | Navigate forward | |
+| `playwright-cli reload` | Reload current page | |
+| `playwright-cli resize <w> <h>` | Resize browser window | |
+| `playwright-cli attach [name]` | Attach to running browser | `--cdp <url>`, `--endpoint <url>`, `--extension[=browser]`, `--config <path>`, `--session <name>` |
+| `playwright-cli detach` | Detach from attached browser | |
+| `playwright-cli delete-data` | Delete session data | |
 
 ### Element Interaction
-| Command | Description |
-|---------|-------------|
-| `playwright-cli click <ref>` | Click element by ref or selector |
-| `playwright-cli type <text>` | Type text into focused/editable element |
-| `playwright-cli fill <ref> <text>` | Fill text (clear + type) |
-| `playwright-cli check <ref>` | Check checkbox/radio |
-| `playwright-cli uncheck <ref>` | Uncheck checkbox |
-| `playwright-cli select <ref> <value>` | Select dropdown option |
-| `playwright-cli hover <ref>` | Hover over element |
-| `playwright-cli drag <startRef> <endRef>` | Drag and drop |
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli click <target> [button]` | Click element | `--modifiers` (e.g. Shift, Control) |
+| `playwright-cli dblclick <target> [button]` | Double-click element | `--modifiers` |
+| `playwright-cli fill <target> <text>` | Clear + type into element | `--submit` (press Enter after) |
+| `playwright-cli type <text>` | Type into focused element | `--submit` |
+| `playwright-cli press <key>` | Press key (e.g. `Enter`, `ArrowLeft`, `Tab`) | |
+| `playwright-cli keydown <key>` | Key down | |
+| `playwright-cli keyup <key>` | Key up | |
+| `playwright-cli select <target> <value>` | Select dropdown option | |
+| `playwright-cli check <target>` | Check checkbox/radio | |
+| `playwright-cli uncheck <target>` | Uncheck checkbox | |
+| `playwright-cli hover <target>` | Hover over element | |
+| `playwright-cli drag <startTarget> <endTarget>` | Drag and drop | |
+| `playwright-cli drop <target>` | Drop files/data onto element | `--path <file>` (repeatable), `--data "mime/type=value"` (repeatable) |
+| `playwright-cli upload <file>` | Upload file(s) | |
 
 ### Targeting Elements
 - **Ref from snapshot**: `playwright-cli click e15`
@@ -39,24 +52,26 @@ This directory is configured for browser automation using `playwright-cli` and P
 - **Role selector**: `playwright-cli click "role=button[name=Submit]"`
 - **Chain selectors**: `playwright-cli click "#footer >> role=button[name=Submit]"`
 
-### Screenshots & Snapshots
-| Command | Description |
-|---------|-------------|
-| `playwright-cli snapshot` | Capture page snapshot with element refs |
-| `playwright-cli screenshot` | Take viewport screenshot |
-| `playwright-cli screenshot <ref>` | Screenshot specific element |
-| `playwright-cli pdf` | Save page as PDF |
+### Screenshots, Snapshots & PDF
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli snapshot [target]` | Capture snapshot with element refs | `--filename`, `--depth <n>`, `--boxes` (include bounding boxes) |
+| `playwright-cli screenshot [target]` | Take screenshot | `--filename`, `--full-page` |
+| `playwright-cli pdf` | Save page as PDF | `--filename` |
 
-### Keyboard & Mouse
+### Mouse
 | Command | Description |
 |---------|-------------|
-| `playwright-cli press <key>` | Press a key (Enter, ArrowLeft, Tab, etc.) |
-| `playwright-cli keydown <key>` | Key down |
-| `playwright-cli keyup <key>` | Key up |
-| `playwright-cli mousemove <x> <y>` | Move mouse |
-| `playwright-cli mousedown [button]` | Mouse button down |
-| `playwright-cli mouseup [button]` | Mouse button up |
+| `playwright-cli mousemove <x> <y>` | Move mouse to coordinates |
+| `playwright-cli mousedown [button]` | Mouse button down (left/middle/right) |
+| `playwright-cli mouseup [button]` | Mouse button up (left/middle/right) |
 | `playwright-cli mousewheel <dx> <dy>` | Scroll |
+
+### Dialogs
+| Command | Description |
+|---------|-------------|
+| `playwright-cli dialog-accept [prompt]` | Accept dialog (optionally fill prompt text) |
+| `playwright-cli dialog-dismiss` | Dismiss dialog |
 
 ### Tabs
 | Command | Description |
@@ -64,60 +79,86 @@ This directory is configured for browser automation using `playwright-cli` and P
 | `playwright-cli tab-list` | List all tabs |
 | `playwright-cli tab-new [url]` | Create new tab |
 | `playwright-cli tab-select <index>` | Switch to tab |
-| `playwright-cli tab-close [index]` | Close tab |
+| `playwright-cli tab-close [index]` | Close tab (default: current) |
+
+### Storage — State
+| Command | Description |
+|---------|-------------|
+| `playwright-cli state-save [filename]` | Save cookies + localStorage to file |
+| `playwright-cli state-load <filename>` | Load saved state from file |
+
+### Storage — Cookies
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli cookie-list` | List all cookies | `--domain`, `--path` |
+| `playwright-cli cookie-get <name>` | Get cookie by name | |
+| `playwright-cli cookie-set <name> <value>` | Set cookie with optional flags | `--domain`, `--path`, `--expires <unix_ts>`, `--httpOnly`, `--secure`, `--sameSite` |
+| `playwright-cli cookie-delete <name>` | Delete cookie | |
+| `playwright-cli cookie-clear` | Clear all cookies | |
+
+### Storage — localStorage
+| Command | Description |
+|---------|-------------|
+| `playwright-cli localstorage-list` | List all keys |
+| `playwright-cli localstorage-get <key>` | Get value by key |
+| `playwright-cli localstorage-set <key> <value>` | Set key-value |
+| `playwright-cli localstorage-delete <key>` | Delete key |
+| `playwright-cli localstorage-clear` | Clear all |
+
+### Storage — sessionStorage
+| Command | Description |
+|---------|-------------|
+| `playwright-cli sessionstorage-list` | List all keys |
+| `playwright-cli sessionstorage-get <key>` | Get value by key |
+| `playwright-cli sessionstorage-set <key> <value>` | Set key-value |
+| `playwright-cli sessionstorage-delete <key>` | Delete key |
+| `playwright-cli sessionstorage-clear` | Clear all |
 
 ### Network
-| Command | Description |
-|---------|-------------|
-| `playwright-cli requests` | List network requests since page load |
-| `playwright-cli request <num>` | Show full request details |
-| `playwright-cli route <pattern> [opts]` | Mock network requests |
-| `playwright-cli route-list` | List active routes |
-| `playwright-cli unroute [pattern]` | Remove routes |
-
-### Storage
-| Command | Description |
-|---------|-------------|
-| `playwright-cli state-save [filename]` | Save cookies + localStorage |
-| `playwright-cli state-load <filename>` | Load saved state |
-| `playwright-cli cookie-list` | List cookies |
-| `playwright-cli cookie-get <name>` | Get cookie value |
-| `playwright-cli cookie-set <name> <val>` | Set cookie |
-| `playwright-cli cookie-delete <name>` | Delete cookie |
-| `playwright-cli cookie-clear` | Clear all cookies |
-| `playwright-cli localstorage-list` | List localStorage keys |
-| `playwright-cli localstorage-get <key>` | Get localStorage value |
-| `playwright-cli localstorage-set <k> <v>` | Set localStorage |
-| `playwright-cli localstorage-delete <key>` | Delete localStorage key |
-| `playwright-cli localstorage-clear` | Clear all localStorage |
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli requests` | List network requests since page load | `--static` (include static resources), `--filter <regex>`, `--clear` |
+| `playwright-cli request <index>` | Show full request/response details | `--filename` |
+| `playwright-cli request-headers <index>` | Show request headers only | `--filename` |
+| `playwright-cli request-body <index>` | Show request body only | `--filename` |
+| `playwright-cli response-headers <index>` | Show response headers only | `--filename` |
+| `playwright-cli response-body <index>` | Show response body (text inline, binary to file) | `--filename` |
+| `playwright-cli route <pattern>` | Mock matching requests | `--status <code>`, `--body <text|json>`, `--content-type`, `--header "name: value"` (repeatable), `--remove-header <names>` (comma-sep) |
+| `playwright-cli route-list` | List active routes | |
+| `playwright-cli unroute [pattern]` | Remove routes (omit for all) | |
+| `playwright-cli network-state-set <state>` | Set online/offline (`online` or `offline`) | |
 
 ### DevTools
-| Command | Description |
-|---------|-------------|
-| `playwright-cli console [min-level]` | List console messages |
-| `playwright-cli eval <func> [ref]` | Evaluate JS on page |
-| `playwright-cli run-code <code>` | Run Playwright code snippet |
-| `playwright-cli tracing-start` | Start trace recording |
-| `playwright-cli tracing-stop` | Stop trace recording |
-| `playwright-cli video-start` | Start video recording |
-| `playwright-cli video-stop` | Stop video recording |
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli console [min-level]` | List console messages | `--clear` |
+| `playwright-cli eval <func> [target]` | Evaluate JS on page/element | `--filename` |
+| `playwright-cli run-code <code>` | Run Playwright code (receives `page`) | `--filename` (load from file) |
+| `playwright-cli generate-locator <target>` | Generate Playwright locator for element | |
+| `playwright-cli highlight [target]` | Show highlight overlay | `--hide`, `--style "css"` |
+| `playwright-cli tracing-start` | Start trace recording | |
+| `playwright-cli tracing-stop` | Stop trace recording | |
+| `playwright-cli video-start [filename]` | Start video recording | `--size "WxH"` (e.g. `800x600`) |
+| `playwright-cli video-stop` | Stop video recording | |
+| `playwright-cli video-chapter <title>` | Add chapter marker to video | `--description`, `--duration <ms>` |
+| `playwright-cli pause-at <location>` | Run test and pause at `file:line` | |
+| `playwright-cli resume` | Resume test execution | |
+| `playwright-cli step-over` | Step over next test call | |
+| `playwright-cli show` | Open Playwright Dashboard | `--port <n>`, `--host`, `--annotate`, `--kill` |
 
 ### Sessions
 | Command | Description |
 |---------|-------------|
 | `playwright-cli -s=<name> open <url>` | Open in named session |
-| `playwright-cli list` | List all sessions |
+| `playwright-cli list` | List sessions (add `--all` for all workspaces) |
 | `playwright-cli close-all` | Close all browsers |
-| `playwright-cli kill-all` | Kill all browser processes |
-| `playwright-cli show` | Open monitoring dashboard |
+| `playwright-cli kill-all` | Kill all browser processes (force) |
 
-### Browser Options
-| Option | Description |
-|--------|-------------|
-| `--headed` | Show browser window |
-| `--browser=chrome/firefox/webkit/msedge` | Choose browser |
-| `--persistent` | Save browser profile to disk |
-| `--config <path>` | Config file path |
+### Install & Browsers
+| Command | Description | Options |
+|---------|-------------|---------|
+| `playwright-cli install` | Initialize workspace | `--skills claude` (default) or `agents` |
+| `playwright-cli install-browser [browser]` | Install browser | `--with-deps`, `--dry-run`, `--list`, `--force`, `--only-shell`, `--no-shell` |
 
 ---
 
@@ -349,7 +390,23 @@ playwright-cli request 1
 ### Cookie management
 ```bash
 playwright-cli cookie-set session_token abc123
+playwright-cli cookie-set auth_token eyJ... --domain .example.com --path / --secure --expires 1811303292 --httpOnly --sameSite Lax
 playwright-cli state-save session.json
 # Later:
 playwright-cli state-load session.json
 ```
+
+## Zendesk Workflow
+
+Zendesk 会话已持久化到 `zendesk_state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
+
+| 用户指令 | 操作 |
+|---------|------|
+| "打开 Zendesk" / "打开工单" / "打开 Zendesk 工单" | `close` → `open https://strikingly.zendesk.com --headed` → `state-load zendesk_state.json` → `goto https://strikingly.zendesk.com/agent/tickets/26500992` → `snapshot` |
+| "打开工单 26500992" (或其它工单号) | 同上，goto 对应工单 URL |
+
+流程：
+1. `playwright-cli open https://strikingly.zendesk.com --headed`
+2. `playwright-cli state-load zendesk_state.json`
+3. `playwright-cli goto https://strikingly.zendesk.com/agent/tickets/<ticket_id>`
+4. `playwright-cli snapshot` (展示页面)
