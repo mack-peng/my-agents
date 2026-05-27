@@ -1,5 +1,11 @@
 # GitHub CLI (gh) — Quick Reference
 
+## 扩展安装
+
+```bash
+gh extension install alberto-cerato/gh-branch-protection  # 分支保护管理
+```
+
 ## 认证 & 配置
 
 ```bash
@@ -144,6 +150,15 @@ gh variable list                 # 列出变量
 gh variable set NAME             # 设置变量
 gh variable get NAME             # 查看变量值
 gh variable delete NAME          # 删除变量
+```
+
+## 分支保护
+
+```bash
+gh branch-protection set main --required-reviews 1 --include-admins  # 设置保护
+gh branch-protection get main                  # 查看保护规则
+gh branch-protection list                      # 列出所有保护分支
+gh branch-protection delete main               # 删除保护
 ```
 
 ## 其他

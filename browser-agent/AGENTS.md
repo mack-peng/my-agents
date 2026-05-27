@@ -410,3 +410,23 @@ Zendesk 会话已持久化到 `zendesk_state.json`。当用户说以下任意自
 2. `playwright-cli state-load zendesk_state.json`
 3. `playwright-cli goto https://strikingly.zendesk.com/agent/tickets/<ticket_id>`
 4. `playwright-cli snapshot` (展示页面)
+
+---
+
+## 通用规范
+
+### 链接处理
+- 用户提供的链接，**默认使用浏览器工具打开**
+- 使用 `playwright-cli tab-new <url>` 在新标签页打开
+- 如果需要阅读内容，使用 `playwright-cli snapshot` 捕获页面内容
+- 使用 `playwright-cli console` 检查控制台错误
+
+### 阅读页面内容
+- 使用 `playwright-cli snapshot` 获取页面结构化快照
+- 使用 `playwright-cli eval <js>` 执行 JavaScript 获取特定数据
+- 使用 `playwright-cli requests` 查看网络请求
+
+---
+
+Skills provide specialized instructions and workflows for specific tasks.
+Use the skill tool to load a skill when a task matches its description.
