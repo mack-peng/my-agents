@@ -427,6 +427,3 @@ Zendesk 会话已持久化到 `zendesk_state.json`。当用户说以下任意自
 - 使用 `playwright-cli requests` 查看网络请求
 
 ---
-
-Skills provide specialized instructions and workflows for specific tasks.
-Use the skill tool to load a skill when a task matches its description.
