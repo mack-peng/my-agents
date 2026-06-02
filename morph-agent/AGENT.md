@@ -10,7 +10,7 @@ Place before the subcommand:
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--ci-base <path>` | `/Users/Mack/dagger-ci` | CI base directory (projects live here as subdirectories) |
+| `--ci-base <path>` | `~/dagger-ci` | CI base directory (projects live here as subdirectories) |
 | `--ssh-key <key>` | `file:~/.ssh/id_rsa` | SSH private key for Dagger |
 
 Example with global options:
@@ -160,7 +160,7 @@ morph-cli deploy door-applets main 1.2.3
 **No separate command.** Projects are subdirectories under the CI base. Run:
 
 ```
-ls /Users/Mack/dagger-ci
+ls ~/dagger-ci
 ```
 
 Or use the `--ci-base` value if overridden.

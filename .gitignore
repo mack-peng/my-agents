@@ -16,3 +16,15 @@ node_modules/
 # Login scripts (contain environment-specific config)
 acli-agent/login.sh
 acli-agent/login-confluence.sh
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+
+# Root-level opencode generated files (duplicates of feishu-agent/)
+.agents/
+skills/
+skills-lock.json
+
+

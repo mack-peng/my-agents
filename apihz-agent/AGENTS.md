@@ -1,272 +1,176 @@
-# AGENTS.md — apihz-cli Quick Reference
+# apihz-agent — AGENTS.md
 
-`@orangemust/apihz-cli` is a CLI for [apihz.cn](https://www.apihz.cn/) (接口盒子), giving terminal access to 479+ APIs.
-Run via `apihz-cli` (global install) or `npx @orangemust/apihz-cli`.
+`@orangemust/apihz-cli` (v0.1.2) installed globally. 479+ APIs via apihz.cn, free tier: 10 calls/min, unlimited daily.
 
-## Authentication
+## 配置
 
-```
-apihz-cli config set --id=<id> --key=<key>     # Save credentials
-apihz-cli config set --vip                      # Enable VIP line
-apihz-cli config show                           # View config (key masked)
-apihz-cli config get id                         # Get specific value
-apihz-cli config reset                          # Clear all config
-apihz-cli config path                           # Config file location
-```
+Already configured with ID `10016043` and key. Config stored at `~/.apihz/config.json`. No action needed.
 
-Config file: `~/.apihz/config.json`
-Priority: CLI flags (`--id`, `--key`, `--vip`) > env vars (`APIHZ_ID`, `APIHZ_KEY`, `APIHZ_VIP`) > config file.
+## 常用命令速查
 
-## Global Flags
+### 时间
+- `apihz-cli time now --type=20` — 北京时间 + 农历生肖
+- `apihz-cli time calendar` — 万年历 (60+ 字段)
+- `apihz-cli time to-timestamp --time="2024-03-20 16:16:16"`
+- `apihz-cli time from-timestamp --time=1710925735`
+- `apihz-cli time country --country=US`
 
-| Flag | Description |
-|------|-------------|
-| `--id <id>` | Developer ID (overrides config and env) |
-| `--key <key>` | Developer KEY (overrides config and env) |
-| `--vip` | Use VIP line instead of free line |
-| `--raw` | Output raw API response |
+### 天气
+- `apihz-cli weather by-address --place=绵阳 --sheng=四川 --day=3 --hourtype=1`
+- `apihz-cli weather by-ip --day=1`
+- `apihz-cli weather by-coords --lon=116.30 --lat=40.05`
 
----
+### IP & 网络
+- `apihz-cli ip lookup --ip=112.192.49.243`
+- `apihz-cli ip visitor`
+- `apihz-cli phone lookup --phone=13219931963`
+- `apihz-cli network icp --domain=apihz.cn`
+- `apihz-cli network domain --domain=example.com`
+- `apihz-cli network whois --domain=example.com`
+- `apihz-cli network ping --host=baidu.com`
+- `apihz-cli network screenshot --url=https://example.com`
+- `apihz-cli network ssl-check --domain=example.com`
 
-## Time (时间)
+### 图片
+- `apihz-cli image search --words=风景 --source=baidu`
+- `apihz-cli image wallpaper --type=1`
+- `apihz-cli image avatar --type=5`
+- `apihz-cli image bing`
+- `apihz-cli image nasa`
+- `apihz-cli image memes --words=开心`
+- `apihz-cli image compress --img=<url> --format=webp`
 
-```
-apihz-cli time now --type=20                   # Current time + lunar + zodiac
-apihz-cli time calendar                         # Full calendar (60+ fields)
-apihz-cli time to-timestamp --time="2024-03-20 16:16:16"
-apihz-cli time from-timestamp --time=1710925735 --type=1
-apihz-cli time country --country=US             # Country timezone info
-```
+### 文本 & 词典
+- `apihz-cli text translate --words="你好" --from=2 --to=1`
+- `apihz-cli text pinyin --words="接口盒子"`
+- `apihz-cli text hanzi --word=天`
+- `apihz-cli text ciyu --words=宇宙`
+- `apihz-cli text baike --words=北京`
+- `apihz-cli text nick --min=2 --max=6`
+- `apihz-cli text yiyan`
+- `apihz-cli text joke`
+- `apihz-cli text today`
+- `apihz-cli text case --type=1 --words="hello"`
+- `apihz-cli text jfzh --type=1 --words="你好"`
+- `apihz-cli text sensitive --text="敏感词检测"`
+- `apihz-cli text segment --text="中文分词"`
+- `apihz-cli text similarity --text1="A" --text2="B"`
+- `apihz-cli text poetry --keyword=月`
+- `apihz-cli text random-name`
+- `apihz-cli text dict --word=hello`
+- 文章提取: `text extract-wechat`, `extract-wangyi`, `extract-xiaohongshu`, `extract-toutiao`, `extract-sina`, `extract-tencent`
+- 百度搜索: `text baidu-search --words=关键词`
 
-**time now --type values:**
-1=timestamp 2=datetime 3=CN format 4=slash 5=pipe 6=compact 7-12=year/month/day/hour/min/sec 13=YMD 14=HMS 15=YM 16=MD 17=HM 18=MS 19=DH 20=full+lunar+zodiac
+### 成语
+- `apihz-cli chengyu random`
+- `apihz-cli chengyu chain --word=天`
+- `apihz-cli chengyu lookup --words=焕然一新`
 
-## Weather (天气)
+### 新闻热点
+- `apihz-cli news baidu`
+- `apihz-cli news weibo`
+- `apihz-cli news douyin`
+- `apihz-cli news toutiao`
 
-```
-apihz-cli weather by-address --place=绵阳 --sheng=四川 --day=3 --hourtype=1
-apihz-cli weather by-ip --day=1 --hourtype=1
-apihz-cli weather by-coords --lon=116.30 --lat=40.05 --day=1
-apihz-cli weather moji15 --sheng=四川 --place=绵阳
-apihz-cli weather cloud                          # Satellite cloud map
-apihz-cli weather precipitation                  # Precipitation anomaly
-apihz-cli weather temp-anomaly                   # Temperature anomaly
-apihz-cli weather humidity                       # Soil humidity
-```
+### 二维码
+- `apihz-cli qrcode create --text="hello"`
+- `apihz-cli qrcode parse --type=1 --img=<url>`
 
-## IP & Location (位置坐标)
+### 地理 & 区域
+- `apihz-cli region list --type=1`
+- `apihz-cli region code --sheng=四川 --place=绵阳`
+- `apihz-cli region country`
+- `apihz-cli idcard lookup --card=510704888888888888`
+- `apihz-cli geo reverse --lon=116.30 --lat=40.05`
+- `apihz-cli geo address --address=北京市朝阳区`
+- `apihz-cli geo nearby --lon=116.30 --lat=40.05 --radius=1000`
 
-```
-apihz-cli ip lookup                              # Auto-detect IP geolocation
-apihz-cli ip lookup --ip=112.192.49.243          # Specific IP
-apihz-cli ip lookup --td=1                       # Query channel 0-5
-apihz-cli ip visitor                             # IP + browser + OS
-apihz-cli phone lookup --phone=13219931963
-apihz-cli region list --type=1                   # Provinces
-apihz-cli region list --type=2 --sheng=四川      # Cities under province
-apihz-cli region list --type=3 --sheng=四川 --shi=绵阳  # Districts
-apihz-cli region code --sheng=四川 --place=绵阳   # Code + coords
-apihz-cli region country                         # All countries
-apihz-cli idcard lookup --card=510704888888888888
-apihz-cli geo reverse --lon=116.30 --lat=40.05   # Coords → address
-```
+### 单位转换
+- `apihz-cli unit speed --num=100 --unit=米秒`
+- `apihz-cli unit length --num=1000 --unit=米`
+- `apihz-cli unit temperature --num=100 --unit=C --target=F`
+- `apihz-cli unit storage --num=1 --unit=gb --target=mb`
 
-## Image (图像)
+### 加密解密
+- `apihz-cli pwd md5 --words="hello"`
+- `apihz-cli pwd base64-encode --words="hello"`
+- `apihz-cli pwd url-encode --words="你好世界"`
+- `apihz-cli pwd hex-encode --words="hello"`
 
-```
-apihz-cli image memes --words=开心 --source=apihz
-apihz-cli image memes --source=baidu --words=开心 --page=1 --limit=10
-apihz-cli image memes --source=sougou --words=开心
-apihz-cli image search --words=风景 --source=baidu --type=1
-apihz-cli image search --source=sougou --words=风景
-apihz-cli image wallpaper --type=1               # 0=rand 1=general 2=beauty
-apihz-cli image avatar --type=5                  # 0=all 1=male 2=female 3=couple 4=bestie 5=anime 6=pet 7=cute 8=europe 9=ancient 10=troll 11=fairy 12=simple 13=QQ 14=wechat 15=text 16=custom
-apihz-cli image bing                             # Bing daily wallpaper
-apihz-cli image nasa --hd                        # NASA astronomy picture
-```
+### 交通物流
+- `apihz-cli transport train-remain --add=绵阳 --end=成都 --y=2025 --m=6 --d=10`
+- `apihz-cli transport express --number=<运单号>`
+- `apihz-cli transport bus-route --starlon=121.42 --starlat=31.20 --endlon=121.31 --endlat=31.19`
 
-## Text & Dictionary (字词句名)
+### B站 & 娱乐
+- `apihz-cli bilibili ranking`
+- `apihz-cli bilibili video-info --url=https://www.bilibili.com/video/BV1xx`
+- `apihz-cli bilibili user-info --url=https://space.bilibili.com/xxx`
+- `apihz-cli bilibili maoyan-movie`
+- `apihz-cli bilibili random-video`
 
-```
-apihz-cli text translate --words="你好" --from=2 --to=1
-apihz-cli text translate --words="hello" --from=1 --to=2 --cache
-apihz-cli text yiyan                             # Random quote (120k)
-apihz-cli text yiyan-search --words=人生
-apihz-cli text pinyin --words="接口盒子"
-apihz-cli text pinyin --words="接口盒子" --sep=|
-apihz-cli text hanzi --word=天                   # Character lookup (20k)
-apihz-cli text ciyu --words=宇宙                 # Word lookup (380k)
-apihz-cli text baike --words=北京                # Baidu encyclopedia
-apihz-cli text nick --min=2 --max=6              # Random nickname (1M)
-apihz-cli text case --type=1 --words="hello"     # 1=upper 2=lower 3=capitalize-first 4=capitalize-each
-apihz-cli text jfzh --type=1 --words="接口盒子"   # 1=S→T 2=T→S
-apihz-cli text today                             # Today in history
-apihz-cli text today --month=7 --day=1           # Specific date
-apihz-cli text joke                              # Random joke (200k)
-```
+### 日历 & 运势
+- `apihz-cli calendar today-detail`
+- `apihz-cli calendar today-luck`
+- `apihz-cli calendar zhuge --words="问前程"`
+- `apihz-cli calendar yuelao`
+- `apihz-cli calendar mbti`
 
-**translate language codes:** 1=en 2=zh-CN 3=zh-TW 4=ja 5=ko 6=fr 7=de 8=ru 9=es 10=ar ...
+### 金融
+- `apihz-cli finance exchange-rate --from=USD --to=CNY --money=100`
+- `apihz-cli finance gold-price`
+- `apihz-cli finance lottery-daletou`
 
-## Idioms (成语)
+### 杂项
+- `apihz-cli misc uuid`
+- `apihz-cli misc chem-eq --reactants=H2,O2 --products=H2O`
+- `apihz-cli misc element --name=H`
+- `apihz-cli misc jiakao --type=1`
+- `apihz-cli misc lottery`
+- `apihz-cli misc calc --expr="1+2*3"`
 
-```
-apihz-cli chengyu random                         # Random idiom (30k)
-apihz-cli chengyu chain --word=天                # Idiom starting with char
-apihz-cli chengyu lookup --words=焕然一新         # Full idiom definition
-```
+### 付费 API（需余额）
+- `apihz-cli ai ocr --type=1 --img=<url>`
+- `apihz-cli ai idcard --type=1 --img=<url>`
+- `apihz-cli ai face-compare --type=1 --imga=<url1> --imgb=<url2>`
+- `apihz-cli ai face-attr --type=1 --img=<url> --mode=1`
+- `apihz-cli voice to-text --type=1 --data=<url> --format=wav`
+- `apihz-cli voice to-voice --text="你好" --type=1`
+- `apihz-cli sms send --phone=13219931963`
+- `apihz-cli auth bank2 --name=张三 --number=6222...`
 
-## QR Code (二维码)
-
-```
-apihz-cli qrcode create --text="hello"           # Generate QR
-apihz-cli qrcode create --text="hello" --level=10 --size=15 --bg=ffffff --fg=000000
-apihz-cli qrcode parse --type=1 --img=<url>      # Parse QR (basic)
-apihz-cli qrcode parse --type=2 --img=<base64> --ext=png
-apihz-cli qrcode parse-plus --type=1 --img=<url> # Parse QR (advanced)
-```
-
-## News (新闻热点)
-
-```
-apihz-cli news baidu
-apihz-cli news weibo
-apihz-cli news douyin
-```
-
-## Network (域名网站)
-
-```
-apihz-cli network icp --domain=apihz.cn
-apihz-cli network icp-plus --domain=apihz.cn     # Stable version (offline DB)
-apihz-cli network domain --domain=example.com    # Free: .com/.cn only
-apihz-cli network tdk --url=https://apihz.cn     # Title/Description/Keywords
-apihz-cli network tdk --url=https://apihz.cn --node=2  # HK access node
-```
-
-## AI Recognition (AI识别) — PAID
-
-All require `--type` (1=remote URL, 2=BASE64) and `--img <data>` (max 1MB).
-
-```
-apihz-cli ai face-compare --type=1 --imga=<url1> --imgb=<url2>
-apihz-cli ai face-liveness --type=1 --img=<url>   # ≥40 = live
-apihz-cli ai face-attr --type=1 --img=<url> --mode=1  # 1=all 2=detection only
-apihz-cli ai ocr --type=1 --img=<url>
-apihz-cli ai ocr --type=1 --img=<url> --sep=|
-apihz-cli ai idcard --type=1 --img=<url>
-apihz-cli ai bankcard --type=1 --img=<url>
-apihz-cli ai driving-license --type=1 --img=<url>
-apihz-cli ai vehicle-license --type=1 --img=<url> --page=1  # 1=front 2=back
-apihz-cli ai business-license --type=1 --img=<url>
-apihz-cli ai receipt --type=1 --img=<url>
-apihz-cli ai plate --type=1 --img=<url>           # License plate
-apihz-cli ai vehicle --type=1 --img=<url>         # Vehicle make/model/color
-apihz-cli ai product --type=1 --img=<url>         # Product recognition
-apihz-cli ai tag --type=1 --img=<url>             # Image tags
-```
-
-## Voice (语音) — PAID
-
-```
-apihz-cli voice to-text --type=1 --data=<url> --format=wav
-apihz-cli voice to-text --type=1 --data=<url> --format=mp3 --lang=16k_en
-# Format: wav/pcm/ogg/mp3/m4a/aac/amr
-# Lang: 8k_zh (default) / 8k_en / 16k_zh / 16k_en / 16k_ja / 16k_ko / 16k_yue ...
-
-apihz-cli voice to-voice --text="你好" --type=1 --voice=1001
-apihz-cli voice to-voice --text="hello" --type=2 --lg=2 --vtype=2
-# type: 1=URL 2=BASE64 | lg: 1=CN 2=EN 3=JP | vtype: 1=wav 2=mp3
-# emotion: neutral/sad/happy/angry/fear/news/story/radio/poetry
-```
-
-## Auth (实名认证) — PAID
-
-```
-apihz-cli auth bank3 --name=张三 --number=6222... --idcard=5107...
-apihz-cli auth bank2 --name=张三 --number=6222...
-apihz-cli auth alipay --name=张三 --number=5107...
-apihz-cli auth alipay-check --cxid=<query_id>
-```
-
-## Storage (存储)
-
-```
-apihz-cli storage text --type=2 --numid=1                    # Read entry
-apihz-cli storage text --type=1 --numid=1 --words="hello" --title="test"
-apihz-cli storage text --type=3 --numid=1 --words="prefix"   # Prepend
-apihz-cli storage text --type=4 --numid=1 --words="suffix"   # Append
-apihz-cli storage data-create --name=data1,data2 --data="val1","val2"
-apihz-cli storage data-query --name=* --page=1 --limit=10
-apihz-cli storage data-query --name=data1,data2 --tj="data1<>'张三'"
-apihz-cli storage data-query --name=* --pxname=data1 --px=2  # Sort desc
-```
-
-## SMS (短信)
-
-```
-apihz-cli sms send --phone=13219931963
-apihz-cli sms send --phone=13219931963 --code=123456        # Custom code
-apihz-cli sms send-verify --type=1 --phone=13219931963       # Send (PAID)
-apihz-cli sms send-verify --type=2 --phone=13219931963 --code=123456  # Verify (FREE)
-apihz-cli sms send-aliyun --phone=13219931963 --aliid=... --alikey=... --sign=... --template=... --code=123456
-```
-
-## Unit Conversion (单位换算)
-
-```
-apihz-cli unit speed --num=100 --unit=米秒        # m/s → all units (note: CN names)
-apihz-cli unit speed --num=360 --unit=节          # knot → all
-apihz-cli unit time --num=3600 --unit=秒
-apihz-cli unit density --num=1 --unit=千克立方米
-apihz-cli unit frequency --num=1000 --unit=赫兹
-apihz-cli unit current --num=5 --unit=安培
-apihz-cli unit voltage --num=220 --unit=伏特
-apihz-cli unit resistance --num=1000 --unit=欧姆
-```
-
-> Units use Chinese names (e.g. `米秒` not `km/h`, `节` not `kn`). Server rejects English symbols and names >2 chars.
-
-## Misc (杂项)
-
-```
-apihz-cli misc jiakao --type=1                     # 1=subject-1 4=subject-4
-apihz-cli misc qq --qq=10001
-apihz-cli misc lottery                             # Latest 双色球
-apihz-cli misc lottery --qh=2024130                 # Specific period
-apihz-cli misc lanzou --url=<share_link> --pwd=6pvs
-apihz-cli misc lanzou --url=<link> --type=2 --outtype=2
-apihz-cli misc phone-status --number=13219931963    # PAID
-apihz-cli misc phone-online --number=13219931963    # PAID
-apihz-cli misc bank-info --number=6222...           # PAID
-apihz-cli misc chem-eq --reactants=H2,O2 --products=H2O
-apihz-cli misc element --name=H                     # Periodic table
-apihz-cli misc element --name=氢                    # CN name
-apihz-cli misc element --name=1                     # Atomic number
-apihz-cli misc mail --name=... --to=... --title=... --text=... --code=utf8 --port=25 --ip=... --secure=tls --idmail=... --pwd=... --usermail=...
-apihz-cli misc proxy --type=1                       # PAID, 1=http 2=socks5
-apihz-cli misc proxy --type=1 --ip=<whitelist> --direct
-apihz-cli misc redpack --zfb=account --name=张三    # PAID
-```
-
-## Common Patterns
+## 配置管理
 
 ```bash
-# JSON parsing with jq
-apihz-cli time now --type=20 | jq '.sx'
-apihz-cli ip lookup | jq '{city: .shi, isp: .isp}'
-apihz-cli news baidu | jq '.data[].content[] | select(.isTop != true) | .word'
-
-# Override credentials per-command
-apihz-cli time now --id=<id> --key=<key>
-
-# One-liner install + configure + verify
-npm install -g @orangemust/apihz-cli && apihz-cli config set --id=<id> --key=<key> && apihz-cli time now --type=20
+apihz-cli config show    # 查看当前配置
+apihz-cli config path    # 配置文件路径
+apihz-cli config reset   # 清除配置
+apihz-cli config set --id=<id> --key=<key>   # 重新设置
 ```
 
-## Errors
+## 环境变量（无需配置文件）
 
-- **Request failed / code:400** → Wrong/missing id/key. Check `apihz-cli config show`.
-- **通讯秘钥错误** → Developer KEY wrong. Get fresh key from apihz.cn User Center.
-- **查询失败，请重试** → Server-side issue. Retry or try `--vip`.
-- **empty config** → No credentials saved. Run `apihz-cli config set --id=<id> --key=<key>`.
-- **无效的单位类型** → Unit name must be Chinese short form (e.g. `米秒` not `km/h`).
+```bash
+export APIHZ_ID=10016043
+export APIHZ_KEY=xxxx
+export APIHZ_VIP=1
+```
+
+优先级: CLI flag > 环境变量 > 配置文件
+
+## 通用参数
+
+```bash
+--id <id>     # 覆盖 Developer ID
+--key <key>   # 覆盖 Developer KEY
+--vip         # 使用 VIP 线路
+--raw         # 输出原始 API 响应（无格式化）
+```
+
+## 帮助
+
+```bash
+apihz-cli --help                    # 总览
+apihz-cli <command> --help          # 子命令详情
+apihz-cli help <command>
+```

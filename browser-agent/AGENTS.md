@@ -4,7 +4,7 @@ This directory is configured for browser automation using `playwright-cli` and P
 
 ## Environment
 
-- `playwright-cli`: Installed at `/Users/mack/.nvm/versions/node/v24.1.0/bin/playwright-cli`
+- `playwright-cli`: Installed globally via npm
 - Default browser: Chromium (use `--browser=firefox` or `--browser=webkit` to switch)
 - Run `playwright-cli --help` for full command list
 
@@ -395,21 +395,6 @@ playwright-cli state-save session.json
 # Later:
 playwright-cli state-load session.json
 ```
-
-## Zendesk Workflow
-
-Zendesk 会话已持久化到 `zendesk_state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
-
-| 用户指令 | 操作 |
-|---------|------|
-| "打开 Zendesk" / "打开工单" / "打开 Zendesk 工单" | `close` → `open https://strikingly.zendesk.com --headed` → `state-load zendesk_state.json` → `goto https://strikingly.zendesk.com/agent/tickets/26500992` → `snapshot` |
-| "打开工单 26500992" (或其它工单号) | 同上，goto 对应工单 URL |
-
-流程：
-1. `playwright-cli open https://strikingly.zendesk.com --headed`
-2. `playwright-cli state-load zendesk_state.json`
-3. `playwright-cli goto https://strikingly.zendesk.com/agent/tickets/<ticket_id>`
-4. `playwright-cli snapshot` (展示页面)
 
 ---
 

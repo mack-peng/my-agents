@@ -476,7 +476,7 @@ glab config set editor vim
 ### 设置默认主机 (自托管 GitLab)
 ```bash
 glab config set -g host gitlab.example.com
-glab config set -g host cd.i.strikingly.com
+# glab config set -g host gitlab.example.com
 ```
 
 ### 禁用 TLS 验证 (用于自签名证书)
@@ -494,7 +494,7 @@ glab config set ca_cert /path/to/ca.pem --host gitlab.example.com
 由于此 agent 工作在 git 仓库之外，需要使用 `-R` 指定项目：
 
 ```bash
--R strikingly/Bobcat
+-R group/project
 ```
 
 ---
@@ -503,22 +503,22 @@ glab config set ca_cert /path/to/ca.pem --host gitlab.example.com
 
 ```bash
 # 列出分配给你的 MRs (在非 git 目录下使用 -R)
-glab mr list --assignee=@me -R strikingly/Bobcat
+glab mr list --assignee=@me -R group/project
 
 # 列出 open 状态的问题
-glab issue list --state=opened -R strikingly/Bobcat
+glab issue list --state=opened -R group/project
 
 # 从分支创建 MR
-glab mr create --fill --label bugfix -R strikingly/Bobcat
+glab mr create --fill --label bugfix -R group/project
 
 # 查看 pipeline 状态
-glab ci status -R strikingly/Bobcat
+glab ci status -R group/project
 
 # 关闭 MR
-glab mr close 12345 -R strikingly/Bobcat
+glab mr close 12345 -R group/project
 
 # 查看 MR diff
-glab mr diff 12345 -R strikingly/Bobcat
+glab mr diff 12345 -R group/project
 
 # 克隆仓库
 glab repo clone group/project
