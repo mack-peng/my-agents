@@ -25,4 +25,8 @@ acli-agent/login-confluence.sh
 skills/
 skills-lock.json
 
+# design-agent output and cognition
+design-agent/output/
+design-agent/projects/
+
 
