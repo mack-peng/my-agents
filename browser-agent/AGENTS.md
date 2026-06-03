@@ -396,6 +396,34 @@ playwright-cli state-save session.json
 playwright-cli state-load session.json
 ```
 
+## Zendesk Workflow
+
+Zendesk 会话已持久化到 `zendesk.state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
+
+| 用户指令 | 操作 |
+|---------|------|
+| "打开 Zendesk" / "打开工单" / "打开 Zendesk 工单" | `close` → `open https://strikingly.zendesk.com --headed` → `state-load zendesk.state.json` → `goto https://strikingly.zendesk.com/agent/tickets/26500992` → `snapshot` |
+| "打开工单 26500992" (或其它工单号) | 同上，goto 对应工单 URL |
+
+流程：
+1. `playwright-cli open https://strikingly.zendesk.com --headed`
+2. `playwright-cli state-load zendesk.state.json`
+3. `playwright-cli goto https://strikingly.zendesk.com/agent/tickets/<ticket_id>`
+4. `playwright-cli snapshot` (展示页面)
+
+## Dify Workflow
+
+Dify 会话已持久化到 `dify.state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
+
+| 用户指令 | 操作 |
+|---------|------|
+| "打开 Dify" / "打开 Dify Studio" | `close` → `open https://dify.orangemust.com --headed` → `state-load dify.state.json` → `snapshot` |
+
+流程：
+1. `playwright-cli open https://dify.orangemust.com --headed`
+2. `playwright-cli state-load dify.state.json`
+3. `playwright-cli snapshot` (展示页面)
+
 ---
 
 ## 通用规范

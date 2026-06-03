@@ -9,9 +9,7 @@ node_modules/
 *.docx
 
 # Browser session state
-*fb_state*.json
-*zendesk-state*.json
-*zendesk_state*.json
+*.state.json
 
 # Login scripts (contain environment-specific config)
 acli-agent/login.sh
