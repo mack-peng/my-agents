@@ -24,6 +24,14 @@ No build, test, or lint at the root level.
 - Root-level `.agents/`, `skills/`, and `skills-lock.json` are **gitignored** (duplicates of `feishu-agent/`'s copies).
 - To add/remove a shared skill, edit `feishu-agent/` — its `.agents/skills/` and `skills/` are the source of truth.
 
+## Working assets (do not commit)
+
+- `input/` — inbound work files (DSL exports, user-provided YAML, reference data). Gitignored.
+- `output/` — outbound artifacts (generated DSL, specs in progress). Gitignored.
+- `design-agent/output/` and `design-agent/projects/` — agent-scoped working directories. Gitignored.
+- These are local working assets, not source code. They should never be pushed to GitHub.
+- All agents read from and write to these directories freely.
+
 ## Auth & secrets
 
 - `.gitignore` hides `acli-agent/login.sh`, `acli-agent/login-confluence.sh`, and `*.state.json` files.

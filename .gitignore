@@ -29,4 +29,8 @@ skills-lock.json
 design-agent/output/
 design-agent/projects/
 
+# Input/output directories
+input/
+output/
+
 
