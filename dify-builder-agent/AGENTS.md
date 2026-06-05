@@ -76,10 +76,24 @@ Iteration 节点有多个容易遗漏的必填/半必填字段，缺少会导致
 - `data.isInIteration: true`
 - `data.iteration_id: "iter_id"`
 
-**KB 在迭代内的输出类型问题**：
-- KB 输出 `result` 类型为 `array[object]`（0~N 个 chunks）
-- Iteration 收集后得到 `array[array[object]]`，不是 `array[object]`
-- **解决方案**：迭代内加一个扁平化 Code 节点，将 `array[object]` 转成 `string`，Iteration 的 `output_selector` 指向该 Code 节点，`output_type` 改为 `array[string]`
+**Iteration 收集 KB.result 的真实行为**（已验证）：
+- Iteration 的 `output_selector: ["kb_node", "result"]` 收集后 **自动平铺**为 `array[object]`，不是 `array[array[object]]`
+- 合并 Code 直接遍历 `for chunk in iter_results`，不需要外层 `for item in iter_results: if isinstance(item, list)` 嵌套
+
+**扁平化 Code 的使用判断**：
+- 下游是 **LLM context**（期望 string）→ 迭代内加扁平化 Code，Iteration `output_selector` 指向它，`output_type: array[string]`
+- 下游是 **VA**（期望 `array[object]`）→ 不需要扁平化 Code，合并 Code 直接对平铺的 `array[object]` 去重
+
+**KB 在迭代内必须通过 Template Transform 获取 query**：
+- KB 的 `query_variable_selector` 不能直接引用 `["iteration_id", "item"]`，Dify 不支持
+- 需要在迭代内加 TT 节点桥接：TT `template: "{{ item }}"`，KB 指向 TT 的 `output`
+- 多变量组合查询同样走 TT（如 `{{ item }} {{ dimensions }}`）
+
+**迭代节点布局规范**：
+- 迭代面板宽度 ~2.5 倍普通节点（650-900px vs 242px）
+- 前后节点间距至少 300px，避免视觉遮挡
+- 同一画布多个迭代放不同 x 列或不同 y 行，避免大面积重叠
+- 迭代内部子节点用相对坐标（x=130, y=80 起步，间距 ~270px）
 
 **Template Transform 语法注意**：Template Transform 使用标准 Jinja2 语法 `{{ variable_name }}`，**不能**用 Dify LLM prompt 中的 `{{#node_id.field#}}` 语法（否则报 `TemplateSyntaxError: unexpected char '#'`）。变量名与 `variables` 映射中的 `variable` 字段一致。
 
