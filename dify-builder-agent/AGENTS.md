@@ -81,12 +81,16 @@ Iteration 节点有多个容易遗漏的必填/半必填字段，缺少会导致
 - Iteration 收集后得到 `array[array[object]]`，不是 `array[object]`
 - **解决方案**：迭代内加一个扁平化 Code 节点，将 `array[object]` 转成 `string`，Iteration 的 `output_selector` 指向该 Code 节点，`output_type` 改为 `array[string]`
 
+**Template Transform 语法注意**：Template Transform 使用标准 Jinja2 语法 `{{ variable_name }}`，**不能**用 Dify LLM prompt 中的 `{{#node_id.field#}}` 语法（否则报 `TemplateSyntaxError: unexpected char '#'`）。变量名与 `variables` 映射中的 `variable` 字段一致。
+
 **Template Transform 中引用当前迭代项**：
 ```yaml
-template: '{{#iteration_start_id.item#}} {{#upstream_id.field#}}'
+template: "{{ item }} {{ dimensions }}"
 variables:
   - variable: item
     value_selector: ["iteration_start_id", "item"]
+  - variable: dimensions
+    value_selector: ["upstream_id", "dimensions"]
 ```
 
 #### 3.6 validate-dsl.rb 的迭代兼容

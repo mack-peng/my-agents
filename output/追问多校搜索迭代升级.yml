@@ -1,21 +1,21 @@
 app:
   description: 面向四川省考生，根据高考分数、选科、兴趣和方向，匹配四川省内及全国985/211大学和专业，支持持续对话咨询
-  icon: "\U0001F916"
-  icon_background: "#FFEAD5"
+  icon: 🤖
+  icon_background: '#FFEAD5'
   mode: advanced-chat
   name: 高考志愿推荐助手
   use_icon_as_answer_icon: false
 dependencies:
-- current_identifier:
+- current_identifier: null
   type: marketplace
   value:
     marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.17@f7a5c1d222d17ee419b17a80d6e4923838fe93788dc724a3af73fbc6990b3a32
-    version:
-- current_identifier:
+    version: null
+- current_identifier: null
   type: marketplace
   value:
     marketplace_plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-    version:
+    version: null
 kind: app
 version: 0.5.0
 workflow:
@@ -24,27 +24,18 @@ workflow:
   features:
     file_upload:
       allowed_file_extensions:
-      - ".JPG"
-      - ".JPEG"
-      - ".PNG"
-      - ".GIF"
-      - ".WEBP"
-      - ".SVG"
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
       allowed_file_types:
       - image
       allowed_file_upload_methods:
       - local_file
       - remote_url
       enabled: false
-      fileUploadConfig:
-        audio_file_size_limit: 50
-        batch_count_limit: 5
-        file_size_limit: 15
-        image_file_batch_limit: 10
-        image_file_size_limit: 10
-        single_chunk_attachment_limit: 10
-        video_file_size_limit: 100
-        workflow_file_upload_limit: 10
       image:
         enabled: false
         number_limits: 3
@@ -52,8 +43,8 @@ workflow:
         - local_file
         - remote_url
       number_limits: 3
-    opening_statement: "你好！我是你的高考志愿推荐助手（数据覆盖四川省内院校及全国985/211）。请告诉我你的高考分数、选科类别、兴趣爱好与方向，我来帮你分析推荐！\\n\\n\U0001F4A1
-      例如：我考了 580 分，选科是物理类，对计算机和 AI 感兴趣"
+    opening_statement: 你好！我是你的高考志愿推荐助手（数据覆盖四川省内院校及全国985/211）。请告诉我你的高考分数、选科类别、兴趣爱好与方向，我来帮你分析推荐！\n\n💡
+      例如：我考了 580 分，选科是物理类，对计算机和 AI 感兴趣
     retriever_resource:
       enabled: true
     sensitive_word_avoidance:
@@ -517,10 +508,10 @@ workflow:
       type: custom
       zIndex: 0
     - data:
-        sourceType: llm
-        targetType: code
         isInIteration: false
         isInLoop: false
+        sourceType: llm
+        targetType: code
       id: 1747600000001-source-1786000000001-target
       source: '1747600000001'
       sourceHandle: source
@@ -529,10 +520,10 @@ workflow:
       type: custom
       zIndex: 0
     - data:
-        sourceType: code
-        targetType: iteration
         isInIteration: false
         isInLoop: false
+        sourceType: code
+        targetType: iteration
       id: 1786000000001-source-1786000000002-target
       source: '1786000000001'
       sourceHandle: source
@@ -541,11 +532,11 @@ workflow:
       type: custom
       zIndex: 0
     - data:
-        sourceType: iteration-start
-        targetType: template-transform
         isInIteration: true
         isInLoop: false
         iteration_id: '1786000000002'
+        sourceType: iteration-start
+        targetType: template-transform
       id: 1786000000003-source-1786000000004-target
       source: '1786000000003'
       sourceHandle: source
@@ -554,11 +545,11 @@ workflow:
       type: custom
       zIndex: 1002
     - data:
-        sourceType: template-transform
-        targetType: knowledge-retrieval
         isInIteration: true
         isInLoop: false
         iteration_id: '1786000000002'
+        sourceType: template-transform
+        targetType: knowledge-retrieval
       id: 1786000000004-source-1747600000002-target
       source: '1786000000004'
       sourceHandle: source
@@ -567,11 +558,11 @@ workflow:
       type: custom
       zIndex: 1002
     - data:
-        sourceType: knowledge-retrieval
-        targetType: code
         isInIteration: true
         isInLoop: false
         iteration_id: '1786000000002'
+        sourceType: knowledge-retrieval
+        targetType: code
       id: 1747600000002-source-1786000000006-target
       source: '1747600000002'
       sourceHandle: source
@@ -580,10 +571,10 @@ workflow:
       type: custom
       zIndex: 1002
     - data:
-        sourceType: iteration
-        targetType: code
         isInIteration: false
         isInLoop: false
+        sourceType: iteration
+        targetType: code
       id: 1786000000002-source-1786000000005-target
       source: '1786000000002'
       sourceHandle: source
@@ -592,10 +583,10 @@ workflow:
       type: custom
       zIndex: 0
     - data:
-        sourceType: code
-        targetType: llm
         isInIteration: false
         isInLoop: false
+        sourceType: code
+        targetType: llm
       id: 1786000000005-source-1747600000003-target
       source: '1786000000005'
       sourceHandle: source
@@ -604,10 +595,10 @@ workflow:
       type: custom
       zIndex: 0
     - data:
-        sourceType: llm
-        targetType: variable-aggregator
         isInIteration: false
         isInLoop: false
+        sourceType: llm
+        targetType: variable-aggregator
       id: 1747600000003-source-1748000000001-target
       source: '1747600000003'
       sourceHandle: source
@@ -661,7 +652,7 @@ workflow:
         cases:
         - case_id: 'true'
           conditions:
-          - comparison_operator: "="
+          - comparison_operator: '='
             id: 1747500000001-condition-1
             value: '1'
             varType: number
@@ -688,31 +679,24 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |
-          def main(gaokao_score: int) -> dict:
-              score = int(gaokao_score)
-              score_low = (score // 10) * 10
-              score_high = ((score + 9) // 10) * 10
-              all_scores = []
-              for s in range(max(0, score_low - 20), min(750, score_high + 30), 10):
-                  if 0 < s < 1000:
-                      all_scores.append(str(s))
-              return {
-                  "score_low": score_low,
-                  "score_high": score_high,
-                  "search_query": f"{score}分 {' '.join(all_scores)}",
-              }
+        code: "def main(gaokao_score: int) -> dict:\n    score = int(gaokao_score)\n\
+          \    score_low = (score // 10) * 10\n    score_high = ((score + 9) // 10)\
+          \ * 10\n    all_scores = []\n    for s in range(max(0, score_low - 20),\
+          \ min(750, score_high + 30), 10):\n        if 0 < s < 1000:\n          \
+          \  all_scores.append(str(s))\n    return {\n        \"score_low\": score_low,\n\
+          \        \"score_high\": score_high,\n        \"search_query\": f\"{score}分\
+          \ {' '.join(all_scores)}\",\n    }\n"
         code_language: python3
         desc: 根据输入分数生成上下取整的搜索关键词
         outputs:
           score_high:
-            children:
+            children: null
             type: number
           score_low:
-            children:
+            children: null
             type: number
           search_query:
-            children:
+            children: null
             type: string
         selected: false
         title: 生成搜索分数
@@ -742,7 +726,7 @@ workflow:
           variable_selector: []
         desc: 根据用户的兴趣和方向，推荐可搜索的专业名称
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -759,16 +743,23 @@ workflow:
         prompt_template:
         - id: 3322a6a5-9c3b-46da-9276-6fcdec079daa
           role: system
-          text: |
-            你是一位高考志愿填报专家。请根据用户的高考分数、兴趣和方向，推荐2-3个最适合用户搜索的本科专业名称。
+          text: '你是一位高考志愿填报专家。请根据用户的高考分数、兴趣和方向，推荐2-3个最适合用户搜索的本科专业名称。
+
 
             用户信息：
+
             - 分数：{{#1747000000001.gaokao_score#}}分
+
             - 选科：{{#1747000000001.subject_choice#}}
+
             - 兴趣与方向：{{#1747000000001.interests#}}
 
+
             请只输出专业名称，用空格分隔，不要任何其他文字和标点符号。
+
             例如：计算机科学与技术 软件工程 人工智能
+
+            '
         - id: 05b87733-7127-4283-abaf-1caabfe0faf3
           role: user
           text: 根据我的信息推荐适合搜索的专业名称
@@ -874,8 +865,8 @@ workflow:
     - data:
         is_team_authorization: true
         paramSchemas:
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: Search query keywords or phrases.
@@ -888,18 +879,18 @@ workflow:
             pt_BR: Search query
             zh_Hans: 搜索查询
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: query
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: true
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
@@ -915,17 +906,17 @@ workflow:
             pt_BR: Model selection
             zh_Hans: 模型选择
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: model
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -943,13 +934,13 @@ workflow:
           min: 0
           name: temperature
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -967,13 +958,13 @@ workflow:
           min: 0
           name: top_p
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: '[{"type": "web", "top_k": 10}]'
           form: llm
           human_description:
@@ -990,15 +981,15 @@ workflow:
             pt_BR: Resource filter
             zh_Hans: 资源过滤
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: resource_type_filter
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: array
         params:
           model: ''
@@ -1008,7 +999,7 @@ workflow:
           top_p: ''
         plugin_id: qianfan/baidu_ai_search
         plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-        provider_icon: "/console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png"
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
         provider_id: qianfan/baidu_ai_search/baidu_ai_search
         provider_name: qianfan/baidu_ai_search/baidu_ai_search
         provider_type: builtin
@@ -1025,7 +1016,7 @@ workflow:
             value: ''
           query:
             type: mixed
-            value: "{{#1747000003001.search_query#}}"
+            value: '{{#1747000003001.search_query#}}'
           resource_type_filter:
             type: constant
             value: '[{"type": "web", "top_k": 10}]'
@@ -1050,21 +1041,15 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          function main({ searchJson }) {
-              const references = searchJson[0].references;
-              let combinedText = "";
-              references.forEach((ref, index) => {
-                  combinedText += `【参考资料 ${index + 1}】\n`;
-                  combinedText += `标题: ${ref.title}\n`;
-                  combinedText += `内容: ${ref.content}\n\n`;
-              });
-              return { result: combinedText };
-          }
+        code: "function main({ searchJson }) {\n    const references = searchJson[0].references;\n\
+          \    let combinedText = \"\";\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n    return { result: combinedText };\n}"
         code_language: javascript
         outputs:
           result:
-            children:
+            children: null
             type: string
         selected: false
         title: 格式化搜索-A
@@ -1119,8 +1104,8 @@ workflow:
     - data:
         is_team_authorization: true
         paramSchemas:
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: Search query keywords or phrases.
@@ -1133,18 +1118,18 @@ workflow:
             pt_BR: Search query
             zh_Hans: 搜索查询
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: query
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: true
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
@@ -1160,17 +1145,17 @@ workflow:
             pt_BR: Model selection
             zh_Hans: 模型选择
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: model
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -1188,13 +1173,13 @@ workflow:
           min: 0
           name: temperature
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -1212,13 +1197,13 @@ workflow:
           min: 0
           name: top_p
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: '[{"type": "web", "top_k": 10}]'
           form: llm
           human_description:
@@ -1235,15 +1220,15 @@ workflow:
             pt_BR: Resource filter
             zh_Hans: 资源过滤
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: resource_type_filter
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: array
         params:
           model: ''
@@ -1253,7 +1238,7 @@ workflow:
           top_p: ''
         plugin_id: qianfan/baidu_ai_search
         plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-        provider_icon: "/console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png"
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
         provider_id: qianfan/baidu_ai_search/baidu_ai_search
         provider_name: qianfan/baidu_ai_search/baidu_ai_search
         provider_type: builtin
@@ -1270,7 +1255,7 @@ workflow:
             value: ''
           query:
             type: mixed
-            value: "{{#1747000006001.text#}}"
+            value: '{{#1747000006001.text#}}'
           resource_type_filter:
             type: constant
             value: '[{"type": "web", "top_k": 10}]'
@@ -1295,21 +1280,15 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          function main({ searchJson }) {
-              const references = searchJson[0].references;
-              let combinedText = "";
-              references.forEach((ref, index) => {
-                  combinedText += `【参考资料 ${index + 1}】\n`;
-                  combinedText += `标题: ${ref.title}\n`;
-                  combinedText += `内容: ${ref.content}\n\n`;
-              });
-              return { result: combinedText };
-          }
+        code: "function main({ searchJson }) {\n    const references = searchJson[0].references;\n\
+          \    let combinedText = \"\";\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n    return { result: combinedText };\n}"
         code_language: javascript
         outputs:
           result:
-            children:
+            children: null
             type: string
         selected: false
         title: 格式化搜索-B
@@ -1337,6 +1316,8 @@ workflow:
         dataset_ids:
         - K5eUil0/WoDDqLOq4GNOWD8SZakG6EVBJcRTesVrHppZHaZW5aX42T6T8rscJD16
         desc: 用追问生成的搜索词检索大学资料库
+        isInIteration: true
+        iteration_id: '1786000000002'
         multiple_retrieval_config:
           reranking_enable: false
           score_threshold: 0.5
@@ -1348,22 +1329,20 @@ workflow:
         selected: false
         title: 追问知识库搜索
         type: knowledge-retrieval
-        isInIteration: true
-        iteration_id: '1786000000002'
       height: 118
       id: '1747600000002'
+      parentId: '1786000000002'
       position:
         x: 400
         y: 80
       positionAbsolute:
-        x: 400
-        y: 80
+        x: 2530
+        y: 520
       selected: false
       sourcePosition: right
       targetPosition: left
       type: custom
       width: 242
-      parentId: '1786000000002'
     - data:
         desc: 合并分数搜索、专业搜索和网络搜索的结果
         output_type: array
@@ -1389,52 +1368,34 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |
-          def main(raw_results: list, search_text_a: str, search_text_b: str) -> dict:
-              seen = set()
-              deduped = []
-              for item in raw_results:
-                  if not isinstance(item, dict):
-                      continue
-                  seg_id = item.get("metadata", {}).get("segment_id", "")
-                  if seg_id and seg_id not in seen:
-                      seen.add(seg_id)
-                      deduped.append(item)
-                  elif not seg_id:
-                      deduped.append(item)
-              sort_order = {"基本信息": 0, "历史沿革": 1, "院系设置": 2, "师资力量": 3, "实验室": 4, "社团": 5, "照片": 6}
-              deduped.sort(key=lambda r: sort_order.get(
-                  r.get("metadata", {}).get("document_name", ""), 99
-              ))
-              deduped = deduped[:12]
-              parts = []
-              for r in deduped:
-                  if "metadata" not in r:
-                      title = r.get("title", "")
-                      content = r.get("content", "")
-                      if isinstance(r, str):
-                          parts.append(f"[网络]{r}")
-                      elif title or content:
-                          parts.append(f"[网络]{title}\n{content}")
-                      continue
-                  parts.append(f"[学校]{r.get('title', 'Unknown')}\n{r.get('content', '')}")
-              result_text = "\n\n".join(parts)
-              if search_text_a:
-                  result_text += "\n\n## 网络搜索结果（分数匹配）\n" + search_text_a
-              if search_text_b:
-                  result_text += "\n\n## 网络搜索结果（专业匹配）\n" + search_text_b
-              return {
-                  "count": len(deduped),
-                  "text": result_text,
-              }
+        code: "def main(raw_results: list, search_text_a: str, search_text_b: str)\
+          \ -> dict:\n    seen = set()\n    deduped = []\n    for item in raw_results:\n\
+          \        if not isinstance(item, dict):\n            continue\n        seg_id\
+          \ = item.get(\"metadata\", {}).get(\"segment_id\", \"\")\n        if seg_id\
+          \ and seg_id not in seen:\n            seen.add(seg_id)\n            deduped.append(item)\n\
+          \        elif not seg_id:\n            deduped.append(item)\n    sort_order\
+          \ = {\"基本信息\": 0, \"历史沿革\": 1, \"院系设置\": 2, \"师资力量\": 3, \"实验室\": 4, \"\
+          社团\": 5, \"照片\": 6}\n    deduped.sort(key=lambda r: sort_order.get(\n  \
+          \      r.get(\"metadata\", {}).get(\"document_name\", \"\"), 99\n    ))\n\
+          \    deduped = deduped[:12]\n    parts = []\n    for r in deduped:\n   \
+          \     if \"metadata\" not in r:\n            title = r.get(\"title\", \"\
+          \")\n            content = r.get(\"content\", \"\")\n            if isinstance(r,\
+          \ str):\n                parts.append(f\"[网络]{r}\")\n            elif title\
+          \ or content:\n                parts.append(f\"[网络]{title}\\n{content}\"\
+          )\n            continue\n        parts.append(f\"[学校]{r.get('title', 'Unknown')}\\\
+          n{r.get('content', '')}\")\n    result_text = \"\\n\\n\".join(parts)\n \
+          \   if search_text_a:\n        result_text += \"\\n\\n## 网络搜索结果（分数匹配）\\\
+          n\" + search_text_a\n    if search_text_b:\n        result_text += \"\\\
+          n\\n## 网络搜索结果（专业匹配）\\n\" + search_text_b\n    return {\n        \"count\"\
+          : len(deduped),\n        \"text\": result_text,\n    }\n"
         code_language: python3
         desc: 去重并精简知识库和搜索结果，减少分析 token 消耗
         outputs:
           count:
-            children:
+            children: null
             type: number
           text:
-            children:
+            children: null
             type: string
         selected: false
         title: 精简去重
@@ -1473,7 +1434,7 @@ workflow:
           - text
         desc: 综合分析生成个性化推荐报告
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -1490,46 +1451,77 @@ workflow:
         prompt_template:
         - id: 1dc79ea5-cd50-431d-a575-2848b20b8428
           role: system
-          text: |
-            你是一位资深高考志愿填报专家。请根据以下信息为用户提供专业推荐。
+          text: '你是一位资深高考志愿填报专家。请根据以下信息为用户提供专业推荐。
+
 
             ## 用户初始信息
+
             - 高考分数：{{#1747000000001.gaokao_score#}}分
+
             - 选科类别：{{#1747000000001.subject_choice#}}
+
             - 兴趣爱好与方向：{{#1747000000001.interests#}}
 
+
             ## 大学资料库检索结果
+
             {{#context#}}
 
+
             ## 输出要求
+
             请按以下结构输出分析报告：
 
+
             ### 一、分数定位分析
+
             说明分数在检索到的院校中的定位，列出匹配的专业及分数。
 
+
             ### 二、兴趣匹配推荐
+
             根据兴趣推荐最匹配的专业及对应学校。
 
+
             ### 三、可选专业对比表
+
             | 学校名称 | 专业名称 | 所属院系 | 2025分数 | 2024分数 | 匹配度 |
 
+
             匹配度标签规则：
+
             - 【冲刺】：高于用户分数0-10分
+
             - 【适中】：在用户分数±5分范围内
+
             - 【稳妥】：低于用户分数10分以上
 
+
             ### 四、综合建议
+
             给出1-3个推荐组合方案（学校+专业）。
 
+
             ## 重要规则
+
             - **必须包含学校名称** —— 每个专业都要注明所属学校
+
             - 如果用户未填写兴趣方向，主动询问他们的偏好学科或感兴趣的领域，引导用户提供更多信息后再做推荐 - 只引用检索结果中存在的真实数据
+
             - **保留知识库结果中的图片链接**（即 `![image](...)` 格式的 markdown），不要删除或改写
+
             - 发现用户输入的36类显示不规范时，主动向用户确认是物理类还是历史类
+
             - 后续用户追问时，可以基于之前的数据继续回答
+
             - **在回复末尾添加：** "以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
-            - 如果大学资料库检索结果（{{#context#}}）为空，请直接回复："很抱歉，目前我的知识库暂未收录与你匹配的信息（当前覆盖四川省内院校及全国 985/211 高校）。你可以尝试换个学校或专业查询。"
+
+            - 如果大学资料库检索结果（{{#context#}}）为空，请直接回复："很抱歉，目前我的知识库暂未收录与你匹配的信息（当前覆盖四川省内院校及全国
+            985/211 高校）。你可以尝试换个学校或专业查询。"
+
             - 在回复的免责声明之后，追加一行引导语，帮助用户知道接下来可以问什么。参考格式： "还有什么想了解的吗？你可以继续问我：某个专业的录取分数、学校宿舍条件、就业前景、学费奖学金、或者换个方向重新推荐。"
+
+            '
         - id: 62c8dc2c-a98b-40e9-ab2f-ccbd6399cf6b
           role: user
           text: 请根据我的{{#1747000000001.subject_choice#}}{{#1747000000001.gaokao_score#}}分，推荐合适的学校和专业。
@@ -1557,7 +1549,7 @@ workflow:
           variable_selector: []
         desc: 将用户追问转化为知识库搜索关键词
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -1574,36 +1566,53 @@ workflow:
         prompt_template:
         - id: 135326d7-7314-442d-9be2-e047b76abe30
           role: system
-          text: |-
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+          text: '## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+
 
             你是高考志愿知识库的搜索助手。请根据用户当前问题和对话历史，输出结构化两行内容：
 
+
             学校:{空格分隔的学校名称}
+
             维度:{空格分隔的维度关键词}
+
 
             学校名从对话历史 memory 中提取（window=10），维度从用户当前问题+历史中提取。
 
+
             维度映射表：
+
             宿舍/寝室 → 宿舍
+
             食堂/吃饭 → 食堂
+
             适合女生/男生 → 校园环境 安全
+
             社团活动 → 社团
+
             实验室/科研 → 实验室
+
             录取分/分数线 → 录取分数
+
             就业/工作 → 就业前景
+
 
             禁止输出「女生」「男生」「适合」等非索引词。
 
+
             示例：
+
             用户问：「这些学校哪个更适合女生读？宿舍条件怎么样？」
+
             输出：
+
             学校:四川大学 山东大学 中国海洋大学
-            维度:宿舍 校园环境
+
+            维度:宿舍 校园环境'
         - id: 44b682b4-72eb-491e-82ee-f158275ef181
           role: user
-          text: "{{#sys.query#}}"
-        selected: true
+          text: '{{#sys.query#}}'
+        selected: false
         title: 追问→生成搜索词
         type: llm
         vision:
@@ -1629,7 +1638,7 @@ workflow:
           - combined
         desc: 结合知识库结果和对话记忆回答用户追问
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -1646,31 +1655,48 @@ workflow:
         prompt_template:
         - id: 50fe095c-8d61-4fac-b1c4-7ab877279711
           role: system
-          text: |
-            你是专业的高考志愿填报助手。请根据以下信息回答用户的追问。
+          text: '你是专业的高考志愿填报助手。请根据以下信息回答用户的追问。
+
 
             ## 知识库检索结果
+
             {{#context#}}
 
+
             ## 回答要求
+
             - 优先使用知识库检索结果中的信息回答
+
             - 结合对话历史中的上下文
+
             - 如果知识库中有相关信息，请引用具体内容
+
             - 如果知识库中没有相关信息，基于对话历史回答
+
             - 每个涉及的专业都要注明所属学校
+
             - **保留知识库结果中的图片链接**（即 `![image](...)` 格式的 markdown），不要删除或改写，直接原样输出
+
             - **在回复末尾添加：** "以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
 
+
             ## 多校对比格式
+
             当 context 含多校数据时，按学校分段呈现对比表（列：学校 | 维度 | 详情 | 数据来源），保留 ![image](...) 图片链接
 
+
             ## 空结果兜底规则
+
             - 若某学校标注为「暂未收录」：不编造该学校任何具体信息，可基于对话历史已讨论的内容做间接参考
+
             - 若所有学校均标注「暂未收录」：回复「很抱歉，目前知识库暂未收录这些学校的相关数据。你可以尝试：1) 单独查询某所学校的特定信息 2) 换其他维度（如专业录取分）」
+
             - 禁止在无知识库数据时虚构宿舍条件、校园环境等具体细节
+
+            '
         - id: d6efbe05-35ea-478c-b131-30ad5fbbfa31
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 追问智能回复
         type: llm
@@ -1695,7 +1721,7 @@ workflow:
           variable_selector: []
         desc: 处理用户的闲聊对话，不需要知识库
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -1712,14 +1738,17 @@ workflow:
         prompt_template:
         - id: aefda169-255c-465e-baeb-5e85e5664bb9
           role: system
-          text: |
-            你是专业的高考志愿填报助手。请基于对话历史回答用户的闲聊问题。
+          text: '你是专业的高考志愿填报助手。请基于对话历史回答用户的闲聊问题。
+
 
             如果用户问的是与高考志愿相关的问题，请基于记忆中的信息回答。
+
             如果用户只是闲聊，请友好回复。
+
+            '
         - id: 1dc2752a-877f-4a06-a7cd-2ecaf1527806
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 闲聊回复
         type: llm
@@ -1744,7 +1773,7 @@ workflow:
           variable_selector: []
         desc: 专业对比分析回答
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -1761,15 +1790,19 @@ workflow:
         prompt_template:
         - id: major-comp-sys-001
           role: system
-          text: |-
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}} - 兴趣爱好：{{#1747000000001.interests#}}
+          text: '## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+            - 兴趣爱好：{{#1747000000001.interests#}}
+
             你是高考志愿填报专家，擅长专业对比分析。请根据用户的当前问题，结合对话历史，进行专业对比分析。
+
             比较维度包括： - 课程设置差异 - 学习难度与门槛 - 就业方向与前景 - 发展空间
+
             请给出客观、结构化的对比分析，以表格和文字说明相结合的方式呈现。
-            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
+
+            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"'
         - id: major-comp-user-001
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 专业对比回答
         type: llm
@@ -1791,8 +1824,8 @@ workflow:
     - data:
         is_team_authorization: true
         paramSchemas:
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: Search query keywords or phrases.
@@ -1805,18 +1838,18 @@ workflow:
             pt_BR: Search query
             zh_Hans: 搜索查询
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: query
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: true
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
@@ -1832,17 +1865,17 @@ workflow:
             pt_BR: Model selection
             zh_Hans: 模型选择
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: model
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -1860,13 +1893,13 @@ workflow:
           min: 0
           name: temperature
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -1884,13 +1917,13 @@ workflow:
           min: 0
           name: top_p
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: '[{"type": "web", "top_k": 10}]'
           form: llm
           human_description:
@@ -1907,15 +1940,15 @@ workflow:
             pt_BR: Resource filter
             zh_Hans: 资源过滤
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: resource_type_filter
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: array
         params:
           model: ''
@@ -1925,7 +1958,7 @@ workflow:
           top_p: ''
         plugin_id: qianfan/baidu_ai_search
         plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-        provider_icon: "/console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png"
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
         provider_id: qianfan/baidu_ai_search/baidu_ai_search
         provider_name: qianfan/baidu_ai_search/baidu_ai_search
         provider_type: builtin
@@ -1942,7 +1975,7 @@ workflow:
             value: ''
           query:
             type: mixed
-            value: "{{#sys.query#}}"
+            value: '{{#sys.query#}}'
           resource_type_filter:
             type: constant
             value: '[{"type": "web", "top_k": 10}]'
@@ -1967,21 +2000,15 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          function main({ searchJson }) {
-              const references = searchJson[0].references;
-              let combinedText = "";
-              references.forEach((ref, index) => {
-                  combinedText += `【参考资料 ${index + 1}】\n`;
-                  combinedText += `标题: ${ref.title}\n`;
-                  combinedText += `内容: ${ref.content}\n\n`;
-              });
-              return { result: combinedText };
-          }
+        code: "function main({ searchJson }) {\n    const references = searchJson[0].references;\n\
+          \    let combinedText = \"\";\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n    return { result: combinedText };\n}"
         code_language: javascript
         outputs:
           result:
-            children:
+            children: null
             type: string
         selected: false
         title: 格式化搜索-C
@@ -2008,8 +2035,8 @@ workflow:
     - data:
         is_team_authorization: true
         paramSchemas:
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: Search query keywords or phrases.
@@ -2022,18 +2049,18 @@ workflow:
             pt_BR: Search query
             zh_Hans: 搜索查询
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: query
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: true
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
@@ -2049,17 +2076,17 @@ workflow:
             pt_BR: Model selection
             zh_Hans: 模型选择
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: model
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -2077,13 +2104,13 @@ workflow:
           min: 0
           name: temperature
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -2101,13 +2128,13 @@ workflow:
           min: 0
           name: top_p
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: '[{"type": "web", "top_k": 10}]'
           form: llm
           human_description:
@@ -2124,15 +2151,15 @@ workflow:
             pt_BR: Resource filter
             zh_Hans: 资源过滤
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: resource_type_filter
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: array
         params:
           model: ''
@@ -2142,7 +2169,7 @@ workflow:
           top_p: ''
         plugin_id: qianfan/baidu_ai_search
         plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-        provider_icon: "/console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png"
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
         provider_id: qianfan/baidu_ai_search/baidu_ai_search
         provider_name: qianfan/baidu_ai_search/baidu_ai_search
         provider_type: builtin
@@ -2159,7 +2186,7 @@ workflow:
             value: ''
           query:
             type: mixed
-            value: "{{#sys.query#}}"
+            value: '{{#sys.query#}}'
           resource_type_filter:
             type: constant
             value: '[{"type": "web", "top_k": 10}]'
@@ -2184,21 +2211,15 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          function main({ searchJson }) {
-              const references = searchJson[0].references;
-              let combinedText = "";
-              references.forEach((ref, index) => {
-                  combinedText += `【参考资料 ${index + 1}】\n`;
-                  combinedText += `标题: ${ref.title}\n`;
-                  combinedText += `内容: ${ref.content}\n\n`;
-              });
-              return { result: combinedText };
-          }
+        code: "function main({ searchJson }) {\n    const references = searchJson[0].references;\n\
+          \    let combinedText = \"\";\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n    return { result: combinedText };\n}"
         code_language: javascript
         outputs:
           result:
-            children:
+            children: null
             type: string
         selected: false
         title: 格式化搜索-D
@@ -2225,8 +2246,8 @@ workflow:
     - data:
         is_team_authorization: true
         paramSchemas:
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: Search query keywords or phrases.
@@ -2239,18 +2260,18 @@ workflow:
             pt_BR: Search query
             zh_Hans: 搜索查询
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: query
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: true
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
-          default:
+        - auto_generate: null
+          default: null
           form: llm
           human_description:
             en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
@@ -2266,17 +2287,17 @@ workflow:
             pt_BR: Model selection
             zh_Hans: 模型选择
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: model
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: string
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -2294,13 +2315,13 @@ workflow:
           min: 0
           name: temperature
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: 0.8
           form: llm
           human_description:
@@ -2318,13 +2339,13 @@ workflow:
           min: 0
           name: top_p
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: number
-        - auto_generate:
+        - auto_generate: null
           default: '[{"type": "web", "top_k": 10}]'
           form: llm
           human_description:
@@ -2341,15 +2362,15 @@ workflow:
             pt_BR: Resource filter
             zh_Hans: 资源过滤
           llm_description: ''
-          max:
-          min:
+          max: null
+          min: null
           name: resource_type_filter
           options: []
-          placeholder:
-          precision:
+          placeholder: null
+          precision: null
           required: false
-          scope:
-          template:
+          scope: null
+          template: null
           type: array
         params:
           model: ''
@@ -2359,7 +2380,7 @@ workflow:
           top_p: ''
         plugin_id: qianfan/baidu_ai_search
         plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
-        provider_icon: "/console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png"
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
         provider_id: qianfan/baidu_ai_search/baidu_ai_search
         provider_name: qianfan/baidu_ai_search/baidu_ai_search
         provider_type: builtin
@@ -2376,7 +2397,7 @@ workflow:
             value: ''
           query:
             type: mixed
-            value: "{{#sys.query#}}"
+            value: '{{#sys.query#}}'
           resource_type_filter:
             type: constant
             value: '[{"type": "web", "top_k": 10}]'
@@ -2401,21 +2422,15 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          function main({ searchJson }) {
-              const references = searchJson[0].references;
-              let combinedText = "";
-              references.forEach((ref, index) => {
-                  combinedText += `【参考资料 ${index + 1}】\n`;
-                  combinedText += `标题: ${ref.title}\n`;
-                  combinedText += `内容: ${ref.content}\n\n`;
-              });
-              return { result: combinedText };
-          }
+        code: "function main({ searchJson }) {\n    const references = searchJson[0].references;\n\
+          \    let combinedText = \"\";\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n    return { result: combinedText };\n}"
         code_language: javascript
         outputs:
           result:
-            children:
+            children: null
             type: string
         selected: false
         title: 格式化搜索-E
@@ -2447,7 +2462,7 @@ workflow:
           - result
         desc: 就业前景分析回答
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -2464,15 +2479,19 @@ workflow:
         prompt_template:
         - id: career-pros-sys-001
           role: system
-          text: |-
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}} - 兴趣爱好：{{#1747000000001.interests#}}
+          text: '## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+            - 兴趣爱好：{{#1747000000001.interests#}}
+
             你是高考志愿填报专家，擅长就业前景分析。请根据用户的当前问题，结合对话历史，分析专业或学校的就业前景。
+
             分析维度包括： - 行业趋势与人才需求 - 典型就业岗位与薪资水平 - 毕业生主要去向（企业/读研/出国） - 发展前景与上升空间
+
             请基于合理的行业认知作答。如果对某些数据不确定，请如实说明。
-            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
+
+            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"'
         - id: career-pros-user-001
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 就业前景回答
         type: llm
@@ -2499,7 +2518,7 @@ workflow:
           - result
         desc: 费用与奖学金咨询回答
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -2516,15 +2535,19 @@ workflow:
         prompt_template:
         - id: fee-sch-sys-001
           role: system
-          text: |-
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}} - 兴趣爱好：{{#1747000000001.interests#}}
+          text: '## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+            - 兴趣爱好：{{#1747000000001.interests#}}
+
             你是高考志愿填报专家，擅长解答大学费用相关问题。请根据用户的当前问题，结合对话历史，回答关于学费、奖学金、助学贷款等方面的问题。
+
             回答要点： - 区分公办与民办院校的学费差异 - 介绍常见的奖学金类型（国家/校级/企业） - 说明助学贷款政策与申请流程 - 提供生活费用的合理参考范围
+
             如果对某些具体金额不确定，请给出合理范围而非编造数据。
-            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
+
+            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"'
         - id: fee-sch-user-001
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 费用咨询回答
         type: llm
@@ -2551,7 +2574,7 @@ workflow:
           - result
         desc: 录取预测咨询回答
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -2568,15 +2591,19 @@ workflow:
         prompt_template:
         - id: admit-pred-sys-001
           role: system
-          text: |-
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}} - 兴趣爱好：{{#1747000000001.interests#}}
+          text: '## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+            - 兴趣爱好：{{#1747000000001.interests#}}
+
             你是高考志愿填报专家，擅长录取预测分析。请根据用户的分数、选科类别和兴趣方向，结合对话历史，给出录取可能性分析。
+
             分析维度包括： - 分数在对应批次中的定位 - 匹配度区间（冲刺/适中/稳妥） - 历年录取数据参考（基于已有知识） - 建议填报策略
+
             注意：不要编造具体的录取分数线数据。用合理的区间和策略建议来代替虚假数据。
-            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
+
+            在回复末尾添加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"'
         - id: admit-pred-user-001
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 录取预测回答
         type: llm
@@ -2596,7 +2623,7 @@ workflow:
       type: custom
       width: 242
     - data:
-        answer: "{{#1747000021001.text#}}{{#1748000000001.output#}}"
+        answer: '{{#1747000021001.text#}}{{#1748000000001.output#}}'
         desc: 输出推荐报告给用户
         selected: false
         title: 回答
@@ -2663,7 +2690,7 @@ workflow:
           variable_selector: []
         desc: 用户要求重新推荐时的回复
         memory:
-          query_prompt_template: "{{#sys.query#}}"
+          query_prompt_template: '{{#sys.query#}}'
           role_prefix:
             assistant: ''
             user: ''
@@ -2680,15 +2707,20 @@ workflow:
         prompt_template:
         - id: re-recommend-sys-001
           role: system
-          text: |-
-            用户要求重新推荐。请根据以下信息重新分析：
-            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}} - 兴趣方向：{{#1747000000001.interests#}}
+          text: '用户要求重新推荐。请根据以下信息重新分析：
+
+            ## 用户信息 - 高考分数：{{#1747000000001.gaokao_score#}}分 - 选科类别：{{#1747000000001.subject_choice#}}
+            - 兴趣方向：{{#1747000000001.interests#}}
+
             ## 用户新诉求 {{#sys.query#}}
-            ## 判断规则 1. 如果用户只是换个兴趣方向（如从计算机换到医学），保持分数/选科不变，基于对话历史中已讨论过的学校数据，重新筛选推荐匹配的专业和学校。 2. 如果用户明确要求修改分数或选科（如"分数改成620"、"我是历史类"），如实告知："当前对话无法修改初始参数，建议你开启新对话重新输入分数和选科信息，我可以为你重新分析。"
-            ## 输出要求 - 重新推荐时给出新的专业对比表和综合建议 - 在回复末尾追加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"
+
+            ## 判断规则 1. 如果用户只是换个兴趣方向（如从计算机换到医学），保持分数/选科不变，基于对话历史中已讨论过的学校数据，重新筛选推荐匹配的专业和学校。
+            2. 如果用户明确要求修改分数或选科（如"分数改成620"、"我是历史类"），如实告知："当前对话无法修改初始参数，建议你开启新对话重新输入分数和选科信息，我可以为你重新分析。"
+
+            ## 输出要求 - 重新推荐时给出新的专业对比表和综合建议 - 在回复末尾追加："以上内容由 AI 生成，仅供参考，请以四川省教育考试院及各高校官方发布为准。"'
         - id: re-recommend-user-001
           role: user
-          text: "{{#sys.query#}}"
+          text: '{{#sys.query#}}'
         selected: false
         title: 重新推荐回复
         type: llm
@@ -2708,40 +2740,25 @@ workflow:
       type: custom
       width: 242
     - data:
-        code: |-
-          import re
-
-          def main(raw_output: str) -> dict:
-              lines = raw_output.strip().split('\n')
-              schools_str = ''
-              dimensions = ''
-              for line in lines:
-                  if re.match(r'^学校[：:]', line):
-                      schools_str = re.sub(r'^学校[：:]\s*', '', line)
-                  elif re.match(r'^维度[：:]', line):
-                      dimensions = re.sub(r'^维度[：:]\s*', '', line)
-
-              if schools_str:
-                  schools = [s.strip() for s in schools_str.split() if s.strip()]
-                  schools = list(dict.fromkeys(schools))
-                  schools = schools[:3]
-              else:
-                  schools = []
-                  dimensions = raw_output.strip()
-
-              return {
-                  "schools": schools,
-                  "dimensions": dimensions,
-              }
+        code: "import re\n\ndef main(raw_output: str) -> dict:\n    lines = raw_output.strip().split('\\\
+          n')\n    schools_str = ''\n    dimensions = ''\n    for line in lines:\n\
+          \        if re.match(r'^学校[：:]', line):\n            schools_str = re.sub(r'^学校[：:]\\\
+          s*', '', line)\n        elif re.match(r'^维度[：:]', line):\n            dimensions\
+          \ = re.sub(r'^维度[：:]\\s*', '', line)\n\n    if schools_str:\n        schools\
+          \ = [s.strip() for s in schools_str.split() if s.strip()]\n        schools\
+          \ = list(dict.fromkeys(schools))\n        schools = schools[:3]\n    else:\n\
+          \        schools = []\n        dimensions = raw_output.strip()\n\n    return\
+          \ {\n        \"schools\": schools,\n        \"dimensions\": dimensions,\n\
+          \    }"
         code_language: python3
         desc: 从 LLM 输出中正则提取学校名和维度词
         outputs:
-          schools:
-            children:
-            type: array[string]
           dimensions:
-            children:
+            children: null
             type: string
+          schools:
+            children: null
+            type: array[string]
         selected: false
         title: 提取学校列表
         type: code
@@ -2765,23 +2782,24 @@ workflow:
       type: custom
       width: 242
     - data:
-        type: iteration
-        title: 迭代多校搜索
         desc: 逐校迭代搜索知识库
-        width: 650
+        error_handle_mode: terminated
         height: 400
+        is_parallel: true
+        iterator_input_type: array[string]
         iterator_selector:
         - '1786000000001'
         - schools
-        iterator_input_type: array[string]
         output_selector:
         - '1786000000006'
         - text
         output_type: array[string]
-        start_node_id: '1786000000003'
-        is_parallel: true
         parallel_nums: 3
-        error_handle_mode: terminated
+        selected: false
+        start_node_id: '1786000000003'
+        title: 迭代多校搜索
+        type: iteration
+        width: 886
       height: 400
       id: '1786000000002'
       position:
@@ -2794,17 +2812,17 @@ workflow:
       sourcePosition: right
       targetPosition: left
       type: custom
-      width: 650
+      width: 886
     - data:
-        type: iteration-start
-        title: ''
         desc: ''
+        height: 64
         isInIteration: true
         iteration_id: '1786000000002'
+        selected: false
+        title: ''
+        type: iteration-start
         width: 64
-        height: 64
       draggable: false
-      selectable: false
       height: 64
       id: '1786000000003'
       parentId: '1786000000002'
@@ -2812,30 +2830,32 @@ workflow:
         x: 30
         y: 50
       positionAbsolute:
-        x: 30
-        y: 50
+        x: 2160
+        y: 490
+      selectable: false
       sourcePosition: right
       targetPosition: left
       type: custom-iteration-start
       width: 64
     - data:
-        type: template-transform
-        title: 构建查询
         desc: 拼接当前学校名 + 维度词
-        template: "{{#1786000000003.item#}} {{#1786000000001.dimensions#}}"
+        isInIteration: true
+        iteration_id: '1786000000002'
+        selected: true
+        template: '{{ item }} {{ dimensions }}'
+        title: 构建查询
+        type: template-transform
         variables:
-        - variable: item
-          value_selector:
-          - '1786000000003'
+        - value_selector:
+          - '1786000000002'
           - item
           value_type: string
-        - variable: dimensions
-          value_selector:
+          variable: item
+        - value_selector:
           - '1786000000001'
           - dimensions
           value_type: string
-        isInIteration: true
-        iteration_id: '1786000000002'
+          variable: dimensions
       height: 68
       id: '1786000000004'
       parentId: '1786000000002'
@@ -2843,30 +2863,27 @@ workflow:
         x: 130
         y: 80
       positionAbsolute:
-        x: 130
-        y: 80
+        x: 2260
+        y: 520
       selected: false
       sourcePosition: right
       targetPosition: left
       type: custom
       width: 200
     - data:
-        code: |-
-          def main(kb_result: list) -> dict:
-              if not kb_result:
-                  return {"text": ""}
-              parts = []
-              for chunk in kb_result:
-                  title = chunk.get("title", "")
-                  content = chunk.get("content", "")
-                  if title or content:
-                      parts.append(f"{title}\n{content}" if title else content)
-              return {"text": "\n\n".join(parts)}
+        code: "def main(kb_result: list) -> dict:\n    if not kb_result:\n       \
+          \ return {\"text\": \"\"}\n    parts = []\n    for chunk in kb_result:\n\
+          \        title = chunk.get(\"title\", \"\")\n        content = chunk.get(\"\
+          content\", \"\")\n        if title or content:\n            parts.append(f\"\
+          {title}\\n{content}\" if title else content)\n    return {\"text\": \"\\\
+          n\\n\".join(parts)}"
         code_language: python3
         desc: 将 KB chunk 数组转成紧凑字符串
+        isInIteration: true
+        iteration_id: '1786000000002'
         outputs:
           text:
-            children:
+            children: null
             type: string
         selected: false
         title: 扁平化KB结果
@@ -2877,8 +2894,6 @@ workflow:
           - result
           value_type: array[object]
           variable: kb_result
-        isInIteration: true
-        iteration_id: '1786000000002'
       height: 52
       id: '1786000000006'
       parentId: '1786000000002'
@@ -2886,33 +2901,27 @@ workflow:
         x: 670
         y: 80
       positionAbsolute:
-        x: 670
-        y: 80
+        x: 2800
+        y: 520
       selected: false
       sourcePosition: right
       targetPosition: left
       type: custom
       width: 200
     - data:
-        code: |-
-          def main(iter_results: list, school_list: list) -> dict:
-              parts = []
-              any_hit = False
-              for i, school in enumerate(school_list):
-                  if i < len(iter_results) and iter_results[i]:
-                      any_hit = True
-                      content = iter_results[i]
-                      parts.append(f"## {school}\n{content}")
-                  else:
-                      parts.append(f"## {school}\n> 该学校相关数据暂未收录，请尝试单独查询。\n")
-              if not any_hit:
-                  return {"combined": "所有学校均暂未收录相关数据。你可以尝试：1) 单独查询某所学校的特定信息 2) 换其他维度（如专业录取分）"}
-              return {"combined": "\n\n".join(parts)}
+        code: "def main(iter_results: list, school_list: list) -> dict:\n    parts\
+          \ = []\n    any_hit = False\n    for i, school in enumerate(school_list):\n\
+          \        if i < len(iter_results) and iter_results[i]:\n            any_hit\
+          \ = True\n            content = iter_results[i]\n            parts.append(f\"\
+          ## {school}\\n{content}\")\n        else:\n            parts.append(f\"\
+          ## {school}\\n> 该学校相关数据暂未收录，请尝试单独查询。\\n\")\n    if not any_hit:\n      \
+          \  return {\"combined\": \"所有学校均暂未收录相关数据。你可以尝试：1) 单独查询某所学校的特定信息 2) 换其他维度（如专业录取分）\"\
+          }\n    return {\"combined\": \"\\n\\n\".join(parts)}"
         code_language: python3
         desc: 按学校对齐 KB 结果，无数据的标注兜底文案
         outputs:
           combined:
-            children:
+            children: null
             type: string
         selected: false
         title: 合并迭代结果
@@ -2942,7 +2951,7 @@ workflow:
       type: custom
       width: 242
     viewport:
-      x: -1150.0125785099374
+      x: -1150.0125785099372
       y: -280.030384075107
       zoom: 0.65
   rag_pipeline_variables: []
