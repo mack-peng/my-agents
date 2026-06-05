@@ -29,7 +29,7 @@
 
 #### 3.1 Tool 节点（百度搜索插件）
 
-**必须以 `test.yml` 中的实际格式为准**，不能简化。关键字段：
+**必须以 `references/dify-dsl-reference.md` §8 中的实际格式为准**，不能简化。关键字段：
 
 - `paramSchemas`: 必须包含 5 个参数的完整定义（query, model, temperature, top_p, resource_type_filter），每个参数都要有 `auto_generate`, `default`, `human_description`（多语言）, `label`（多语言）, `llm_description`, `max`, `min`, `options`, `placeholder`, `precision`, `required`, `scope`, `template`, `type`
 - `params`: 必须列出全部 5 个参数（model, query, resource_type_filter, temperature, top_p）
@@ -53,7 +53,50 @@
 - VariableAggregator 用裸嵌套列表：`[ [node_id, field], [node_id, field] ]`
 - Knowledge Retrieval 用 `query_variable_selector: [node_id, field]`（扁平数组）
 
-#### 3.5 修改现有 DSL 时的安全检查
+#### 3.5 Iteration 节点 — 必填字段与内部结构
+
+Iteration 节点有多个容易遗漏的必填/半必填字段，缺少会导致导入失败：
+
+**外层节点对象**：
+- `start_node_id` — 必须指向 iteration-start 子节点 ID
+- `data.width` / `data.height` — 需要在 `data` 内再写一份（与外层重复）
+
+**iteration-start 子节点**：
+- `type: custom-iteration-start`（外层） / `data.type: iteration-start`（内层）
+- `parentId` 指向迭代主节点
+- `data.isInIteration: true`, `data.iteration_id: "iter_id"`
+
+**迭代内的子节点**（Template Transform, Code, KB 等）：
+- 外层加 `parentId: "iteration_id"`
+- data 内加 `isInIteration: true`, `iteration_id: "iter_id"`
+- KB 节点的 `query_variable_selector` 改为指向迭代内的上游节点
+
+**迭代内边**：
+- `zIndex: 1002`（外部边是 `0`）
+- `data.isInIteration: true`
+- `data.iteration_id: "iter_id"`
+
+**KB 在迭代内的输出类型问题**：
+- KB 输出 `result` 类型为 `array[object]`（0~N 个 chunks）
+- Iteration 收集后得到 `array[array[object]]`，不是 `array[object]`
+- **解决方案**：迭代内加一个扁平化 Code 节点，将 `array[object]` 转成 `string`，Iteration 的 `output_selector` 指向该 Code 节点，`output_type` 改为 `array[string]`
+
+**Template Transform 中引用当前迭代项**：
+```yaml
+template: '{{#iteration_start_id.item#}} {{#upstream_id.field#}}'
+variables:
+  - variable: item
+    value_selector: ["iteration_start_id", "item"]
+```
+
+#### 3.6 validate-dsl.rb 的迭代兼容
+
+验证脚本对迭代结构做了特判，如果手动修改了脚本，请确认以下豁免逻辑保留：
+
+- `iteration-start` 节点免于"无入边"检查（数据来自 `iterator_selector`）
+- 迭代内部末梢节点（`data.isInIteration: true`）免于"无出边"检查（输出由 `output_selector` 收集）
+
+#### 3.7 修改现有 DSL 时的安全检查
 
 - 删除节点时，同步检查并更新：
   - `edges:` 中所有引用该节点 ID 的边
@@ -106,7 +149,7 @@ ruby scripts/validate-dsl.rb <file.yml>
 在 repo 内切临时分支操作，每次原子改动后 commit，验证失败立即回滚，最终只保留产物文件，分支用完删除：
 
 ```bash
-git checkout -b temp/dify-work
+git checkout -b temp-dify-work
 
 # 改一个原子步骤 → 验证
 git add -A && git commit -m "step 1: xxx"
@@ -120,11 +163,13 @@ git reset --hard HEAD~1
 
 ```bash
 git checkout main
-git checkout temp/dify-work -- Agents/output/最终文件.yml
-git branch -D temp/dify-work
+git checkout temp-dify-work -- output/最终文件.yml
+git branch -D temp-dify-work
 ```
 
 中间 commit 随分支一起删除，主分支历史不受影响。
+
+**命名规范**：临时分支统一用 `temp-` 前缀（不是 `temp/`），避免与目录名冲突。
 
 ### 5. 交付
 
@@ -138,9 +183,10 @@ git branch -D temp/dify-work
   # 连通性、VA 一致性、orphan 检查等
   '
   ```
-- 已输出的最终文件同步到 `Agents/output/` 目录
+- 已输出的最终文件同步到 `output/` 目录
 
 ## 参考
 
 - DSL schema: `references/dify-dsl-reference.md`
-- 搜索插件参考实现: `Agents/input/test.yml`（百度智能搜索 Tool + Code 节点）
+- 百度智能搜索插件格式: `references/dify-dsl-reference.md` §8 Baidu AI Search Plugin（已合并入参考文档）
+- 验证脚本: `scripts/validate-dsl.rb`（已兼容 Iteration 内部结构）
