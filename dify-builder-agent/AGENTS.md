@@ -83,12 +83,12 @@ Iteration 节点有多个容易遗漏的必填/半必填字段，缺少会导致
 
 **Template Transform 语法注意**：Template Transform 使用标准 Jinja2 语法 `{{ variable_name }}`，**不能**用 Dify LLM prompt 中的 `{{#node_id.field#}}` 语法（否则报 `TemplateSyntaxError: unexpected char '#'`）。变量名与 `variables` 映射中的 `variable` 字段一致。
 
-**Template Transform 中引用当前迭代项**：
+**Template Transform 中引用当前迭代项**：`item` 字段挂在 **iteration 主节点** 上，不是 iteration-start 子节点。
 ```yaml
 template: "{{ item }} {{ dimensions }}"
 variables:
   - variable: item
-    value_selector: ["iteration_start_id", "item"]
+    value_selector: ["iteration_id", "item"]    # ← iteration 主节点，不是 iteration-start
   - variable: dimensions
     value_selector: ["upstream_id", "dimensions"]
 ```
