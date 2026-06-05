@@ -1,0 +1,414 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: test
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.17@f7a5c1d222d17ee419b17a80d6e4923838fe93788dc724a3af73fbc6990b3a32
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: llm-answer
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: tool
+      id: 1780624321028-source-1780625469789-target
+      source: '1780624321028'
+      sourceHandle: source
+      target: '1780625469789'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: code
+      id: 1780625469789-source-1780625644668-target
+      source: '1780625469789'
+      sourceHandle: source
+      target: '1780625644668'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: 1780625644668-source-llm-target
+      source: '1780625644668'
+      sourceHandle: source
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables: []
+      height: 73
+      id: '1780624321028'
+      position:
+        x: 26.012081932545527
+        y: 192
+      positionAbsolute:
+        x: 26.012081932545527
+        y: 192
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1780625644668'
+          - result
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.3
+            thinking: false
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_config:
+          jinja2_variables: []
+        prompt_template:
+        - edition_type: basic
+          id: 39f9c33b-6343-429d-aed4-173445ef84f5
+          role: system
+          text: 用户的搜索词是{{#sys.query#}}，搜索结果如下：{{#context#}}。请根据搜索结果准确回答用户的问题。如果搜索结果不相关或没有结果，请如实告知。
+        selected: false
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: llm
+      position:
+        x: 256
+        y: 536
+      positionAbsolute:
+        x: 256
+        y: 536
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#llm.text#}}'
+        selected: false
+        title: 直接回复
+        type: answer
+        variables: []
+      height: 103
+      id: answer
+      position:
+        x: 594
+        y: 507
+      positionAbsolute:
+        x: 594
+        y: 507
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        is_team_authorization: true
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Search query keywords or phrases.
+            ja_JP: Search query keywords or phrases.
+            pt_BR: Search query keywords or phrases.
+            zh_Hans: 搜索查询关键词或短语
+          label:
+            en_US: Search query
+            ja_JP: Search query
+            pt_BR: Search query
+            zh_Hans: 搜索查询
+          llm_description: ''
+          max: null
+          min: null
+          name: query
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
+              Model list: https://cloud.baidu.com/doc/qianfan/s/rmh4stp0j'
+            ja_JP: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
+              Model list: https://cloud.baidu.com/doc/qianfan/s/rmh4stp0j'
+            pt_BR: 'Specify the model for result summarization (e.g. "ERNIE-3.5-8K").
+              Model list: https://cloud.baidu.com/doc/qianfan/s/rmh4stp0j'
+            zh_Hans: 指定用于结果总结的模型（如"ERNIE-3.5-8K"）选择模型可前往：https://cloud.baidu.com/doc/qianfan/s/rmh4stp0j
+          label:
+            en_US: Model selection
+            ja_JP: Model selection
+            pt_BR: Model selection
+            zh_Hans: 模型选择
+          llm_description: ''
+          max: null
+          min: null
+          name: model
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: 0.8
+          form: llm
+          human_description:
+            en_US: Controls output randomness, range 0-1.0, default 0.8
+            ja_JP: Controls output randomness, range 0-1.0, default 0.8
+            pt_BR: Controls output randomness, range 0-1.0, default 0.8
+            zh_Hans: 输出随机性控制，范围0-1.0，默认0.8
+          label:
+            en_US: Temperature
+            ja_JP: Temperature
+            pt_BR: Temperature
+            zh_Hans: 随机性控制
+          llm_description: ''
+          max: 1
+          min: 0
+          name: temperature
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: number
+        - auto_generate: null
+          default: 0.8
+          form: llm
+          human_description:
+            en_US: Controls output diversity, range 0-1.0, default 0.8
+            ja_JP: Controls output diversity, range 0-1.0, default 0.8
+            pt_BR: Controls output diversity, range 0-1.0, default 0.8
+            zh_Hans: 多样性控制，范围0-1.0，默认0.8
+          label:
+            en_US: Top-P
+            ja_JP: Top-P
+            pt_BR: Top-P
+            zh_Hans: 多样性控制
+          llm_description: ''
+          max: 1
+          min: 0
+          name: top_p
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: number
+        - auto_generate: null
+          default: '[{"type": "web", "top_k": 10}]'
+          form: llm
+          human_description:
+            en_US: The top_k range for each resource type (web, image, video, etc.)
+              is 1~10.
+            ja_JP: The top_k range for each resource type (web, image, video, etc.)
+              is 1~10.
+            pt_BR: The top_k range for each resource type (web, image, video, etc.)
+              is 1~10.
+            zh_Hans: 每种资源类型（web、image、video等）的top_k取值范围为1~10。
+          label:
+            en_US: Resource filter
+            ja_JP: Resource filter
+            pt_BR: Resource filter
+            zh_Hans: 资源过滤
+          llm_description: ''
+          max: null
+          min: null
+          name: resource_type_filter
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: array
+        params:
+          model: ''
+          query: ''
+          resource_type_filter: ''
+          temperature: ''
+          top_p: ''
+        plugin_id: qianfan/baidu_ai_search
+        plugin_unique_identifier: qianfan/baidu_ai_search:0.0.1@97821ba294ff49a4d7fabb6746bfd7993373e27c2a110efd684865bf21f2ff6e
+        provider_icon: /console/api/workspaces/current/plugin/icon?tenant_id=18391616-0974-43c4-aa36-0f1db84ba9b2&filename=6abf3075b001f405d82db8b68d08722a9fd9014c79877c7177204e8fea22fb1e.png
+        provider_id: qianfan/baidu_ai_search/baidu_ai_search
+        provider_name: qianfan/baidu_ai_search/baidu_ai_search
+        provider_type: builtin
+        selected: true
+        title: 智能搜索生成
+        tool_configurations: {}
+        tool_description: 提供AI增强的智能语义搜索工具
+        tool_label: 智能搜索生成
+        tool_name: smart_search
+        tool_node_version: '2'
+        tool_parameters:
+          model:
+            type: mixed
+            value: ''
+          query:
+            type: mixed
+            value: '{{#sys.query#}}'
+          resource_type_filter:
+            type: constant
+            value: '[{"type": "web", "top_k": 10}]'
+          temperature:
+            type: constant
+            value: 0.8
+          top_p:
+            type: constant
+            value: 0.8
+        type: tool
+      height: 52
+      id: '1780625469789'
+      position:
+        x: 328.0120819325455
+        y: 192
+      positionAbsolute:
+        x: 328.0120819325455
+        y: 192
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ searchJson }) {\n    // 提取 references 数组\n    const\
+          \ references = searchJson[0].references;\n    let combinedText = \"\";\n\
+          \n    // 循环将每条新闻的标题和内容拼接成纯文本\n    references.forEach((ref, index) => {\n\
+          \        combinedText += `【参考资料 ${index + 1}】\\n`;\n        combinedText\
+          \ += `标题: ${ref.title}\\n`;\n        combinedText += `内容: ${ref.content}\\\
+          n\\n`;\n    });\n\n    return {\n        result: combinedText\n    };\n}"
+        code_language: javascript
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1780625469789'
+          - json
+          value_type: array[object]
+          variable: searchJson
+      height: 52
+      id: '1780625644668'
+      position:
+        x: 266.01595975406326
+        y: 348.7478358858009
+      positionAbsolute:
+        x: 266.01595975406326
+        y: 348.7478358858009
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 45.13930411417459
+      y: 2.389931954918268
+      zoom: 0.998406567672483
+  rag_pipeline_variables: []
