@@ -1,210 +1,279 @@
-# dify-builder-agent — Dify DSL 生成器
+# dify-builder-agent
 
-基于 OpenCode 的 Dify 工作流 DSL 文件生成代理。根据用户描述的需求，输出符合 Dify v0.6.0+ 标准的 `.yml` 工作流定义文件。
+AI agent for reading, manipulating, validating, and generating Dify DSL YAML files (`app.yml`). Uses the `@orangemust/dify-dsl-builder` library.
 
-## 工作流
+## Tools
+
+- **dify-dsl-cli** — globally installed CLI (`npm install -g @orangemust/dify-dsl-builder`). Also usable via `npx dify-dsl-cli`.
+- **Library API** — `import { DifyDSL } from "@orangemust/dify-dsl-builder"` for scripted manipulation.
+- **YAML Patch System** — declarative patch files (19 ops) applied via `dify-dsl-cli apply <patch> -i <in> -o <out>`.
+
+## Workflow
 
 ```
-用户描述需求 → AI 理解并规划流程 → 生成 DSL YAML → 验证结构正确性 → 交付
+用户提供 DSL 文件 + 需求文档 → 分析判定 → 简单/复杂 → 确认 → 执行 → 验证
 ```
 
-### 1. 理解需求
+### Step 1: 接收输入
 
-- 确定 app mode: `workflow`（批处理）还是 `advanced-chat`（对话）
-- 确定节点类型和连接顺序（Start → LLM → Answer/End 等）
-- 确定输入变量、模型、提示词、条件分支等细节
+用户将 Dify 应用导出的 `.yml` DSL 文件放到 `input/` 目录，并提供需求文档（要修改什么、达到什么效果）。
 
-### 2. DSL 生成
+### Step 2: 分析判定
 
-参照 `references/dify-dsl-reference.md` 作为完整 schema 参考，生成包含以下结构的 DSL：
+先用 `dify-dsl-cli flow <file>` 了解拓扑结构，`dify-dsl-cli node show <file> <id>` 查看关键节点详情，再根据需求判定修改方式：
 
-- **Top-level**: `version: "0.5.0"`（实际导出格式）或 `version: "0.6.0"`（DSL 标准）
-- **Nodes**: 按节点类型生成完整 schema（start, llm, end, answer, code, knowledge-retrieval, if-else, template-transform, variable-aggregator, iteration, http-request, tool 等）
-- **Edges**: 正确连接节点，使用规范 sourceHandle 命名
-- **Layout**: 符合 Dify 画布坐标约定
+| 场景 | 判定 | 工具 |
+|------|------|------|
+| 改标题、描述、位置 | **简单** | `node set-title` / `set-desc` / `set-position` |
+| 单条 prompt 替换 | **简单** | `node set-prompt` |
+| 单条 code 替换 | **简单** | `node set-code` |
+| if-else 条件值修改 | **简单** | `node set-condition` |
+| 添加/删除单条边 | **简单** | `edge add` / `edge remove` |
+| 涉及多个节点、多条边、增删节点 | **复杂** | **YAML Patch 文件** |
+| 批量修改（多个 LLM prompt、多个 code、多个变量） | **复杂** | **YAML Patch 文件** |
+| 新增复杂节点（LLM、Knowledge、Tool 等） | **复杂** | **YAML Patch 文件** 或 Library API |
+| 全新 DSL 生成 | 程序化 | Library API（TypeScript） |
 
-### 3. 生成规范 — 零容错规则
+### Step 3: 执行
 
-以下规则来自实际导入/运行失败经验，必须严格遵守：
+- **简单修改**：直接在原文件上执行原子命令（modify in place）
+- **复杂修改**：编写 YAML Patch 文件 → **与用户确认** → `dify-dsl-cli apply` 执行
 
-#### 3.1 Tool 节点（百度搜索插件）
+### Step 4: 验证
 
-**必须以 `references/dify-dsl-reference.md` §8 中的实际格式为准**，不能简化。关键字段：
+任何修改后必须验证：`dify-dsl-cli validate <file>`
 
-- `paramSchemas`: 必须包含 5 个参数的完整定义（query, model, temperature, top_p, resource_type_filter），每个参数都要有 `auto_generate`, `default`, `human_description`（多语言）, `label`（多语言）, `llm_description`, `max`, `min`, `options`, `placeholder`, `precision`, `required`, `scope`, `template`, `type`
-- `params`: 必须列出全部 5 个参数（model, query, resource_type_filter, temperature, top_p）
-- `tool_parameters`: 必须有 5 项，其中 query 的值用 `type: mixed`
-- `plugin_unique_identifier`: 必须包含完整 hash
+### CLI reference
 
-#### 3.2 LLM 节点
+```
+dify-dsl-cli info       <file>              Print node/edge stats
+dify-dsl-cli flow       <file> [--short]    Print workflow topology tree (full IDs default, --short for truncated)
+dify-dsl-cli find       <file> <text>       Search text across all node content
+dify-dsl-cli node show  <file> <id>         Dump full data of a single node (--json for machine-readable)
+dify-dsl-cli node list  <file> [type]       Tabular node listing, optional type filter
+dify-dsl-cli edge list  <file> [node-id]    Tabular edge listing
+dify-dsl-cli path       <file> <from> <to>  Shortest path between two nodes
+dify-dsl-cli diff       <yml1> <yml2>       Semantic diff between two DSL files
+dify-dsl-cli roundtrip  <input> [output]    Parse → save, verify round-trip
+dify-dsl-cli validate   <file>              Run Ruby DSL validator
+dify-dsl-cli apply      <patch> -i <in> -o <out>  Apply YAML patch file
+dify-dsl-cli remove     <file> <id>         Remove a node
 
-- **`context` 和 `vision` 是必填字段**，即使不使用也要写：`context: { enabled: false, variable_selector: [] }` 和 `vision: { enabled: false }`
-- 思虑模型加 `thinking: false` 到 `completion_params`
+Atomic commands (modify file in place):
+  node set-title      <file> <id> <title>
+  node set-desc       <file> <id> <desc>
+  node set-prompt     <file> <id> <role> <replace> <with>
+  node set-code       <file> <id> <replace> <with>
+  node set-condition  <file> <id> <case_id> <field> <value>
+  edge add            <file> <src> <tgt> [handle]
+  edge remove         <file> <src> <tgt> [handle]
+```
 
-#### 3.3 Code 节点
+### YAML Patch System (19 operations)
 
-- `outputs` 中的 `type` 必须用 Dify 校验通过的枚举值：`string`, `number`, `integer`, `boolean`, `object`, `file`, `secret`, `array[string]`, `array[number]`, `array[object]`, `array[boolean]`, `array[file]`, `array[any]`, `none`
-- **不能用裸 `array`**，必须是 `array[xxx]` 格式
-- Python 代码中的 f-string 不能用 `"` 包裹中文字符（如 `f"[{"学校"}]"`），会导致 SyntaxError。应改用变量替代
+Write a `.yml` patch file with a `steps` array. Steps are **executed sequentially** — order matters. Apply with:
+```bash
+dify-dsl-cli apply my-patch.yml -i input.yml -o output.yml
+```
 
-#### 3.4 变量引用格式
+Also usable programmatically:
+```ts
+import { loadPatch, applyPatch } from "dify-dsl-builder";
+const { description, steps } = loadPatch("my-patch.yml");
+const dsl = DifyDSL.parse(yamlStr);
+applyPatch(dsl, steps);
+dsl.save("output.yml");
+```
 
-- Code/LLM/Template 节点的 `variables` 用对象格式：`{ variable, value_selector: [node_id, field] }`
-- VariableAggregator 用裸嵌套列表：`[ [node_id, field], [node_id, field] ]`
-- Knowledge Retrieval 用 `query_variable_selector: [node_id, field]`（扁平数组）
+Full operation list (reference: `examples/patch-all-steps.yml` in the source repo):
 
-#### 3.5 Iteration 节点 — 必填字段与内部结构
+| # | Operation | Key | Parameters |
+|---|-----------|-----|------------|
+| 1 | Remove an edge | `remove-edge` | `source`, `target`, `sourceHandle?` |
+| 2 | Add an edge | `add-edge` | `source`, `target`, `handle?` |
+| 3 | Add a Code node | `add-code-node` | `id`, `title`, `desc`, `code`, `code_language`, `position`, `variables`, `outputs` |
+| 4 | Remove a node | `remove-node` | `id` |
+| 5 | Set node title | `set-title` | `id`, `value` |
+| 6 | Set node description | `set-desc` | `id`, `value` |
+| 7 | Set node position | `set-position` | `id`, `x`, `y` |
+| 8 | Replace LLM prompt text | `set-prompt` | `id`, `role`, `replace`, `with`, `replaceAll?` |
+| 9 | Set Answer template | `set-answer` | `id`, `answer` |
+| 10 | Add classifier class | `add-classifier-class` | `classifier`, `id`, `name` |
+| 11 | Replace code text | `set-code` | `id`, `replace`, `with`, `replaceAll?` |
+| 12 | Modify Start variable | `set-start-var` | `id`, `variable`, `field`, `value` |
+| 13 | Set environment variable | `env-set` | `name`, `value`, `type` |
+| 14 | Remove environment variable | `env-remove` | `name` |
+| 15 | Set conversation variable | `conv-set` | `name`, `value_type` |
+| 16 | Update if-else condition | `update-condition` | `id`, `case_id`, `field`, `value`, `condition_index?` |
+| 17 | Remove classifier class | `remove-classifier-class` | `classifier`, `id` |
+| 18 | Remove conversation variable | `conv-remove` | `name` |
+| 19 | Set features | `set-features` | (feature key/value pairs) |
 
-Iteration 节点有多个容易遗漏的必填/半必填字段，缺少会导致导入失败：
+#### Patch behavior details
 
-**外层节点对象**：
-- `start_node_id` — 必须指向 iteration-start 子节点 ID
-- `data.width` / `data.height` — 需要在 `data` 内再写一份（与外层重复）
+- **Edge ID auto-generation**: `add-edge` produces edge ID `{source}-{handle}-{target}-target`; `remove-edge` matches with the same rule.
+- **`remove-edge` retries**: tries the specified `sourceHandle`, then `"true"`, then `"false"` — convenient for if-else branches.
+- **`set-prompt`** and **`set-code`** use `String.replace()` — **only replaces the first match**, not global. Set `replaceAll: true` for global replacement.
+- **`update-condition` field** supports dot-path notation: `value`, `comparison_operator`, `varType`, `variable_selector.0` for nested array elements.
+- **`env-set`** value: write numbers as numbers, strings as quoted strings in YAML.
+- **`add-edge` requires both nodes to exist**: node insertion/removal order matters in steps.
 
-**iteration-start 子节点**：
-- `type: custom-iteration-start`（外层） / `data.type: iteration-start`（内层）
-- `parentId` 指向迭代主节点
-- `data.isInIteration: true`, `data.iteration_id: "iter_id"`
+### Library API — programmatic creation
 
-**迭代内的子节点**（Template Transform, Code, KB 等）：
-- 外层加 `parentId: "iteration_id"`
-- data 内加 `isInIteration: true`, `iteration_id: "iter_id"`
-- KB 节点的 `query_variable_selector` 改为指向迭代内的上游节点
+When patches are insufficient (complex node creation, iteration children, etc.), use the TypeScript API:
 
-**迭代内边**：
-- `zIndex: 1002`（外部边是 `0`）
-- `data.isInIteration: true`
-- `data.iteration_id: "iter_id"`
+```ts
+import { DifyDSL, LLMNode, CodeNode, StartNode, AnswerNode } from "@orangemust/dify-dsl-builder";
+import * as fs from "fs";
 
-**Iteration 收集 KB.result 的真实行为**（已验证）：
-- Iteration 的 `output_selector: ["kb_node", "result"]` 收集后 **自动平铺**为 `array[object]`，不是 `array[array[object]]`
-- 合并 Code 直接遍历 `for chunk in iter_results`，不需要外层 `for item in iter_results: if isinstance(item, list)` 嵌套
+const dsl = DifyDSL.parse(fs.readFileSync("input/app.yml", "utf-8"));
 
-**扁平化 Code 的使用判断**：
-- 下游是 **LLM context**（期望 string）→ 迭代内加扁平化 Code，Iteration `output_selector` 指向它，`output_type: array[string]`
-- 下游是 **VA**（期望 `array[object]`）→ 不需要扁平化 Code，合并 Code 直接对平铺的 `array[object]` 去重
+// CRUD — O(1) lookups
+dsl.getNode("id");
+dsl.findByType("llm");
+dsl.getPrevIds("id");
+dsl.getNextIds("id");
 
-**KB 在迭代内必须通过 Template Transform 获取 query**：
-- KB 的 `query_variable_selector` 不能直接引用 `["iteration_id", "item"]`，Dify 不支持
-- 需要在迭代内加 TT 节点桥接：TT `template: "{{ item }}"`，KB 指向 TT 的 `output`
-- 多变量组合查询同样走 TT（如 `{{ item }} {{ dimensions }}`）
+// Create and add
+const code = new CodeNode("new-id", {
+  title: "处理数据",
+  code: `def main(x: str) -> dict:\n    return {"r": x}`,
+  code_language: "python3",
+  variables: [{ variable: "x", value_selector: ["upstream", "text"] }],
+});
+code.addOutput("r", "string");
+dsl.addNode(code);
+dsl.addEdge("upstream-id", "new-id");
 
-**迭代节点布局规范**：
-- 迭代面板宽度 ~2.5 倍普通节点（650-900px vs 242px）
-- 前后节点间距至少 300px，避免视觉遮挡
-- 同一画布多个迭代放不同 x 列或不同 y 行，避免大面积重叠
-- 迭代内部子节点用相对坐标（x=130, y=80 起步，间距 ~270px）
+// Serialize
+fs.writeFileSync("output.yml", dsl.toYAML());
+```
 
-**Template Transform 语法注意**：Template Transform 使用标准 Jinja2 语法 `{{ variable_name }}`，**不能**用 Dify LLM prompt 中的 `{{#node_id.field#}}` 语法（否则报 `TemplateSyntaxError: unexpected char '#'`）。变量名与 `variables` 映射中的 `variable` 字段一致。
+## Architecture
 
-**Template Transform 中引用当前迭代项**：`item` 字段挂在 **iteration 主节点** 上，不是 iteration-start 子节点。
+### 7-step pipeline
+
+```
+① parse(yamlStr)   → raw JSON (js-yaml.load)
+② index()          → NodeIndex (typed nodes + edges)
+③ (implicit)       → edges provide connectivity
+④ CRUD             → getNode / addNode / removeNode / updateNode
+⑤ Node.methods()   → instance modifications
+⑥ toJSON()         → Dify DSL JSON plain object
+⑦ toYAML()         → yaml.dump(json, {...})
+```
+
+### Key design decisions
+
+- **Connectivity is in NodeIndex, not on nodes** — query via `dsl.getPrevIds(id)` / `dsl.getNextIds(id)`. Deleting a node auto-removes related edges.
+- **`toJSON()` not `toYAML()`** — each node produces a plain JSON object; final YAML is `yaml.dump(toJSON())`.
+- **All node IDs must be strings** (quote in YAML to prevent integer coercion).
+
+## Node types (13)
+
+| Type string | Class | Key methods |
+|-------------|-------|-------------|
+| `start` | `StartNode` | `addVariable(v)`, `removeVariable(n)`, `updateVariable(n,p)` |
+| `answer` | `AnswerNode` | `setAnswer(tpl)`, `addVariableRef(id,f)` |
+| `llm` | `LLMNode` | `setModel(p,n)`, `setTemperature(t)`, `addPromptMessage(m)`, `setMemory(n)` |
+| `code` | `CodeNode` | `setCode(lang,code)`, `addVariable(v)`, `addOutput(name,type)` |
+| `knowledge-retrieval` | `KnowledgeNode` | `addDataset(id)`, `setQuerySelector(id,f)`, `setTopK(n)` |
+| `if-else` | `IfElseNode` | `addCase(c)`, `updateCondition(caseId,idx,patch)` |
+| `template-transform` | `TemplateNode` | `setTemplate(tpl)`, `addVariable(v)` |
+| `variable-aggregator` | `AggregatorNode` | `addSource(id,f)`, `removeSource(id)`, `setOutputType(t)` |
+| `iteration` | `IterationNode` | `addChild(n)`, `removeChild(id)`, `setIterator(id,f)` |
+| `tool` | `ToolNode` | `setPlugin(id,uid)`, `setToolParam(k,v)`, `setToolConfig(k,v)` |
+| `question-classifier` | `ClassifierNode` | `addClass(c)`, `setModel(p,n)`, `setInstructions(s)` |
+| `http-request` | `HTTPNode` | `setMethod(m)`, `setUrl(u)`, `setBody(type,data)` |
+| `document-extractor` | `DocNode` | `setVariableSelector(id,field)` |
+
+## DSL schema quick reference
+
+### App modes
+- `workflow` — Start → ... → **End** (structured outputs)
+- `advanced-chat` — Start → ... → **Answer** (streamed text)
+
+### Variable reference syntax
+| Context | Syntax | Example |
+|---------|--------|---------|
+| Prompt/answer text | `{{#node_id.field#}}` | `{{#start.query#}}` |
+| Structured fields (value_selector) | `[node_id, field]` | `["start", "query"]` |
+| System variables | `{{#sys.var#}}` | `{{#sys.query#}}` |
+| Environment variables | `{{#env.NAME#}}` | `{{#env.API_KEY#}}` |
+
+### Edge conventions
+- Standard nodes → `sourceHandle: "source"`
+- IF/ELSE true branch → `"true"`, false branch → `"false"`
+- Question Classifier → `topic.id`
+- Edge ID: `{source}-{sourceHandle}-{target}-{targetHandle}`
+- Cross-level connections (different parentId) are invalid
+
+### if-else condition variable constraints
+
+- `variable_selector` supports **workflow node** variables only (e.g. `["start", "field"]`)
+- Environment variables (`["env", "VAR"]`) are **NOT** supported in if-else conditions — Dify rejects them with "value cannot be empty"
+- `conversation_variables` may work but untested in if-else conditions
+- Workaround: use a Code node to read `{{#env.VAR#}}` and output as a normal variable, then reference in if-else
+
+### Critical pitfalls
+1. **Variable Aggregator** uses bare nested arrays: `[["node", "field"]]`, NOT `{variable, value_selector}`
+2. **Document Extractor** uses singular `variable_selector: ["node", "field"]`
+3. **Code outputs** is a dict (not list): `{ result: { type: "string" } }`
+4. **LLM nodes require `context` and `vision`** blocks even when disabled
+5. **`memory` only in advanced-chat** LLM nodes, omit in workflow mode
+6. **Iteration children** need `parentId` at outer level + `isInIteration: true` in data
+7. Model names must be real, current names (not fictional)
+8. All node IDs quoted in YAML to prevent integer coercion
+
+## Input/output conventions
+
+- `input/` — source DSL YAML files (gitignored)
+- `output/` — generated/patched DSL YAML files (gitignored)
+- `patches/` — project-specific YAML patch files (gitignored, node IDs are DSL-specific)
+
+## Patch patterns
+
+### Replace a node (remove old, insert new, rewire)
+
 ```yaml
-template: "{{ item }} {{ dimensions }}"
-variables:
-  - variable: item
-    value_selector: ["iteration_id", "item"]    # ← iteration 主节点，不是 iteration-start
-  - variable: dimensions
-    value_selector: ["upstream_id", "dimensions"]
+description: 用 Code 节点替换旧模板节点
+steps:
+  - remove-edge: { source: "prev", target: "old-node" }
+  - remove-edge: { source: "old-node", target: "next" }
+  - remove-node:  { id: "old-node" }
+  - add-code-node:
+      id: "new-code"
+      title: "替换节点"
+      code: |
+        def main(input: str) -> dict:
+            return {"result": input}
+      position: { x: 2000, y: 500 }
+  - add-edge: { source: "prev", target: "new-code" }
+  - add-edge: { source: "new-code", target: "next" }
 ```
 
-#### 3.6 validate-dsl.rb 的迭代兼容
+### Batch modify prompts
 
-验证脚本对迭代结构做了特判，如果手动修改了脚本，请确认以下豁免逻辑保留：
-
-- `iteration-start` 节点免于"无入边"检查（数据来自 `iterator_selector`）
-- 迭代内部末梢节点（`data.isInIteration: true`）免于"无出边"检查（输出由 `output_selector` 收集）
-
-#### 3.7 修改现有 DSL 时的安全检查
-
-- 删除节点时，同步检查并更新：
-  - `edges:` 中所有引用该节点 ID 的边
-  - 其他节点 `variables` / `query_variable_selector` 中对已删节点 ID 的引用
-  - VariableAggregator 的 `variables` 列表
-- 删除边时，确保不会破坏流程连通性
-
-### 4. 修改现有 DSL 的工作方法
-
-修改现有 `.yml` 时，必须遵守以下流程，避免反复出错：
-
-#### 4.1 用 YAML 库操作，禁止字符串替换
-
-字符串 `replace` 在 YAML 文本上操作会导致缩进错位、游离行、删错边等结构性 bug。必须用标准 YAML 库：
-
-```python
-import yaml
-with open('input.yml') as f:
-    data = yaml.safe_load(f)
-
-# 修改内存中的 dict
-data['workflow']['graph']['nodes'].append(new_node)
-data['workflow']['graph']['edges'].append(new_edge)
-
-with open('output.yml', 'w') as f:
-    yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
+```yaml
+description: 统一修改多个 LLM 节点的 system prompt
+steps:
+  - set-prompt: { id: "llm-1", role: "system", replace: "旧指令", with: "新指令 v2" }
+  - set-prompt: { id: "llm-2", role: "system", replace: "旧指令", with: "新指令 v2" }
 ```
 
-#### 4.2 变更前先跑约束对照
+## Validation
 
-生成一份变更清单，逐条对照 `references/dify-dsl-reference.md` 的 pitfall 章节验证。也可直接用内置脚本：
-
+After any modification, validate the DSL:
 ```bash
-ruby scripts/validate-dsl.rb <file.yml>
+dify-dsl-cli validate output/my-workflow.yml
 ```
 
-脚本自动检查以下全部约束，不通的变更不执行：
+The `apply` command auto-validates after patching and exits non-zero on errors.
 
-- VA `output_type` 与 `variables` 类型是否一致（`array` 不兼容 `string`）
-- if-else 只支持 `true`/`false` case_id
-- Code outputs `type` 枚举值（禁止裸 `array`）
-- LLM 节点 `context`、`vision` 必填
-- 边 `sourceHandle` 与源节点类型匹配
-- 百度搜索结果只能通过单独参数传入下游 Code 节点，不可与 KB 结果混入同一个 VA
+## Reference documentation
 
-不通的变更不执行。
-
-#### 4.3 Git 工作分支
-
-在 repo 内切临时分支操作，每次原子改动后 commit，验证失败立即回滚，最终只保留产物文件，分支用完删除：
-
+Fetch the latest guides:
 ```bash
-git checkout -b temp-dify-work
-
-# 改一个原子步骤 → 验证
-git add -A && git commit -m "step 1: xxx"
-ruby -ryaml -e "YAML.load_file('output.yml')"
-
-# 出错回滚到上一个 commit
-git reset --hard HEAD~1
+curl -s https://raw.githubusercontent.com/mack-peng/dify-dsl-builder/main/docs/guide/installation.md
+curl -s https://raw.githubusercontent.com/mack-peng/dify-dsl-builder/main/docs/guide/patch.md
 ```
-
-验证通过后，切回原分支，只把最终产物文件带回来：
-
-```bash
-git checkout main
-git checkout temp-dify-work -- output/最终文件.yml
-git branch -D temp-dify-work
-```
-
-中间 commit 随分支一起删除，主分支历史不受影响。
-
-**命名规范**：临时分支统一用 `temp-` 前缀（不是 `temp/`），避免与目录名冲突。
-
-### 5. 交付
-
-- 输出 `.yml` 文件，文件名反映功能
-- 交付前用 Ruby 做最终验证：
-  ```bash
-  ruby -ryaml -e '
-  data = YAML.load_file("output.yml")
-  nodes = data["workflow"]["graph"]["nodes"]
-  edges = data["workflow"]["graph"]["edges"]
-  # 连通性、VA 一致性、orphan 检查等
-  '
-  ```
-- 已输出的最终文件同步到 `output/` 目录
-
-## 参考
-
-- DSL schema: `references/dify-dsl-reference.md`
-- 百度智能搜索插件格式: `references/dify-dsl-reference.md` §8 Baidu AI Search Plugin（已合并入参考文档）
-- 验证脚本: `scripts/validate-dsl.rb`（已兼容 Iteration 内部结构）

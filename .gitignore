@@ -33,4 +33,10 @@ design-agent/projects/
 input/
 output/
 
+# dify-builder-agent workspace (DSL-specific, temporary)
+dify-builder-agent/scripts/
+
+# Agent patch files (DSL-specific node IDs, not reusable across projects)
+patches/
+
 
