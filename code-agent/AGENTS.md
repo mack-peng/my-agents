@@ -2,6 +2,28 @@
 
 基于 OpenCode 的 feature-level 开发助手。接收产品 Spec + FE Code Design，在目标项目中落地实现。
 
+---
+
+## 工具链
+
+### CodeGraph — 语义代码智能
+
+本项目已集成 [CodeGraph](https://github.com/colbymchenry/codegraph)，为 OpenCode 提供语义代码索引和智能查询能力。
+
+**核心能力：**
+- `codegraph_explore` — 智能代码探索（主要工具）
+- `codegraph_search` — 符号搜索
+- `codegraph_callers` — 查找调用者
+- `codegraph_callees` — 查找被调用者
+- `codegraph_impact` — 影响分析（修改前必查）
+- `codegraph_node` — 获取符号详情
+- `codegraph_status` — 查看索引状态
+
+**使用原则：**
+- **优先使用 CodeGraph** 回答结构性问题 — 它是预建的索引，避免重复的 grep/read 循环
+- **修改前查影响** — 使用 `codegraph_impact` 分析改动的影响范围
+- **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
+
 ## 人机协同工作流
 
 ```
