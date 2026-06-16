@@ -24,6 +24,47 @@
 - **修改前查影响** — 使用 `codegraph_impact` 分析改动的影响范围
 - **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
 
+## 项目初始化流程
+
+进入新代码库时，按以下顺序执行：
+
+### 1. CodeGraph 代码图谱初始化
+
+```bash
+# 检查是否已初始化
+codegraph status
+
+# 如果未初始化，执行：
+codegraph init -i
+
+# 再次确认状态
+codegraph status
+```
+
+**说明：**
+- `codegraph init -i` 会创建 `.codegraph/` 目录并构建初始索引
+- 索引完成后，才能使用 `codegraph_explore`, `codegraph_search` 等工具
+- 如果项目较大，首次索引可能需要几分钟
+
+### 2. 项目结构探索
+
+```bash
+# 查看项目文件结构（从索引中读取，比 ls 更快）
+codegraph files --format tree
+
+# 识别技术栈
+codegraph explore package.json tsconfig.json vite.config.*
+```
+
+### 3. 建立项目上下文
+
+在理解项目结构后，创建项目专属的 AGENTS.md（如果项目本身没有）：
+- 记录项目技术栈、目录规范
+- 记录已发现的关键组件、工具函数位置
+- 记录 CodeGraph 索引状态
+
+---
+
 ## 人机协同工作流
 
 ```
