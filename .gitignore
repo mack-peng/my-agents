@@ -42,4 +42,8 @@ patches/
 # Temporary working scripts and test artifacts
 tmp/
 
+# Cookie/session scripts (contain credentials)
+browser-agent/set-cookies.js
+browser-agent/update-state.js
+
 
