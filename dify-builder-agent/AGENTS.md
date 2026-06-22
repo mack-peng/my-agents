@@ -230,6 +230,7 @@ fs.writeFileSync("output.yml", dsl.toYAML());
 - `input/` — source DSL YAML files (gitignored)
 - `output/` — generated/patched DSL YAML files (gitignored)
 - `patches/` — project-specific YAML patch files (gitignored, node IDs are DSL-specific)
+- `tmp/` — TypeScript manipulation scripts (gitignored)
 
 ## Patch patterns
 
@@ -269,6 +270,67 @@ dify-dsl-cli validate output/my-workflow.yml
 ```
 
 The `apply` command auto-validates after patching and exits non-zero on errors.
+
+## KB 检索关键词规范
+
+当 DSL 中包含 knowledge-retrieval 节点时，必须遵循以下关键词构造规范，确保检索命中率：
+
+### 分数搜索
+
+```python
+# 正确格式
+search_query = f"录取分数线 {score} 分"
+
+# 错误格式（中低分会被 0.65 阈值过滤）
+search_query = f"{score}分 {' '.join(all_scores)}"  # 裸分数列表
+search_query = str(score)                            # 单数值无语义
+```
+
+### 专业名搜索
+
+```
+格式: {专业全称} 录取分数线 {score} 分 {可选: 省份}
+```
+
+| 规则 | 说明 |
+|------|------|
+| 专业名用全称 | `计算机科学与技术` 优于 `计算机`、`计科` |
+| 分数用单值 | 用 `450`，不用分数列表 |
+| 省份可选 | 仅在用户限定地域时添加 |
+| 禁止裸专业名 | `{专业名}` 无分数无上下文 → 得分 <0.2 |
+
+### 校名搜索
+
+```
+格式: {全称校名} {段标题词}
+```
+
+| 目标维度 | 段标题词 |
+|---------|---------|
+| 院系/专业/分数 | `院系设置` |
+| 师资力量 | `师资` |
+| 实验室/科研 | `实验室` |
+| 学生社团 | `社团` |
+| 照片/环境 | `宿舍` |
+| 历史沿革 | `历史沿革` |
+
+校名必须用全称（`四川西南航空职业学院`），缩写（`西航`）容易歧义到其他学校。
+
+### 要避免的模式
+
+| 避免 | 替代 |
+|------|------|
+| `{专业名}` 裸搜 | `{专业名} 录取分数线 {score} 分` |
+| `{score}分 {分数列表}` | `录取分数线 {score} 分` |
+| `{score}` 单数值 | `录取分数线 {score} 分` |
+| 校名缩写 | 全称校名 |
+| LLM 输出整段原文到 KB | fallback 输出空字符串 |
+
+### KB 参数推荐
+
+- Score Threshold: 0.65
+- TopK: 8
+- Hybrid Search (0.7 向量 + 0.3 关键词)
 
 ## Reference documentation
 

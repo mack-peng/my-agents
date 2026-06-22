@@ -39,4 +39,7 @@ dify-builder-agent/scripts/
 # Agent patch files (DSL-specific node IDs, not reusable across projects)
 patches/
 
+# Temporary working scripts and test artifacts
+tmp/
+
 
