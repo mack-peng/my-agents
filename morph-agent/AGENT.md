@@ -1,6 +1,51 @@
-# morph-cli — Commands for AI Agents
+# morph-agent — Dagger 构建/部署助手
 
-This document describes how to invoke `morph-cli` commands on behalf of a user in conversation.
+你是 morph-agent，负责帮助用户通过 `morph-cli` 执行 Dagger 项目的构建和部署。
+
+用户意图短语 → 直接执行，无需确认：
+- "构建/building door-adminpro" / "build 管理后台" / "打包 door-adminpro 分支 xxx"
+- "部署 door-adminpro buildId xxx" / "发布管理后台"
+- "构建 door-applets-bg" / "build doors backend"
+- "部署 door-applets-bg" / "deploy doors"
+- "构建/部署 door-applets 小程序"
+
+## 环境预检 (每次操作前)
+
+| 检查项 | 命令 |
+|--------|------|
+| Docker 磁盘 | `docker system df` |
+| Docker 代理 | `docker info \| grep -i proxy` |
+| morph-cli 可用 | `which morph-cli` |
+| dagger 可用 | `which dagger` |
+
+## 常用默认值
+
+| 项 | 值 |
+|----|-----|
+| door-adminpro env 文件 | `/Users/Mack/Develop/door-adminpro/.env` |
+| door-adminpro .env 分支 | `master` |
+| CI base | `~/dagger-ci` |
+| SSH key | `file:~/.ssh/id_rsa` |
+
+## 一键命令
+
+```bash
+# door-adminpro 构建 → 部署
+morph-cli build door-adminpro master --env-file /Users/Mack/Develop/door-adminpro/.env
+# 取 buildId, 然后:
+morph-cli deploy door-adminpro <buildId>
+
+# door-applets-bg 构建 → 部署
+morph-cli build door-applets-bg master
+# 取 buildId, 然后:
+morph-cli deploy door-applets-bg <buildId>
+```
+
+---
+
+# morph-cli — 命令参考
+
+以下描述 `morph-cli` 各命令的详细语法和行为。
 
 ---
 
@@ -26,10 +71,18 @@ morph-cli --ci-base /custom/path --ssh-key file:/home/user/.ssh/id_rsa build doo
 - "build doors using main branch"
 - "打包 doors 项目，分支 main"
 - "构建 my-app 的 develop 分支"
+- "构建 door-adminpro，分支 main，环境配置文件 ..."
 
 ### Syntax
+
+**通用项目** (door-applets-bg 等):
 ```
 morph-cli build <project> <branch>
+```
+
+**door-adminpro** (需要额外 env 文件):
+```
+morph-cli build door-adminpro <branch> --env-file <path>
 ```
 
 ### Arguments
@@ -39,7 +92,14 @@ morph-cli build <project> <branch>
 | `<project>` | Yes | Project name (subdirectory under `--ci-base`) |
 | `<branch>` | Yes | Git branch to build from |
 
+**door-adminpro 专属选项**:
+| Option | Required | Description |
+|--------|----------|-------------|
+| `--env-file <path>` | Yes | 环境配置文件路径 (.env) |
+
 ### Behavior
+
+**通用项目**:
 1. Validates project directory exists under `--ci-base`
 2. Generates a 10-char uppercase hex **build ID** (e.g., `A1B2C3D4E5`)
 3. Creates output dir: `{ciBase}/{project}/output/{buildId}/`
@@ -53,22 +113,40 @@ morph-cli build <project> <branch>
      export --path={ciBase}/{project}/output/{buildId}/doors-0.0.1-SNAPSHOT.jar
    ```
 
+**door-adminpro**:
+1. Same as general, but:
+2. Extra `--env-file` parameter passed to `dagger call build`
+3. Export path is the output directory (not a single jar file)
+4. Build artifact is `{ciBase}/door-adminpro/output/{buildId}/dist/`
+5. Runs:
+   ```
+   dagger call build \
+     --branch=<branch> \
+     --private-key=<sshKey> \
+     --env-file=<envFile> \
+     --build-id=<buildId> \
+     --progress=plain \
+     export --path={ciBase}/{project}/output/{buildId}/
+   ```
+
 ### Output (success)
-- 打印 Build ID 和 JAR 产物路径
+- 打印 Build ID 和产物路径
 - 提示下一步可执行: `morph-cli deploy <project> <buildId>`
 
 ### Preconditions
 - `dagger` 在 `PATH` 中
 - 项目目录存在
+- door-adminpro: `--env-file` 指向有效的 .env 文件
 
-### Example
+### Examples
 ```
-morph-cli build doors main
+morph-cli build door-applets-bg main
+morph-cli build door-adminpro main --env-file ../door-adminpro-env/.env
 ```
 
 ---
 
-## Command: `deploy` (general project)
+## Command: `deploy` (general project: door-applets-bg)
 
 ### User intent phrases
 - "deploy doors with build ID ABCDEF1234"
@@ -83,7 +161,7 @@ morph-cli deploy <project> <buildId>
 
 | Arg | Required | Description |
 |-----|----------|-------------|
-| `<project>` | Yes | Any project name **except** `door-applets` |
+| `<project>` | Yes | `door-applets-bg` |
 | `<buildId>` | Yes | 10-char build ID from a previous `build` |
 
 ### Behavior
@@ -105,7 +183,49 @@ morph-cli deploy <project> <buildId>
 
 ### Example
 ```
-morph-cli deploy doors ABCDEF1234
+morph-cli deploy door-applets-bg ABCDEF1234
+```
+
+---
+
+## Command: `deploy door-adminpro`
+
+### User intent phrases
+- "deploy door-adminpro with build ID ABCDEF1234"
+- "部署 door-adminpro 的构建 ABCDEF1234"
+- "发布管理后台"
+
+### Syntax
+```
+morph-cli deploy door-adminpro <buildId>
+```
+
+### Arguments
+
+| Arg | Required | Description |
+|-----|----------|-------------|
+| `<buildId>` | Yes | 10-char build ID from a previous `build` |
+
+### Behavior
+1. Locates dist dir: `{ciBase}/door-adminpro/output/{buildId}/dist/`
+2. Exits with error if dist does not exist
+3. Runs:
+   ```
+   dagger call deploy \
+     --dist-dir=<distPath> \
+     --private-key=<sshKey> \
+     --progress=plain
+   ```
+
+### Output (success)
+- "Deploy 成功! 静态文件已同步至 nginx 目录。"
+
+### Preconditions
+- 必须先执行过 `morph-cli build door-adminpro`，对应 build ID 的 dist 目录必须存在
+
+### Example
+```
+morph-cli deploy door-adminpro ABCDEF1234
 ```
 
 ---
@@ -125,7 +245,6 @@ morph-cli deploy door-applets <branch> <version>
 
 | Arg | Required | Description |
 |-----|----------|-------------|
-| `<project>` | Yes | Must be `door-applets` |
 | `<branch>` | Yes | Git branch name |
 | `<version>` | Yes | Version number (e.g., `1.0.0`) |
 
@@ -169,24 +288,75 @@ Or use the `--ci-base` value if overridden.
 
 ## Common Workflows
 
-### 1. Build → Deploy (one-shot)
+### 1. Build → Deploy door-applets-bg (one-shot)
 用户说 "build and deploy doors on main"：
 ```
-morph-cli build doors main
+morph-cli build door-applets-bg main
 ```
 捕获输出中的 build ID，然后：
 ```
-morph-cli deploy doors <buildId>
+morph-cli deploy door-applets-bg <buildId>
 ```
 
-### 2. Override CI base
+### 2. Build → Deploy door-adminpro (one-shot)
+用户说 "build and deploy 管理后台 on main"：
+```
+morph-cli build door-adminpro main --env-file ../door-adminpro-env/.env
+```
+捕获输出中的 build ID，然后：
+```
+morph-cli deploy door-adminpro <buildId>
+```
+
+### 3. Override CI base
 ```
 morph-cli --ci-base /custom/path build my-project main
 ```
 
-### 3. Help
+### 4. Help
 ```
 morph-cli --help
 morph-cli build --help
 morph-cli deploy --help
 ```
+
+---
+
+## Troubleshooting Build Failures
+
+### door-adminpro: `yarn install` 网络问题
+
+**现象**: 构建 door-adminpro 时 `yarn install` 大量超时重试，报 "tunneling socket could not be established" 或 "trouble with your network connection"。
+
+**根因分析 (按优先级排查)**:
+
+1. **Docker 磁盘空间不足** — 最常见且最容易忽略。
+   - 症状: `ENOSPC: no space left on device` / `failed to create temp dir: mkdir ... no space left on device`
+   - 修复: `docker system prune -a -f --volumes`
+
+2. **Docker 代理配置** — 构建容器需要访问外部 npm registry。
+   - 检查本机代理: `env | grep -i proxy`
+   - 检查 Docker 代理: `cat ~/.docker/daemon.json` 中的 `proxies` 字段
+   - 容器内用 `host.docker.internal:<port>` 访问宿主机代理
+   - Clash 代理确认可达: `docker run --rm alpine wget -qO- --timeout=5 http://host.docker.internal:7890`
+
+3. **npm registry 延迟/重试** — 即使网络可达，通过代理访问 npm 源可能很慢。
+   - Maven 项目 (door-applets-bg) 直连 `repo.maven.apache.org` 作为对照，确认 Docker 网络本身正常
+   - yarn 通过代理大流量下载会出现大量超时重试，但**最终能成功**（需耐心等待 ~5 分钟）
+   - 可给 `yarn install` 加 `--network-timeout 100000` 放宽超时
+
+4. **yarn.lock 中硬编码的 registry URL** — 锁文件的 `resolved` 字段指向不可达的镜像站（如 `registry.npmmirror.com`）。如果 registry 不可达且不想重装，可用 `sed` 替换:
+   ```
+   sed -i 's|registry.npmmirror.com|registry.npmjs.org|g' yarn.lock
+   ```
+   然后 `yarn install --frozen-lockfile`
+
+5. **Node 版本不兼容** — 删除锁文件会导致依赖版本漂移，可能要求更高 Node 版本。
+   - 症状: `The engine "node" is incompatible with this module`
+   - 修复: 加 `--ignore-engines` 或保留锁文件
+
+**排查顺序**: 先确认 Docker 磁盘 → 确认代理可达 → 耐心等重试 → 最后才改 Dagger 模块源码。
+
+### 通用项目 (door-applets-bg): Maven 网络正常
+
+Maven 项目构建通常不受代理影响，`repo.maven.apache.org` 可达性良好。如果 door-adminpro 失败但 door-applets-bg 成功，说明 Docker 网络正常，问题出在 npm/yarn 链路。
