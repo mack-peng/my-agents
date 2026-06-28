@@ -8,6 +8,7 @@
 - "构建 door-applets-bg" / "build doors backend"
 - "部署 door-applets-bg" / "deploy doors"
 - "构建/部署 door-applets 小程序"
+- "构建/部署 official-website" / "build 官网" / "部署官网"
 
 ## 环境预检 (每次操作前)
 
@@ -23,7 +24,9 @@
 | 项 | 值 |
 |----|-----|
 | door-adminpro env 文件 | `/Users/Mack/Develop/door-adminpro/.env` |
-| door-adminpro .env 分支 | `master` |
+| door-adminpro 默认分支 | `master` |
+| official-website env 文件 | `/Users/Mack/Develop/official-website/.env` |
+| official-website 默认分支 | `master` |
 | CI base | `~/dagger-ci` |
 | SSH key | `file:~/.ssh/id_rsa` |
 
@@ -80,9 +83,10 @@ morph-cli --ci-base /custom/path --ssh-key file:/home/user/.ssh/id_rsa build doo
 morph-cli build <project> <branch>
 ```
 
-**door-adminpro** (需要额外 env 文件):
+**需要 env 文件的项目** (door-adminpro / official-website):
 ```
 morph-cli build door-adminpro <branch> --env-file <path>
+morph-cli build official-website <branch> --env-file <path>
 ```
 
 ### Arguments
@@ -92,7 +96,7 @@ morph-cli build door-adminpro <branch> --env-file <path>
 | `<project>` | Yes | Project name (subdirectory under `--ci-base`) |
 | `<branch>` | Yes | Git branch to build from |
 
-**door-adminpro 专属选项**:
+**door-adminpro / official-website 专属选项**:
 | Option | Required | Description |
 |--------|----------|-------------|
 | `--env-file <path>` | Yes | 环境配置文件路径 (.env) |
@@ -113,11 +117,13 @@ morph-cli build door-adminpro <branch> --env-file <path>
      export --path={ciBase}/{project}/output/{buildId}/doors-0.0.1-SNAPSHOT.jar
    ```
 
-**door-adminpro**:
+**door-adminpro / official-website** (需要 env 文件的项目):
 1. Same as general, but:
 2. Extra `--env-file` parameter passed to `dagger call build`
 3. Export path is the output directory (not a single jar file)
-4. Build artifact is `{ciBase}/door-adminpro/output/{buildId}/dist/`
+4. Build artifact:
+   - door-adminpro: `{ciBase}/door-adminpro/output/{buildId}/dist/`
+   - official-website: `{ciBase}/official-website/output/{buildId}/ (build.server/ + ssr.js + yarn.lock)`
 5. Runs:
    ```
    dagger call build \
@@ -136,12 +142,13 @@ morph-cli build door-adminpro <branch> --env-file <path>
 ### Preconditions
 - `dagger` 在 `PATH` 中
 - 项目目录存在
-- door-adminpro: `--env-file` 指向有效的 .env 文件
+- 需要 `--env-file` 指向有效的 .env 文件
 
 ### Examples
 ```
 morph-cli build door-applets-bg main
 morph-cli build door-adminpro main --env-file ../door-adminpro-env/.env
+morph-cli build official-website master --env-file /Users/Mack/Develop/official-website/.env
 ```
 
 ---
@@ -230,6 +237,48 @@ morph-cli deploy door-adminpro ABCDEF1234
 
 ---
 
+## Command: `deploy official-website`
+
+### User intent phrases
+- "deploy official-website with build ID ABCDEF1234"
+- "部署官网的构建 ABCDEF1234"
+- "发布官网"
+
+### Syntax
+```
+morph-cli deploy official-website <buildId>
+```
+
+### Arguments
+
+| Arg | Required | Description |
+|-----|----------|-------------|
+| `<buildId>` | Yes | 10-char build ID from a previous `build` |
+
+### Behavior
+1. Locates deploy dir: `{ciBase}/official-website/output/{buildId}/` (contains build.server/ + ssr.js + yarn.lock)
+2. Exits with error if directory does not exist
+3. Runs:
+   ```
+   dagger call deploy \
+     --dist-dir=<distPath> \
+     --private-key=<sshKey> \
+     --progress=plain
+   ```
+
+### Output (success)
+- "Deploy 成功! SSR 文件已同步至服务器，Node 服务已重启。"
+
+### Preconditions
+- 必须先执行过 `morph-cli build official-website`，对应 build ID 的目录必须存在
+
+### Example
+```
+morph-cli deploy official-website ABCDEF1234
+```
+
+---
+
 ## Command: `deploy door-applets` (WeChat mini-app)
 
 ### User intent phrases
@@ -308,12 +357,22 @@ morph-cli build door-adminpro main --env-file ../door-adminpro-env/.env
 morph-cli deploy door-adminpro <buildId>
 ```
 
-### 3. Override CI base
+### 3. Build → Deploy official-website (one-shot)
+用户说 "build and deploy 官网"：
+```
+morph-cli build official-website master --env-file /Users/Mack/Develop/official-website/.env
+```
+捕获输出中的 build ID，然后：
+```
+morph-cli deploy official-website <buildId>
+```
+
+### 4. Override CI base
 ```
 morph-cli --ci-base /custom/path build my-project main
 ```
 
-### 4. Help
+### 5. Help
 ```
 morph-cli --help
 morph-cli build --help
@@ -360,3 +419,24 @@ morph-cli deploy --help
 ### 通用项目 (door-applets-bg): Maven 网络正常
 
 Maven 项目构建通常不受代理影响，`repo.maven.apache.org` 可达性良好。如果 door-adminpro 失败但 door-applets-bg 成功，说明 Docker 网络正常，问题出在 npm/yarn 链路。
+
+### official-website: Puppeteer Chromium arm64 不兼容
+
+**现象**: `yarn install` 阶段报 `The chromium binary is not available for arm64`。
+
+**根因**: `@zachleat/spider-pig` 依赖的 `puppeteer` 在 arm64（Apple Silicon）上没有预编译的 Chromium 二进制。
+
+**修复 (已内置在 dagger 模块中)**:
+- `PUPPETEER_SKIP_DOWNLOAD=true` 环境变量，跳过 Chromium 下载
+- `yarn install --ignore-engines`，跳过 Node 版本检查（`@eslint/compat` 要求 Node >= 20.19.0 但容器用的是 20.13.1）
+
+### official-website: 部署后 `node_modules` 缺失 / puppeteer 报错
+
+**现象**: 服务器重启后 puppeteer 下载 Chromium 失败。
+
+**根因**: 首次部署使用 `--delete` 误删了服务器上的 `node_modules/`。
+
+**修复 (已内置在 dagger 模块中)**:
+- `build.server/` 用 `--delete` 只清空该子目录，不动根目录
+- `ssr.js`、`yarn.lock` 无 `--delete` 同步
+- 部署时 SSH 写入 `.npmrc` 设置 `puppeteer_skip_download=true`
