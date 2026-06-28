@@ -452,3 +452,43 @@ Dify 会话已持久化到 `dify.state.json`。当用户说以下任意自然语
 - 使用 `playwright-cli requests` 查看网络请求
 
 ---
+
+## References 参考文档
+
+整理自浏览器抓取的外部文档，存放在 `references/` 下。
+
+| 文件 | 来源 | 内容 |
+|------|------|------|
+| `references/Opnform-Use-Doc.md` | https://docs.opnform.com | OpnForm 技术文档全量整理（25 篇页面） |
+
+### OpnForm 文档索引 (`references/Opnform-Use-Doc.md`)
+
+| 分组 | 章节 | 源 URL |
+|------|------|--------|
+| Get Started | Introduction | `/introduction` |
+| Get Started | Tech Stack | `/tech-stack` |
+| Features | Computed Variables | `/features/computed-variables` |
+| Deployment | Docker Deployment | `/deployment/docker` |
+| Deployment | Docker Development Setup | `/deployment/docker-development` |
+| Deployment | Local Deployment | `/deployment/local-deployment` |
+| Deployment | Cloud vs Self-Hosting | `/deployment/cloud-vs-self-hosting` |
+| Deployment | Self-hosted License | `/deployment/self-hosted-license` |
+| Deployment | License Activation | `/deployment/license-activation` |
+| Enterprise | Workspace Custom SMTP | `/deployment/enterprise-features/workspace-custom-smtp` |
+| Enterprise | Single Sign-On | `/deployment/enterprise-features/single-sign-on` |
+| Enterprise | Multiple Workspaces & Team Roles | `/deployment/enterprise-features/multiple-workspaces` |
+| Enterprise | White Label & Advanced Branding | `/deployment/enterprise-features/white-label-branding` |
+| Enterprise | Custom Code | `/deployment/enterprise-features/custom-code` |
+| Enterprise | Audit Logs | `/deployment/enterprise-features/audit-logs` |
+| Enterprise | External Storage | `/deployment/enterprise-features/external-storage` |
+| Configuration | Environment Variables | `/configuration/environment-variables` |
+| Configuration | OAuth Integration Setup | `/configuration/oauth-setup` |
+| Configuration | AWS S3 Configuration | `/configuration/aws-s3` |
+| Configuration | Email Setup | `/configuration/email-setup` |
+| Configuration | Using your own domain | `/configuration/custom-domain` |
+| Configuration | Subdomain Redirect | `/configuration/subdomain-redirect` |
+| Configuration | OIDC SSO Configuration | `/configuration/oidc-sso` |
+| Configuration | Disable Two-Factor Authentication | `/configuration/disable-2fa` |
+| Embedding | JavaScript SDK | `/embedding/javascript-sdk` |
+
+---
