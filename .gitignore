@@ -7,6 +7,7 @@ node_modules/
 *.jpeg
 *.gif
 *.docx
+*.swp
 
 # Browser session state
 *.state.json
