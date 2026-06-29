@@ -5,8 +5,8 @@ No build, test, or lint at the root level.
 
 ## Directory conventions
 
-- **12 directories use `AGENTS.md`**, **2 use `AGENT.md`** (singular): `dify-agent/` and `morph-agent/`.
-- All 14 agent directories on disk have a reference doc.
+- **13 directories use `AGENTS.md`**, **2 use `AGENT.md`** (singular): `dify-agent/` and `morph-agent/`.
+- All 15 agent directories on disk have a reference doc.
 - Most agents are CLI-tool wrappers — the CLI is installed globally, not per-directory. Commands and auth are documented inside each agent's markdown.
 - No `package.json`, root workspace config, or shared dependency management.
 - **No `opencode.json`** anywhere in the repo.
@@ -14,7 +14,7 @@ No build, test, or lint at the root level.
 ## Agents that differ from the wrapper pattern
 
 - **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
-- **`feishu-agent/`** — has 26 sub-skills under `.agents/skills/` (mirrored in `skills/`), tracked via `skills-lock.json` from `open.feishu.cn`.
+- **`feishu-agent/`** — has 25 sub-skills under `.agents/skills/` (mirrored in `skills/`), tracked via `skills-lock.json` from `open.feishu.cn`.
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
