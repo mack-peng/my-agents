@@ -141,9 +141,6 @@ Global options: `--help [command]`, `--json`, `--raw`, `--version`
 | `playwright-cli video-start [filename]` | Start video recording | `--size "WxH"` (e.g. `800x600`) |
 | `playwright-cli video-stop` | Stop video recording | |
 | `playwright-cli video-chapter <title>` | Add chapter marker to video | `--description`, `--duration <ms>` |
-| `playwright-cli pause-at <location>` | Run test and pause at `file:line` | |
-| `playwright-cli resume` | Resume test execution | |
-| `playwright-cli step-over` | Step over next test call | |
 | `playwright-cli show` | Open Playwright Dashboard | `--port <n>`, `--host`, `--annotate`, `--kill` |
 
 ### Sessions
@@ -159,200 +156,6 @@ Global options: `--help [command]`, `--json`, `--raw`, `--version`
 |---------|-------------|---------|
 | `playwright-cli install` | Initialize workspace | `--skills claude` (default) or `agents` |
 | `playwright-cli install-browser [browser]` | Install browser | `--with-deps`, `--dry-run`, `--list`, `--force`, `--only-shell`, `--no-shell` |
-
----
-
-## Playwright Test Framework Concepts
-
-CLI commands for running tests:
-```
-npx playwright test [options] [test-filter...]
-npx playwright test --headed
-npx playwright test --project=chromium
-npx playwright test --ui
-npx playwright test --debug
-npx playwright test --workers=1
-npx playwright test -g "test title"
-npx playwright test --last-failed
-npx playwright test --shard=1/3
-```
-
-### Configuration (`playwright.config.ts`)
-```ts
-import { defineConfig, devices } from '@playwright/test';
-export default defineConfig({
-  testDir: 'tests',
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    viewport: { width: 1280, height: 720 },
-    // storageState: 'auth.json',  - for authentication
-  },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit',   use: { ...devices['Desktop Safari'] } },
-  ],
-  webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
-});
-```
-
-### Core API
-
-**Locators** (preferred way to find elements):
-- `page.getByRole('button', { name: 'Submit' })`
-- `page.getByText('Hello')`
-- `page.getByLabel('Email')`
-- `page.getByPlaceholder('Enter name')`
-- `page.getByTestId('login-button')`
-- `page.getByTitle('Close')`
-- `page.getByAltText('logo')`
-- `page.locator('.class')` / `page.locator('#id')`
-- `page.locator('css=...')` / `page.locator('xpath=...')`
-- `locator.filter({ hasText: '...' })` / `locator.first()` / `locator.last()` / `locator.nth(n)`
-- `page.frameLocator('#frame').getByRole('...')` - for iframes
-
-**Actions** (auto-wait for actionability):
-```ts
-await locator.click()
-await locator.fill('text')
-await locator.type('text')       // types character by character
-await locator.check() / .uncheck()
-await locator.selectOption('value')
-await locator.hover()
-await locator.dragTo(target)
-await locator.focus()
-await locator.press('Enter')
-await locator.setInputFiles('file.txt')
-```
-
-**Assertions** (async - automatically retry until condition met):
-```ts
-await expect(locator).toBeVisible()
-await expect(locator).toBeHidden()
-await expect(locator).toBeChecked()
-await expect(locator).toBeEnabled()
-await expect(locator).toBeDisabled()
-await expect(locator).toHaveText('exact text')
-await expect(locator).toContainText('partial')
-await expect(locator).toHaveValue('value')
-await expect(locator).toHaveCount(3)
-await expect(locator).toHaveAttribute('href', '/path')
-await expect(page).toHaveTitle(/Playwright/)
-await expect(page).toHaveURL('**/login')
-await expect(page).toHaveScreenshot()
-await expect(locator).toHaveScreenshot()
-```
-
-**Test Annotations:**
-```ts
-test.skip('reason')              // skip test
-test.fail()                      // expect failure
-test.fixme()                     // skip + mark as failing
-test.slow()                      // triple timeout
-test.only()                      // run only this test
-test.describe('group', () => {}) // group tests
-// Tags: @fast, @slow
-test('login @fast', async () => {})
-```
-
----
-
-## Playwright Documentation Structure
-
-### Getting Started (7 pages)
-| Page | Key Content |
-|------|-------------|
-| Installation | `npm init playwright@latest`, browsers install, project scaffold, `playwright.config.ts` |
-| Writing tests | Actions + assertions, first test, test isolation, hooks (`beforeEach/afterEach`) |
-| Generating tests | `npx playwright codegen`, record interactions, generate locators, emulation |
-| Running & debugging | `--headed`, `--project`, `--last-failed`, `--ui`, `--debug`, `-g` filter |
-| Trace viewer | `trace: 'on-first-retry'`, HTML report (`npx playwright show-report`), DOM snapshots |
-| Setting up CI | GitHub Actions workflow, artifact upload, retry on CI |
-| VS Code | Extension, run/debug via sidebar, CodeGen, AI fix with Copilot, Trace Viewer |
-
-### Playwright Test (18 pages)
-| Page | Key Content |
-|------|-------------|
-| Agents | Planner (test plan), Generator (code), Healer (auto-repair) |
-| Annotations | `skip/fail/fixme/slow/only`, tags `@fast`, `test.describe` |
-| Command line | `npx playwright test [options]`, filter by file/line/title |
-| Configuration | `testDir`, `fullyParallel`, `retries`, `workers`, `reporter`, `projects`, `webServer` |
-| Configuration (use) | `baseURL`, `storageState`, emulation (`viewport/colorScheme/locale/timezoneId/geolocation`) |
-| Emulation | Viewport, device (`...devices['iPhone 15']`), locale, timezone, geolocation, color scheme, permissions |
-| Fixtures | Built-in (`page/browser/context`), custom fixtures, worker-scoped, `autouse`, timeout |
-| Global setup/teardown | Project dependencies (setup/teardown projects), `globalSetup`/`globalTeardown` config |
-| Parallelism | `workers` config, `fullyParallel`, sharding (`--shard=1/3`), `test.describe.serial` |
-| Parameterize tests | Dynamic test generation with arrays of values |
-| Projects | Multi-browser config, environments, dependencies (sequential execution), teardown |
-| Reporters | HTML (default), Line, List, JSON, JUnit, Blob (merge), custom reporters |
-| Retries | `retries` config, `test.flaky()`, `expect().toPass()` |
-| Sharding | `--shard=x/y` for CI parallelization across machines |
-| Timeouts | Test timeout, expect timeout, global timeout (config or CLI overrides) |
-| TypeScript | `@ts-check`, tsconfig path resolution, type safety |
-| UI Mode | `--ui`, watch mode, locator picker, time travel, step-by-step trace |
-| Web server | `webServer` config: command, url, port, `reuseExistingServer` |
-
-### Guides (40+ pages)
-| Page | Key Content |
-|------|-------------|
-| Library | `chromium.launch()`, `browser.newPage()` for scripting vs testing |
-| Accessibility testing | `page.accessibility.snapshot()`, `page.accessibility.getAXTree()` |
-| Actions | click, fill, type, check, selectOption, hover, drag, focus, press, scroll, upload |
-| Assertions | async matchers (visible, text, value, etc.), generic matchers, custom matchers |
-| API testing | `page.request.get()/post()/put()/delete()`, `APIResponse` assertions |
-| Authentication | `storageState` for login reuse, `context.addCookies()`, API-based auth |
-| Auto-waiting | Actionability checks: visible, enabled, stable, not detached, not obscured |
-| Best Practices | Web-first assertions, proper locators, avoid `$`/`$$`, no manual waits, POM |
-| Browsers | Chromium/Firefox/WebKit, channels (Chrome/Edge/Firefox Stable), `npx playwright install` |
-| Chrome extensions | Launch with extension path, test extension UI |
-| Clock | `page.clock.fastForward()`, `page.clock.install()`, `page.clock.pauseAt()` |
-| Components (exp) | `test.mount()` for React/Vue/Svelte component testing |
-| Debugging Tests | `--debug`, Playwright Inspector, `page.pause()`, VS Code breakpoints |
-| Dialogs | `page.on('dialog')`, `dialog.accept()/dismiss()`, alert/confirm/prompt |
-| Downloads | `page.waitForEvent('download')`, `download.saveAs()`, `download.path()` |
-| Evaluating JS | `page.evaluate()`, `page.evaluateHandle()`, passing args, JSHandle |
-| Events | `page.on()`, `page.waitForEvent()`, request/response/popup/console events |
-| Extensibility | Custom fixtures, custom reporters, custom matchers (`expect.extend()`) |
-| Frames | `page.frame()`, `frameLocator()`, cross-frame element location |
-| Handles | JSHandle, ElementHandle, `handle.$()`, `handle.evaluate()` |
-| Isolation | `browser.newContext()`, per-test isolation, multi-page within context |
-| Locators | `getByRole/Text/Label/Placeholder/TestId/Title/AltText`, `locator()` with CSS |
-| Mock APIs | `page.route()` to intercept/fulfill/abort requests |
-| Mock browser APIs | `context.grantPermissions()`, geolocation mocking |
-| Navigations | `page.goto()`, lifecycle (`load/domcontentloaded/networkidle`), `page.waitForURL()` |
-| Network | HTTP auth, modify request/response, network throttling, `page.unroute()` |
-| Other locators | CSS selectors, XPath selectors |
-| Pages | `browser.newPage()`, `context.newPage()`, multi-page, popup handling |
-| Page object models | Encapsulate page logic in classes, inject via fixtures |
-| Screenshots | `page.screenshot()` full page/clip/mask, `locator.screenshot()`, `--update-snapshots` |
-| Service Workers | Intercept with `page.route()`, test SW behavior |
-| Snapshot testing | `expect(locator).toMatchAriaSnapshot()` (ARIA tree comparison) |
-| Test generator | Codegen deep dive: record, assertions, locator picker, emulation |
-| Touch events (legacy) | `page.touchscreen.tap()` |
-| Trace viewer | `trace: on/off/retain-on-failure/on-first-retry`, viewing DOM snapshots, network, console |
-| Videos | `context.video()`, `video.saveAs()`, `video.path()` |
-| Visual comparisons | `toHaveScreenshot()`, pixel matching, snapshot file management |
-| WebView2 | Microsoft Edge WebView2 testing |
-
-### Migration, Integrations, Languages
-| Page | Key Content |
-|------|-------------|
-| Migrate from Protractor | Guide for Protractor-to-Playwright migration |
-| Migrate from Puppeteer | Guide for Puppeteer-to-Playwright migration |
-| Migrate from Testing Library | Guide for Testing Library migration |
-| Docker | `mcr.microsoft.com/playwright` Docker images |
-| Continuous Integration | CI setup for GitHub Actions, Azure, Jenkins, etc. |
-| Selenium Grid (exp) | Connect Playwright to Selenium Grid |
-| Supported languages | JS/TS (Node.js), Python, Java, .NET |
 
 ---
 
@@ -396,46 +199,6 @@ playwright-cli state-save session.json
 playwright-cli state-load session.json
 ```
 
-## Zendesk Workflow
-
-Zendesk 会话已持久化到 `zendesk.state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
-
-| 用户指令 | 操作 |
-|---------|------|
-| "打开 Zendesk" / "打开工单" / "打开 Zendesk 工单" | `close` → `open https://strikingly.zendesk.com --headed` → `state-load zendesk.state.json` → `goto https://strikingly.zendesk.com/agent/tickets/26500992` → `snapshot` |
-| "打开工单 26500992" (或其它工单号) | 同上，goto 对应工单 URL |
-
-流程：
-1. `playwright-cli open https://strikingly.zendesk.com --headed`
-2. `playwright-cli state-load zendesk.state.json`
-3. `playwright-cli goto https://strikingly.zendesk.com/agent/tickets/<ticket_id>`
-4. `playwright-cli snapshot` (展示页面)
-
-## SXL Zendesk Workflow
-
-SXL Zendesk 会话已持久化到 `sxl.zendesk.state.json`。当用户提供一个 `https://sxl.zendesk.com/agent/tickets/<ticket_id>` 链接时，执行以下操作：
-
-流程：
-1. `playwright-cli open https://sxl.zendesk.com --headed`
-2. `playwright-cli state-load sxl.zendesk.state.json`
-3. `playwright-cli goto <用户提供的工单URL>`
-4. `playwright-cli snapshot` (获取页面结构)
-5. `playwright-cli eval "() => document.title"` (获取页面标题)
-6. 阅读 snapshot、console 输出，理解工单内容，整理并总结给用户
-
-## Dify Workflow
-
-Dify 会话已持久化到 `dify.state.json`。当用户说以下任意自然语言指令时，执行对应的操作：
-
-| 用户指令 | 操作 |
-|---------|------|
-| "打开 Dify" / "打开 Dify Studio" | `close` → `open https://dify.orangemust.com --headed` → `state-load dify.state.json` → `snapshot` |
-
-流程：
-1. `playwright-cli open https://dify.orangemust.com --headed`
-2. `playwright-cli state-load dify.state.json`
-3. `playwright-cli snapshot` (展示页面)
-
 ---
 
 ## 通用规范
@@ -453,42 +216,15 @@ Dify 会话已持久化到 `dify.state.json`。当用户说以下任意自然语
 
 ---
 
-## References 参考文档
+## Workflow 索引
 
-整理自浏览器抓取的外部文档，存放在 `references/` 下。
+当用户的输入匹配以下触发条件时，**先 read 对应 workflow 文件**，理解流程后再执行。
 
-| 文件 | 来源 | 内容 |
-|------|------|------|
-| `references/Opnform-Use-Doc.md` | https://docs.opnform.com | OpnForm 技术文档全量整理（25 篇页面） |
+| 触发条件 | 读取文件 |
+|---------|---------|
+| "打开 Zendesk" "打开工单" 或 `strikingly.zendesk.com/agent/tickets/` URL | `workflows/zendesk.md` |
+| `sxl.zendesk.com/agent/tickets/` URL | `workflows/zendesk.md` |
+| "打开 Dify" | `workflows/dify.md` |
+| "帮我提MR" "提交 MR" "创建 MR" 或 `cd.i.strikingly.com/.../merge_requests/new` URL | `workflows/gitlab-mr.md` |
 
-### OpnForm 文档索引 (`references/Opnform-Use-Doc.md`)
-
-| 分组 | 章节 | 源 URL |
-|------|------|--------|
-| Get Started | Introduction | `/introduction` |
-| Get Started | Tech Stack | `/tech-stack` |
-| Features | Computed Variables | `/features/computed-variables` |
-| Deployment | Docker Deployment | `/deployment/docker` |
-| Deployment | Docker Development Setup | `/deployment/docker-development` |
-| Deployment | Local Deployment | `/deployment/local-deployment` |
-| Deployment | Cloud vs Self-Hosting | `/deployment/cloud-vs-self-hosting` |
-| Deployment | Self-hosted License | `/deployment/self-hosted-license` |
-| Deployment | License Activation | `/deployment/license-activation` |
-| Enterprise | Workspace Custom SMTP | `/deployment/enterprise-features/workspace-custom-smtp` |
-| Enterprise | Single Sign-On | `/deployment/enterprise-features/single-sign-on` |
-| Enterprise | Multiple Workspaces & Team Roles | `/deployment/enterprise-features/multiple-workspaces` |
-| Enterprise | White Label & Advanced Branding | `/deployment/enterprise-features/white-label-branding` |
-| Enterprise | Custom Code | `/deployment/enterprise-features/custom-code` |
-| Enterprise | Audit Logs | `/deployment/enterprise-features/audit-logs` |
-| Enterprise | External Storage | `/deployment/enterprise-features/external-storage` |
-| Configuration | Environment Variables | `/configuration/environment-variables` |
-| Configuration | OAuth Integration Setup | `/configuration/oauth-setup` |
-| Configuration | AWS S3 Configuration | `/configuration/aws-s3` |
-| Configuration | Email Setup | `/configuration/email-setup` |
-| Configuration | Using your own domain | `/configuration/custom-domain` |
-| Configuration | Subdomain Redirect | `/configuration/subdomain-redirect` |
-| Configuration | OIDC SSO Configuration | `/configuration/oidc-sso` |
-| Configuration | Disable Two-Factor Authentication | `/configuration/disable-2fa` |
-| Embedding | JavaScript SDK | `/embedding/javascript-sdk` |
-
----
+如需 Playwright Test 编程 API 参考，见 `references/playwright-test.md`。
