@@ -207,6 +207,7 @@ playwright-cli state-load session.json
 - 用户提供的链接，**默认使用浏览器工具打开**
 - 使用 `playwright-cli tab-new <url>` 在新标签页打开
 - 如果需要阅读内容，使用 `playwright-cli snapshot` 捕获页面内容
+- 不要截图
 - 使用 `playwright-cli console` 检查控制台错误
 
 ### 阅读页面内容
@@ -226,5 +227,3 @@ playwright-cli state-load session.json
 | `sxl.zendesk.com/agent/tickets/` URL | `workflows/zendesk.md` |
 | "打开 Dify" | `workflows/dify.md` |
 | "帮我提MR" "提交 MR" "创建 MR" 或 `cd.i.strikingly.com/.../merge_requests/new` URL | `workflows/gitlab-mr.md` |
-
-如需 Playwright Test 编程 API 参考，见 `references/playwright-test.md`。
