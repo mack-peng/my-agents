@@ -30,11 +30,16 @@
 
 ### 1. CodeGraph 代码图谱初始化
 
-```bash
-# 检查是否已初始化
-codegraph status
+**🔴 强制规则：每个目标代码库必须先初始化 CodeGraph。**
+- 进入目标项目后，首先检查 `.codegraph/` 目录是否存在。
+- **如果未初始化 → 必须提示用户运行 `codegraph init -i`，并等待索引完成后再开始编码。**
+- 不允许在未初始化 CodeGraph 的代码库中直接修改代码。CodeGraph 的语义索引是后续所有查询和影响分析的基础。
 
-# 如果未初始化，执行：
+```bash
+# 检查是否已初始化（通过 .codegraph/ 目录存在性快速判断）
+ls <project>/.codegraph/ 2>&1
+
+# 如果未初始化，提示用户执行：
 codegraph init -i
 
 # 再次确认状态
@@ -45,6 +50,7 @@ codegraph status
 - `codegraph init -i` 会创建 `.codegraph/` 目录并构建初始索引
 - 索引完成后，才能使用 `codegraph_explore`, `codegraph_search` 等工具
 - 如果项目较大，首次索引可能需要几分钟
+- **严禁在无索引状态下做结构性代码修改**
 
 ### 2. 项目结构探索
 
@@ -90,6 +96,7 @@ codegraph explore package.json tsconfig.json vite.config.*
 - **集中管理数据** — 所有静态常量（角色列表、证言、FAQ、步骤等）集中在 `constants/index.tsx`
 - **代码优先于注释** — 不写注释，用自描述的命名和结构表达意图
 - **批量写入** — 同一层的文件（多个新组件）并行写入，减少往返
+- **英文 Commit** — 所有 commit message 使用英文，格式：`type(scope): description`
 
 ### 4. 验证
 
