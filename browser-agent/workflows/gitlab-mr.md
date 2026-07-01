@@ -31,7 +31,7 @@
 5. `click "role=button[name='Choose a template']"` → 打开模板下拉
 6. `click "role=link[name='Bugfix-FE']"` → 选择 Bugfix-FE 模板
 7. 用 Python subprocess 运行 eval JS 填充 Description（见下方）
-8. `screenshot` → 截图展示给用户确认
+8. `snapshot` → 用 snapshot 展示给用户确认
 9. **不要关闭浏览器** — 等用户检查后自行提交
 
 ## 步骤 7：填充 Description
@@ -146,4 +146,4 @@ if result.stderr: print(result.stderr, end='')
 - 复选框在 markdown 源中预设为 `- [x]`，无需点击页面元素
 - `state-load` 必须在 `open` 之后、`goto` 之前执行
 - 如果 `gitlab.state.json` 过期（跳转到 sign_in），提示用户提供新的 Netscape 格式 cookie
-- **填充完成后不要关浏览器**，用户自行检查、添加截图后点击 Submit
+- **填充完成后不要关浏览器**，用户自行检查后点击 Submit
