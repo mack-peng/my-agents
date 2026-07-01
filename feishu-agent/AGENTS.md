@@ -1,21 +1,85 @@
 # Feishu Agent 项目
 
-## 环境
+## 前置检查
 
-飞书 CLI (`lark-cli`) 已全局安装，当前已登录用户 `用户878821`，Bot 与 User 双重身份已就绪。
-
-如 CLI 未安装或未登录，请参考安装指南：https://open.feishu.cn/document/no_class/mcp-archive/feishu-cli-installation-guide.md
+每次使用飞书 Agent 前，先检查 `lark-cli` 是否可用和已登录：
 
 ```bash
+# 检查 CLI 是否安装
+which lark-cli || echo "未安装"
+
 # 检查登录状态
 lark-cli auth status
-
-# 重新配置 & 登录
-lark-cli config init --new
-lark-cli auth login --recommend
 ```
 
-## 已安装的 25 个 Skills
+如 `lark-cli` 未安装，按以下步骤安装。
+
+## 安装
+
+### 1. Node.js 版本
+
+`lark-cli` 需要 Node.js >= 20.12.0。如使用 nodenv：
+
+```bash
+nodenv global 22.13.0   # 或其他 >= 20.12 的版本
+```
+
+### 2. 安装 CLI
+
+```bash
+npm install -g @larksuite/cli
+```
+
+### 3. 安装 Skills
+
+```bash
+npx -y skills add https://open.feishu.cn --skill -y
+```
+
+## 配置与登录
+
+### 配置应用凭证
+
+```bash
+lark-cli config init --new
+```
+
+此命令会输出二维码和浏览器链接，用户在浏览器中完成应用创建后，进程会自动完成配置。
+
+### 登录（两步流程）
+
+**第一步：获取授权 URL 和 device_code**
+
+```bash
+lark-cli auth login --recommend --no-wait --json
+```
+
+输出包含 `device_code` 和 `verification_url`。用 `verification_url` 生成二维码展示给用户：
+
+```bash
+# 生成 ASCII 二维码（通用，无需图片支持）
+lark-cli auth qrcode --ascii "<verification_url>"
+```
+
+将 URL 和二维码一并展示给用户，告知用户扫码授权后回复"完成"。
+
+**第二步：用 device_code 完成登录**
+
+用户确认授权后执行：
+
+```bash
+lark-cli auth login --device-code "<device_code>"
+```
+
+### 验证
+
+```bash
+lark-cli auth status
+```
+
+成功时 Bot 和 User 双身份均为 `ready`。
+
+## 已安装的 27 个 Skills
 
 项目 `.agents/skills/` 目录下已安装以下飞书技能，所有技能均使用 `lark-cli` 命令行操作：
 
@@ -41,6 +105,8 @@ lark-cli auth login --recommend
 | lark-attendance | 查询考勤打卡记录 |
 | lark-apps | 部署 HTML 到飞书妙搭（公网可访问） |
 | lark-event | 实时事件流订阅与消费 |
+| lark-markdown | 创建、读取、编辑 Markdown 文件 |
+| lark-note | 查询会议纪要详情和逐字记录 |
 | lark-openapi-explorer | 查找和调用原生飞书 OpenAPI |
 | lark-skill-maker | 创建自定义 lark-cli Skill |
 | lark-shared | 身份切换、权限问题诊断、CLI 更新 |
