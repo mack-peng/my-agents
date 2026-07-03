@@ -24,6 +24,27 @@
 - **修改前查影响** — 使用 `codegraph_impact` 分析改动的影响范围
 - **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
 
+### CSSGraph — 样式代码智能
+
+本项目已集成 [cssgraph](https://github.com/mack-peng/cssgraph)，为 OpenCode 提供样式代码索引和智能查询能力。
+
+**核心能力：**
+- `cssgraph_explore` — 智能样式探索（主要工具），获取 className 的完整上下文（属性、覆盖、特异性、调用者）
+- `cssgraph_search` — className 选择器搜索
+- `cssgraph_callers` — 查找引用某 className 的 JSX 组件
+- `cssgraph_impact` — 分析修改 className 的影响范围
+- `cssgraph_rule` — 完整 CSS 选择器的爆炸半径分析
+- `cssgraph_cascade` — 可视化级联路径，看清谁覆盖了谁
+- `cssgraph_unused` — 查找未被引用的 class 选择器（清理死代码）
+- `cssgraph_property` — 按 CSS 属性值搜索（如 `display: flex`）
+- `cssgraph_status` — 查看索引状态
+
+**使用原则：**
+- **样式问题优先用 cssgraph** — 不要 grep className，预建索引更快更准
+- **修改样式前查影响** — 用 `cssgraph_impact` 或 `cssgraph_rule` 确认改动范围
+- **级联问题用 `cssgraph_cascade`** — 一眼看清哪个选择器最终生效
+- **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
+
 ## 项目初始化流程
 
 进入新代码库时，按以下顺序执行：
@@ -52,6 +73,24 @@ codegraph status
 - 如果项目较大，首次索引可能需要几分钟
 - **严禁在无索引状态下做结构性代码修改**
 
+### 1.5. CSSGraph 样式图谱初始化
+
+**🔴 强制规则：涉及前端样式的项目必须先初始化 CSSGraph。**
+- 进入目标项目后，检查 `.cssgraph/` 目录是否存在。
+- **如果未初始化 → 必须提示用户运行 `cssgraph init`（仅样式）或 `cssgraph index --jsx`（样式+JSX 关联），并等待索引完成后再开始编码。**
+- 在样式代码修改前，必须先通过 cssgraph 分析影响范围。
+
+\`\`\`bash
+# 检查是否已初始化
+ls <project>/.cssgraph/ 2>&1
+
+# 如果未初始化，提示用户执行（仅样式文件）：
+cssgraph init
+
+# 如果需要 JSX 关联索引：
+cssgraph index --jsx
+\`\`\`
+
 ### 2. 项目结构探索
 
 ```bash
@@ -67,7 +106,7 @@ codegraph explore package.json tsconfig.json vite.config.*
 在理解项目结构后，创建项目专属的 AGENTS.md（如果项目本身没有）：
 - 记录项目技术栈、目录规范
 - 记录已发现的关键组件、工具函数位置
-- 记录 CodeGraph 索引状态
+- 记录 CodeGraph、CSSGraph 索引状态
 
 ---
 
