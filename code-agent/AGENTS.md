@@ -40,15 +40,22 @@ codegraph_explore "package.json tsconfig.json vite.config" --projectPath <projec
 
 > **反例**：用户说"把 `.foo` 宽度改成 responsive"，只改 `width → max-width` → 忽略了 `position: absolute` 的子元素在 flex 流中错位、DOM 多余的嵌套层级未处理。
 
-1. **获取完整 DOM 结构** — 如果上下文中没有目标元素的完整 HTML/JSX：
-   - 先向用户索取
-   - 或自行 `codegraph_explore` + Read 模板文件
-2. **`cssgraph_cascade <className>`** — 该元素上所有生效的层叠样式，按特异性排序：
-   - 从设计系统/组件库继承的默认样式
-   - 当前文件中的覆盖样式
-   - 谁覆盖了谁
-3. **检查 `@media` 断点** — 确认桌面/平板/手机的响应式表现，建立窄屏行为认知
-4. **`cssgraph_rule "<full-selector>"`** — 谁在用这个选择器，改动会波及哪些文件
+##### 搜索分层：CSS 问题 cssgraph 优先，不要从 codegraph/grep 开始
+
+| 入口 | 第一步 | 第二步 |
+|---|---|---|
+| 完整 selector（如 `.wrapper .btn`） | **`cssgraph_rule "<full-selector>"`** — 一步返回定义位置 + 所有相关选择器 + 文件用途 + 影响范围（~30 行） | `cssgraph_cascade <className>` 确认层叠 |
+| 单个 className（如 `btn`） | **`cssgraph_explore "<className>"`** — 样式定义 + JSX 调用者 | `cssgraph_cascade <className>` |
+| 代码符号 | `codegraph_search` → `codegraph_explore` | `codegraph_impact` |
+
+1. **`cssgraph_rule` 建立完整认知** — 当有完整 selector 时，优先用此一步到位：
+   - Exact matches：样式定义文件+行号
+   - Related selectors：所有子/伪类选择器（如 `button`、`:hover`）
+   - Class usage：哪些文件用了这些 class
+   - Loose impact：改动会波及哪些文件
+2. **`cssgraph_cascade <className>`** — 确认层叠：该元素的覆盖链，谁覆盖了谁
+3. **检查 `@media` 断点** — 确认桌面/平板/手机的响应式表现
+4. **获取 DOM 结构** — 如上下文缺失，向用户索取或 `codegraph_explore` + Read 模板
 5. **建立完整心智模型后，再设计方案**
 
 ### Phase 3: 编码
@@ -84,12 +91,13 @@ codegraph_explore "package.json tsconfig.json vite.config" --projectPath <projec
 
 | 场景 | 工具 |
 |---|---|
-| 找选择器定义位置 | `cssgraph_details` |
-| 看一个元素上所有层叠样式（按特异性排序） | `cssgraph_cascade` ← **修改前必查** |
-| 查谁在用这个选择器（影响范围） | `cssgraph_rule` ← **修改前必查** |
+| **完整 selector：建立认知的首选入口**（定义+子选择器+用途+影响，一步到位） | `cssgraph_rule "<full-selector>"` ← **首选** |
+| 确认层叠覆盖链（按特异性排序） | `cssgraph_cascade <className>` ← **rule 之后跟进** |
+| 单个 className：样式定义 + JSX 调用者 | `cssgraph_explore "<className>"` |
 | 找引用某 className 的 JSX 组件 | `cssgraph_callers` |
-| 样式 + JSX 关联探索 | `cssgraph_explore` |
+| 找选择器定义位置（轻量） | `cssgraph_details` |
 | 清理死代码：找无引用的 class | `cssgraph_unused` |
+| 按 CSS 属性值反查 selector | `cssgraph_property value=<value>` |
 | 跨项目使用（bobcat 等） | MCP 工具会报错，改用 **Bash + `workdir`** 执行 CLI |
 
 ```bash
