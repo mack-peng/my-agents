@@ -1,149 +1,111 @@
-# code-agent — 人机协同开发
+# code-agent
 
-基于 OpenCode 的 feature-level 开发助手。接收产品 Spec + FE Code Design，在目标项目中落地实现。
-
----
-
-## 工具链
-
-### CodeGraph — 语义代码智能
-
-本项目已集成 [CodeGraph](https://github.com/colbymchenry/codegraph)，为 OpenCode 提供语义代码索引和智能查询能力。
-
-**核心能力：**
-- `codegraph_explore` — 智能代码探索（主要工具）
-- `codegraph_search` — 符号搜索
-- `codegraph_callers` — 查找调用者
-- `codegraph_callees` — 查找被调用者
-- `codegraph_impact` — 影响分析（修改前必查）
-- `codegraph_node` — 获取符号详情
-- `codegraph_status` — 查看索引状态
-
-**使用原则：**
-- **优先使用 CodeGraph** 回答结构性问题 — 它是预建的索引，避免重复的 grep/read 循环
-- **修改前查影响** — 使用 `codegraph_impact` 分析改动的影响范围
-- **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
-
-### CSSGraph — 样式代码智能
-
-本项目已集成 [cssgraph](https://github.com/mack-peng/cssgraph)，为 OpenCode 提供样式代码索引和智能查询能力。
-
-**核心能力：**
-- `cssgraph_explore` — 智能样式探索（主要工具），获取 className 的完整上下文（属性、覆盖、特异性、调用者）
-- `cssgraph_search` — className 选择器搜索
-- `cssgraph_callers` — 查找引用某 className 的 JSX 组件
-- `cssgraph_impact` — 分析修改 className 的影响范围
-- `cssgraph_rule` — 完整 CSS 选择器的爆炸半径分析
-- `cssgraph_cascade` — 可视化级联路径，看清谁覆盖了谁
-- `cssgraph_unused` — 查找未被引用的 class 选择器（清理死代码）
-- `cssgraph_property` — 按 CSS 属性值搜索（如 `display: flex`）
-- `cssgraph_status` — 查看索引状态
-
-**使用原则：**
-- **样式问题优先用 cssgraph** — 不要 grep className，预建索引更快更准
-- **修改样式前查影响** — 用 `cssgraph_impact` 或 `cssgraph_rule` 确认改动范围
-- **级联问题用 `cssgraph_cascade`** — 一眼看清哪个选择器最终生效
-- **信任返回结果** — 不要再用 grep 验证，注意编辑后的 staleness banner
-
-## 项目初始化流程
-
-进入新代码库时，按以下顺序执行：
-
-### 1. CodeGraph 代码图谱初始化
-
-**🔴 强制规则：每个目标代码库必须先初始化 CodeGraph。**
-- 进入目标项目后，首先检查 `.codegraph/` 目录是否存在。
-- **如果未初始化 → 必须提示用户运行 `codegraph init -i`，并等待索引完成后再开始编码。**
-- 不允许在未初始化 CodeGraph 的代码库中直接修改代码。CodeGraph 的语义索引是后续所有查询和影响分析的基础。
-
-```bash
-# 检查是否已初始化（通过 .codegraph/ 目录存在性快速判断）
-ls <project>/.codegraph/ 2>&1
-
-# 如果未初始化，提示用户执行：
-codegraph init -i
-
-# 再次确认状态
-codegraph status
-```
-
-**说明：**
-- `codegraph init -i` 会创建 `.codegraph/` 目录并构建初始索引
-- 索引完成后，才能使用 `codegraph_explore`, `codegraph_search` 等工具
-- 如果项目较大，首次索引可能需要几分钟
-- **严禁在无索引状态下做结构性代码修改**
-
-### 1.5. CSSGraph 样式图谱初始化
-
-**🔴 强制规则：涉及前端样式的项目必须先初始化 CSSGraph。**
-- 进入目标项目后，检查 `.cssgraph/` 目录是否存在。
-- **如果未初始化 → 必须提示用户运行 `cssgraph init`（仅样式）或 `cssgraph index --jsx`（样式+JSX 关联），并等待索引完成后再开始编码。**
-- 在样式代码修改前，必须先通过 cssgraph 分析影响范围。
-
-\`\`\`bash
-# 检查是否已初始化
-ls <project>/.cssgraph/ 2>&1
-
-# 如果未初始化，提示用户执行（仅样式文件）：
-cssgraph init
-
-# 如果需要 JSX 关联索引：
-cssgraph index --jsx
-\`\`\`
-
-### 2. 项目结构探索
-
-```bash
-# 查看项目文件结构（从索引中读取，比 ls 更快）
-codegraph files --format tree
-
-# 识别技术栈
-codegraph explore package.json tsconfig.json vite.config.*
-```
-
-### 3. 建立项目上下文
-
-在理解项目结构后，创建项目专属的 AGENTS.md（如果项目本身没有）：
-- 记录项目技术栈、目录规范
-- 记录已发现的关键组件、工具函数位置
-- 记录 CodeGraph、CSSGraph 索引状态
+Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目中落地实现。
 
 ---
 
-## 人机协同工作流
+## 工作流
 
+### Phase 0: Setup（初始检查）
+
+进入目标项目后，**先执行以下检查，通过后才能开始编码**：
+
+- [ ] `.codegraph/` 存在 → 否则停止，提示用户：`codegraph init -i`
+- [ ] 涉及样式 → `.cssgraph/` 存在 → 否则停止，提示用户：`cssgraph init`
+- [ ] 已读取目标项目的 `AGENTS.md`（如果有）
+- [ ] 已速览项目结构和技术栈：
+
+```bash
+codegraph files --format tree --projectPath <project>
+codegraph_explore "package.json tsconfig.json vite.config" --projectPath <project>
 ```
-用户提供设计文档 → AI 理解并规划 → 用户确认 → AI 编码 → 验证交付
-```
 
-### 1. 输入
+### Phase 1: 理解输入
 
-- `.spec.md` — 产品需求文档（PM 产出）
-- `*_code_design.md` — 前端代码设计文档（含组件树、数据流、API 定义、样式变更清单）
+从 Code Design 文档中提取并创建 Todo list：
 
-### 2. 理解与规划
+1. **Tech Changes 表格** — 组件/样式/数据/Hook 的变更清单
+2. **组件树** → 确定执行顺序（先叶子后容器，先依赖后消费者）
+3. **数据流和 API 契约** → 需要对接的接口
 
-- 从 Code Design 中提取 **Tech Changes** 表格（组件/样式/数据/Hook 变更清单）
-- 按 **Page Block Order** 和 **Component Tree** 确定实现顺序
-- 识别主要难点（动态表单联动、CTA 滚动、表单提交）
-- 创建 Todo List 分步跟踪
+### Phase 2: 调研（编辑前必须完成）
 
-### 3. 编码原则
+#### 修改代码
 
-- **不猜测框架** — 先探索项目 `package.json`、`tsconfig.json`、目录结构，确认技术栈
-- **遵循既有模式** — 阅读现有组件，模仿其 import 风格、CSS Module 命名、组件库用法
-- **集中管理数据** — 所有静态常量（角色列表、证言、FAQ、步骤等）集中在 `constants/index.tsx`
-- **代码优先于注释** — 不写注释，用自描述的命名和结构表达意图
-- **批量写入** — 同一层的文件（多个新组件）并行写入，减少往返
-- **英文 Commit** — 所有 commit message 使用英文，格式：`type(scope): description`
+1. `codegraph_explore` 理解目标符号的架构和上下文
+2. `codegraph_impact` 分析改动的影响范围
+3. 阅读相邻文件，学习现有的 import 风格、命名、库选择模式
 
-### 4. 验证
+#### 修改样式
+
+> **反例**：用户说"把 `.foo` 宽度改成 responsive"，只改 `width → max-width` → 忽略了 `position: absolute` 的子元素在 flex 流中错位、DOM 多余的嵌套层级未处理。
+
+1. **获取完整 DOM 结构** — 如果上下文中没有目标元素的完整 HTML/JSX：
+   - 先向用户索取
+   - 或自行 `codegraph_explore` + Read 模板文件
+2. **`cssgraph_cascade <className>`** — 该元素上所有生效的层叠样式，按特异性排序：
+   - 从设计系统/组件库继承的默认样式
+   - 当前文件中的覆盖样式
+   - 谁覆盖了谁
+3. **检查 `@media` 断点** — 确认桌面/平板/手机的响应式表现，建立窄屏行为认知
+4. **`cssgraph_rule "<full-selector>"`** — 谁在用这个选择器，改动会波及哪些文件
+5. **建立完整心智模型后，再设计方案**
+
+### Phase 3: 编码
+
+- **模仿现有模式** — import 风格、命名约定、组件库选择，参考 Phase 2 调研结果
+- **批量并行写入** — 同层的新文件（多个新组件）并行写入，减少往返
+- **不写注释** — 用自描述的命名和结构表达意图
+- **英文 Commit** — `type(scope): description`
+
+### Phase 4: 验证
 
 - 类型检查（如 `tsc --noEmit`）
-- lint 检查（如 `eslint src/ --fix`）
-- 修复所有 error 后交付
+- Lint 检查（如 `eslint src/ --fix`）
+- 修完所有 error 后再交付
 
-## 职责边界
+---
+
+## 工具箱
+
+### 代码
+
+| 场景 | 工具 |
+|---|---|
+| 理解某个符号/模块的架构和逻辑 | `codegraph_explore` ← **主力** |
+| 按名称查找符号（只查位置） | `codegraph_search` |
+| 修改前：改这个会影响谁 | `codegraph_impact` |
+| 获取单个符号的完整源码 | `codegraph_node` |
+| 谁调用了 X / X 调用了谁 | `codegraph_callers` / `codegraph_callees` |
+| 项目文件树 | `codegraph_files` |
+| 跨项目使用 | 所有 MCP 工具加 `projectPath` 参数 |
+
+### 样式
+
+| 场景 | 工具 |
+|---|---|
+| 找选择器定义位置 | `cssgraph_details` |
+| 看一个元素上所有层叠样式（按特异性排序） | `cssgraph_cascade` ← **修改前必查** |
+| 查谁在用这个选择器（影响范围） | `cssgraph_rule` ← **修改前必查** |
+| 找引用某 className 的 JSX 组件 | `cssgraph_callers` |
+| 样式 + JSX 关联探索 | `cssgraph_explore` |
+| 清理死代码：找无引用的 class | `cssgraph_unused` |
+| 跨项目使用（bobcat 等） | MCP 工具会报错，改用 **Bash + `workdir`** 执行 CLI |
+
+```bash
+# 跨项目示例（target = bobcat）
+cssgraph cascade ".my-class"          # ← workdir: /home/penghe/bobcat
+cssgraph rule ".container .my-title"  # ← workdir: /home/penghe/bobcat
+```
+
+### 原则
+
+- **信任 CodeGraph/CSSGraph 结果** — 不要再用 grep/Read 验证
+- **编辑后注意 staleness banner** — 如果有文件 pending sync，直接 Read 那个文件
+
+---
+
+## 边界
 
 | 负责 | 不负责 |
 |------|--------|
