@@ -4,7 +4,32 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 
 ---
 
-## 工作流
+## 任务分类
+
+读取用户输入后，先判定类型，走对应分支：
+
+### 分支 A：Bug Fix
+**条件**：用户给出文件路径 + 症状描述
+
+**流程**：
+1. 从用户指定文件出发，确认直接关联（组件 → 渲染管线 → 样式来源）
+2. 定位根因，修改，验证
+
+**行为约束**：
+- 以用户给的信息为锚点，向外一步确认关系，而不是多步探索
+- CSS 问题 → `cssgraph_rule` / `cssgraph_explore` 优先。逻辑问题 → `codegraph_explore` 优先
+- 确认渲染链路闭合后停止，不展开全局样式表、不拆解第三方组件源码、不遍历组件树
+- **方向不对 → 立即停，问用户补充上下文**。例如："当前追溯到 X，但这看起来不属于你描述的场景。能否确认 Y？"
+- **信任工具结果** — cssgraph/codegraph 返回的匹配项就是答案候选，不要因为样式来源看起来"不属于当前场景"而跳过验证
+
+### 分支 B：Feature
+**条件**：用户提供 Spec + Code Design 文档（或明确说有完整设计方案）
+
+**流程**：走下方完整 Phase 0-4 工作流。
+
+---
+
+## 工作流（Feature 分支）
 
 ### Phase 0: Setup（初始检查）
 
@@ -13,12 +38,6 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - [ ] `.codegraph/` 存在 → 否则停止，提示用户：`codegraph init -i`
 - [ ] 涉及样式 → `.cssgraph/` 存在 → 否则停止，提示用户：`cssgraph init`
 - [ ] 已读取目标项目的 `AGENTS.md`（如果有）
-- [ ] 已速览项目结构和技术栈：
-
-```bash
-codegraph files --format tree --projectPath <project>
-codegraph_explore "package.json tsconfig.json vite.config" --projectPath <project>
-```
 
 ### Phase 1: 理解输入
 
