@@ -1,5 +1,7 @@
 # Agents monorepo
 
+AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任务、做决策、审结果；AI 读取各 agent 文档后调用对应 CLI 或执行工作流，完成具体产出。
+
 Each subdirectory is a self-contained OpenCode agent with its own doc.
 No build, test, or lint at the root level.
 
