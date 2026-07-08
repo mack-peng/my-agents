@@ -5,8 +5,8 @@ No build, test, or lint at the root level.
 
 ## Directory conventions
 
-- **13 directories use `AGENTS.md`**, **2 use `AGENT.md`** (singular): `dify-agent/` and `morph-agent/`.
-- All 15 agent directories on disk have a reference doc.
+- **16 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
+- All 17 agent directories on disk have a reference doc.
 - Most agents are CLI-tool wrappers — the CLI is installed globally, not per-directory. Commands and auth are documented inside each agent's markdown.
 - No `package.json`, root workspace config, or shared dependency management.
 - **No `opencode.json`** anywhere in the repo.
@@ -14,6 +14,7 @@ No build, test, or lint at the root level.
 ## Agents that differ from the wrapper pattern
 
 - **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
+- **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
 - **`feishu-agent/`** — has 25 sub-skills under `.agents/skills/` (mirrored in `skills/`), tracked via `skills-lock.json` from `open.feishu.cn`.
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
@@ -23,6 +24,11 @@ No build, test, or lint at the root level.
 
 - Root-level `.agents/`, `skills/`, and `skills-lock.json` are **gitignored** (duplicates of `feishu-agent/`'s copies).
 - To add/remove a shared skill, edit `feishu-agent/` — its `.agents/skills/` and `skills/` are the source of truth.
+
+## Reference docs
+
+- `references/` — tool usage docs and templates (Dagger, Dify, Opnform, Google-SEO, bobcat MR template). Shared reference material, not agent-specific.
+- `specs/` — empty directory, reserved for spec-syncing workflows (e.g. strk-agent).
 
 ## Working assets (do not commit)
 

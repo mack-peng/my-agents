@@ -48,3 +48,4 @@ browser-agent/set-cookies.js
 browser-agent/update-state.js
 
 
+strk-agent/.env
