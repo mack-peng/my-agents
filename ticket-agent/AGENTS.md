@@ -37,12 +37,26 @@
 - 跨 Phase 共享状态仅通过飞书文档传递。禁止在协调器上下文中跨 Phase 积累代码片段、diff、日志或子 agent 输出。
 - 每个 Phase 完成后停止协调器深度分析，等待用户 sign-off 后再读取飞书文档进入下一 Phase。
 
+## Profile 选择
+
+处理工单前，必须先确定正确的 Zendesk profile：
+
+1. 从工单 URL 中提取子域名（如 `https://<subdomain>.zendesk.com/...`）
+2. 运行 `zcli-ticket config-list` 列出所有 profile，匹配子域名
+3. 匹配到 profile 后，所有 `zcli-ticket` 命令均使用 `-p <profile>` 参数
+
+```
+zcli-ticket -p <profile> ticket-show <id>
+```
+
+如果 URL 中无法提取子域名（如仅提供 ID），默认使用当前 active profile，并告知用户。
+
 ## 五阶段流程
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | **use zendesk-agent** → 获取结构化工单数据 | 飞书文档：问题描述 |
-| 2 | 调研分析 | **CodeGraph/CSSGraph** → 代码调研；**use browser-agent** → livesite 复现；**优先对比 API 数据** | 追加：根因 + 代码路径 |
+| 1 | 阅读工单 | 详见 `workflows/phase1-read.md` | 飞书文档：问题描述 |
+| 2 | 调研分析 | **use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现；**优先让用户对比 API 数据**（见下方调研策略） | 追加：根因 + 代码路径 |
 | 3 | 代码编写 | 直接编辑代码文件 | 追加：方案 + 影响面 |
 | 4 | 提交代码 | **git CLI** → 分支 + commit | 追加：分支 + commit |
 | 5 | 提交 MR | **use gitlab-agent** → MR 创建 | 追加：MR 链接 |
@@ -93,11 +107,10 @@
 ### .env 文件（gitignored）
 
 ```bash
-BOBKAT_PATH=/path/to/Bobcat
-COMPONENT_KIT_PATH=/path/to/component-kit
+BOBKAT_PATH=/home/penghe/bobcat
 ```
 
-复制 `.env.example` 为 `.env` 并填入实际路径。
+`.env` 已配置，格式见 `.env.example`。
 
 ### Pre-flight 检查
 
@@ -171,6 +184,6 @@ COMPONENT_KIT_PATH=/path/to/component-kit
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use browser-agent`，命令在 `browser-agent/` 目录下执行（状态文件在此）
 - **所有 playwright-cli 命令必须使用 `-s=ticket-agent`**（独立浏览器 session）
 - 需要飞书操作 → `use feishu-agent`
-- 需要 MR 操作 → `use gitlab-agent`
+- 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - 跨机器时：提供飞书文档 URL，agent 自动读取当前进度

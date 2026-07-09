@@ -527,6 +527,8 @@ glab repo clone group/project
 glab release create v1.0.0
 ```
 
+> **重要**: 对于自管理 GitLab（非 gitlab.com），`glab mr` / `glab api` 等命令推荐在仓库目录下执行。仓库目录下的 git remote 会自动解析 host，避免 `-R` 无法正确匹配非默认 host 的问题。如果必须在仓库外执行，使用 `glab api` 并显式指定 `--hostname`。
+
 ---
 
 ## 创建 MR
@@ -552,6 +554,7 @@ BoBCat Bugfix-FE 模板：`references/bobcat-mr-bugfix-fe-template.md`
 
 ## 技巧
 
-- 如果不在 git 仓库中，始终使用 `-R` 或 `GITLAB_HOST` 指定项目/主机
+- 优先在仓库目录下执行 `glab` 命令，git remote 会自动解析 host，比 `-R` 更可靠
+- 如果不在 git 仓库中，使用 `glab api` + `--hostname` 显式指定主机，而非依赖 `-R` 标志
 - 使用 `glab config set -g host <hostname>` 设置默认主机
 - 常用过滤器：`--assignee=@me`、`--author=@me`、`--state=opened/closed/merged`、`--per-page N`
