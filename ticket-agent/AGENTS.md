@@ -2,13 +2,13 @@
 
 端到端工单处理 agent。五阶段流程，每阶段需人工 sign-off。
 使用飞书文档作为跨机器状态持久化。
-**本 agent 是协调器，具体操作委托给 browser-agent / feishu-agent / gitlab-agent。**
+**本 agent 是协调器，具体操作委托给 zendesk-agent / browser-agent / feishu-agent / gitlab-agent。**
 
 ## 入口判断
 
 ```
-输入 Zendesk 工单 URL   → Phase 1 开始
-输入飞书文档 URL        → 读取文档，判断当前阶段，从中断处继续
+输入 Zendesk 工单 URL 或 ID   → Phase 1 开始
+输入飞书文档 URL              → 读取文档，判断当前阶段，从中断处继续
 ```
 
 ### 文档中阶段识别规则
@@ -28,7 +28,7 @@
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | **use browser-agent** → 打开 Zendesk、获取 snapshot | 飞书文档：问题描述 |
+| 1 | 阅读工单 | **use zendesk-agent** → `zcli-ticket` 获取结构化工单数据 | 飞书文档：问题描述 |
 | 2 | 调研分析 | **use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现；**优先让用户对比 API 数据**（见下方调研策略） | 追加：根因 + 代码路径 |
 | 3 | 代码编写 | 直接编辑代码文件 | 追加：方案 + 影响面 |
 | 4 | 提交代码 | **git CLI** → 分支 + cherry-pick（在 `$BOBKAT_PATH` 下） | 追加：分支 + commit |
@@ -93,8 +93,9 @@ COMPONENT_KIT_PATH=/Users/mack/Projects/component-kit
 
 ## 注意事项
 
-- 本 agent 不直接使用 playwright-cli / lark-cli / glab 命令
-- 需要浏览器操作 → `use browser-agent`，命令在 `browser-agent/` 目录下执行（状态文件在此）
+- 本 agent 不直接使用 playwright-cli / lark-cli / glab / zcli-ticket 命令
+- 需要工单数据 → `use zendesk-agent`
+- 需要浏览器操作（Phase 2 livesite 复现）→ `use browser-agent`，命令在 `browser-agent/` 目录下执行（状态文件在此）
 - **所有 playwright-cli 命令必须使用 `-s=ticket-agent`**（独立浏览器 session，不与 browser-agent 默认 session 冲突）
 - 需要飞书操作 → `use feishu-agent`
 - 需要 MR 操作 → `use gitlab-agent`
