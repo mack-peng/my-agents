@@ -53,7 +53,7 @@ glab mr create \
 
 # 方式 2：两步法（description 过长时）
 glab mr create --source-branch <branch-name> --target-branch develop --title "<title>" --no-editor
-glab api projects/strikingly%2FBobcat/merge_requests/<iid> -X PUT -f description="$(cat /tmp/mr_desc.md)"
+glab api projects/<gitlab-project-path>/merge_requests/<iid> -X PUT -f description="$(cat /tmp/mr_desc.md)"
 ```
 
 ### 5. 输出总结
@@ -65,7 +65,7 @@ glab api projects/strikingly%2FBobcat/merge_requests/<iid> -X PUT -f description
 - **标题**: <title>
 - **分支**: <branch-name> → develop
 - **Reviewer**: @<reviewer>
-- **MR 链接**: https://cd.i.strikingly.com/strikingly/Bobcat/merge_requests/<iid>
+- **MR 链接**: <URL>
 ```
 
 ### 6. 等待 Sign-off
