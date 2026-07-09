@@ -17,15 +17,16 @@ No build, test, or lint at the root level.
 
 - **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
 - **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
-- **`feishu-agent/`** — has 25 sub-skills under `.agents/skills/` (mirrored in `skills/`), tracked via `skills-lock.json` from `open.feishu.cn`.
+- **`feishu-agent/`** — has 27 sub-skills in root `.agents/skills/` (mirrored in `skills/`), tracked via `skills-lock.json` from `open.feishu.cn`.
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 
 ## Skills
 
-- Root-level `.agents/`, `skills/`, and `skills-lock.json` are **gitignored** (duplicates of `feishu-agent/`'s copies).
-- To add/remove a shared skill, edit `feishu-agent/` — its `.agents/skills/` and `skills/` are the source of truth.
+- Root-level `.agents/skills/` 是所有 agent 共享的飞书技能目录，与 `skills/` 保持同步链接。
+- 通过 `npx -y skills add https://open.feishu.cn --skill -y` 安装/更新。
+- `skills-lock.json` 记录已安装的 skills 版本。
 
 ## Reference docs
 

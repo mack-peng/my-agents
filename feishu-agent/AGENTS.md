@@ -115,18 +115,48 @@ lark-cli auth status
 
 ## 使用方式
 
-遇到飞书相关任务时，优先读取对应 skill 的 `SKILL.md` 和 `references/` 文件了解具体命令。Skill 文件位于：
-- `.agents/skills/<skill-name>/SKILL.md`
-- `skills/<skill-name>/SKILL.md`（两处为同步链接）
+### 云文档 / 知识库
 
-所有操作通过 `lark-cli` 命令执行，例如：
+以下命令可直接使用，无需读取 skill 文件。
+
 ```bash
-# 查日程
-lark-cli calendar +agenda
+# 创建文档（默认 Docx，Markdown 格式内容）
+lark-cli docs +create --api-version v2 --doc-format markdown --content $'# 标题\n\n内容...'
+# 返回 document.document_id 和 url
 
-# 发消息
-lark-cli im messages send --receive-id <open_id> --content "Hello"
+# 创建文档到指定知识空间
+lark-cli docs +create --api-version v2 --doc-format markdown --parent-token <space_id> --content $'# 标题\n\n...'
 
-# 搜索文档
+# 读取文档内容
+lark-cli docs +fetch --doc "<url或token>"
+# 支持 /docx/ 和 /wiki/ 链接
+
+# 追加内容到文档末尾
+lark-cli docs +update --api-version v2 --doc "<url或token>" --command append --doc-format markdown --content $'...'
+
+# 替换文档内文本（str_replace）
+lark-cli docs +update --api-version v2 --doc "<url或token>" --command str_replace --pattern "旧文本" --content "新文本" --doc-format markdown
+
+# 列出知识空间
+lark-cli wiki +space-list
+lark-cli wiki +space-list --page-all --format pretty
+
+# 列出空间内节点
+lark-cli wiki +node-list --space-id <space_id>
+lark-cli wiki +node-list --space-id my_library --format pretty
+
+# 在知识库中创建节点（文档）
+lark-cli wiki +node-create --space-id <space_id> --title "文档标题"
+lark-cli wiki +node-create --title "个人文档"  # user 身份默认 my_library
+
+# 搜索云空间文件
 lark-cli drive +search --keyword "关键词"
 ```
+
+> Markdown 写入转义：`\*` `\_` `\[` `\]` `\~` `\$` `<` `\>`。行首 `#` `-` `+` 需转义。
+> 详细语法参考 `skills/lark-doc/references/lark-doc-md.md`。
+
+### 其他操作
+
+表格、多维表格、日历、邮件、审批、IM 等操作需读取对应 skill 文件：
+- `.agents/skills/<skill-name>/SKILL.md`

@@ -23,11 +23,6 @@ acli-agent/login-confluence.sh
 .env.local
 .env.production
 
-# Root-level opencode generated files (duplicates of feishu-agent/)
-.agents/
-skills/
-skills-lock.json
-
 # design-agent output and cognition
 design-agent/output/
 design-agent/projects/
