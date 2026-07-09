@@ -10,6 +10,31 @@
 - **约束上下文预算**：优先 codegraph，限制 maxFiles=8，禁止盲目 grep
 - **分层递进**：代码架构总览 → 关键符号定位 → 精准读码
 
+## 差异对比策略
+
+**核心原则：优先对比数据，后分析代码。**
+
+### 当工单描述 "X 正常，Y 异常" 时
+
+不要先钻进共用代码。先找出 X 和 Y 的数据差异点：
+
+1. **列出差异方调用的所有后端 API**（从前端 network 请求或代码中的 api 调用推断）
+2. **请求用户提供两方的 API 响应对比**（curl 或浏览器 Network 抓取）
+3. **从响应差异反向定位后端 controller/query** — 通常 5 分钟定位根因
+4. **只在确认"双方数据相同但行为不同"时才深入前端代码**
+
+### 反例
+
+花费大量时间分析 FilterSelectContent、RecipientSelector 的前端逻辑，但这段代码对 Owner 和 Collaborator 执行路径完全相同。真正的差异在 `/r/v1/membership/tiers` 的返回值 — 如果一开始就对比这个 API 的响应，根因定位只需 5 分钟。
+
+### 关键检查点
+
+| 差异类型 | 优先检查 |
+|---------|---------|
+| Owner vs Collaborator | `current_user.sites` vs `current_user.page_collaborators` 作用域 |
+| 不同站点 | API 参数中的 `site_id` 过滤逻辑 |
+| 不同计划/套餐 | `ConfStore` / rollout flag 的 gon 配置值 |
+
 ## 流程
 
 ### 1. 读取飞书文档

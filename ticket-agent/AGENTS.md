@@ -29,7 +29,7 @@
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
 | 1 | 阅读工单 | **use browser-agent** → 打开 Zendesk、获取 snapshot | 飞书文档：问题描述 |
-| 2 | 调研分析 | **use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现 | 追加：根因 + 代码路径 |
+| 2 | 调研分析 | **use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现；**优先让用户对比 API 数据**（见下方调研策略） | 追加：根因 + 代码路径 |
 | 3 | 代码编写 | 直接编辑代码文件 | 追加：方案 + 影响面 |
 | 4 | 提交代码 | **git CLI** → 分支 + cherry-pick（在 `$BOBKAT_PATH` 下） | 追加：分支 + commit |
 | 5 | 提交 MR | **use gitlab-agent** → `glab mr create` | 追加：MR 链接 |
@@ -39,6 +39,10 @@
 2. **等待用户 sign-off**（明确说"确认"或"OK"才继续）
 3. Sign-off 后，**use feishu-agent** 将结果追加到飞书文档
 4. 进入下一 Phase
+
+## Phase 2 调研策略
+
+详见 `workflows/phase2-investigate.md`。
 
 ## 环境配置
 
