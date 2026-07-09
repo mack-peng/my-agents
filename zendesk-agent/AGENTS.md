@@ -272,6 +272,11 @@ zcli-ticket ticket-update <id> --comment "已在处理"
 zcli-ticket ticket-update <id> --private-comment "需要升级"
 ```
 
+## Agent 使用约定
+
+- 查看工单时，默认使用 `zcli-ticket --json ticket-thread <id>`，一次性获取工单详情 + 全部评论（包括内部备注），便于 AI 完整理解工单上下文。
+- 如仅需工单元信息（不含评论），用 `zcli-ticket --json ticket-show <id>`。
+
 ## Agent 边界
 
 - **负责**：Zendesk 工单、用户、组织、群组、搜索、视图、附件等资源的 CRUD 操作
