@@ -249,6 +249,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use browser-agent`，命令在 `browser-agent/` 目录下执行（状态文件在此）
 - **所有 playwright-cli 命令必须使用 `-s=ticket-agent`**（独立浏览器 session）
 - 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
+- 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - **飞书模式**：需要飞书操作 → `use feishu-agent`。跨机器时提供飞书文档 URL 即可续接
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
