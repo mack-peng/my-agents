@@ -43,19 +43,15 @@
 
 **Use gitlab-agent**。
 
-在 `$BOBKAT_PATH` 下执行：
+生成 MR 描述 `/tmp/mr_desc.md` 时，**Self-checklist 中所有适用项必须根据实际情况勾选为 `[x]`**，不可留空。不适用项保留原文不勾选。
 
 ```bash
-# 方式 1：直接创建（推荐）
+# 在 $BOBKAT_PATH 下执行
 glab mr create \
   --source-branch <branch-name> \
   --target-branch develop \
   --title "<title>" \
   --description "$(cat /tmp/mr_desc.md)"
-
-# 方式 2：两步法（description 过长时）
-glab mr create --source-branch <branch-name> --target-branch develop --title "<title>" --no-editor
-glab api projects/<gitlab-project-path>/merge_requests/<iid> -X PUT -f description="$(cat /tmp/mr_desc.md)"
 ```
 
 ### 5. 输出总结
