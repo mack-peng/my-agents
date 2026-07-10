@@ -86,16 +86,25 @@ zcli-ticket -p <profile> ticket-show <id>
 | # | 阶段 | 委托 | 飞书模式产出 | Session 模式产出 |
 |---|------|------|-------------|-----------------|
 | 1 | 阅读工单 | 详见 `workflows/phase1-read.md` | 飞书文档：问题描述 | 对话摘要：问题描述 |
-| 2 | 调研分析 | **use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现；**优先让用户对比 API 数据**（见下方调研策略） | 追加：根因 + 代码路径 | 对话摘要：根因 + 代码路径 |
-| 3 | 代码编写 | 直接编辑代码文件 | 追加：方案 + 影响面 | 对话摘要：方案 + 影响面 |
-| 4 | 提交代码 | **git CLI** → 分支 + commit | 追加：分支 + commit | 对话摘要：分支 + commit |
-| 5 | 提交 MR | **use gitlab-agent** → MR 创建 | 追加：MR 链接 | 对话摘要：MR 链接 |
+| 2 | 调研分析 | 详见 `workflows/phase2-investigate.md`；**use codegraph/cssgraph** → 代码调研；**use browser-agent** → livesite 复现；**优先让用户对比 API 数据**（见下方调研策略） | 追加：根因 + 代码路径 | 对话摘要：根因 + 代码路径 |
+| 3 | 代码编写 | 详见 `workflows/phase3-write.md` | 追加：方案 + 影响面 | 对话摘要：方案 + 影响面 |
+| 4 | 提交代码 | 详见 `workflows/phase4-commit.md` | 追加：分支 + commit | 对话摘要：分支 + commit |
+| 5 | 提交 MR | 详见 `workflows/phase5-mr.md` | 追加：MR 链接 | 对话摘要：MR 链接 |
 
 每个 Phase 完成后：
 1. 输出总结给用户
 2. **等待用户 sign-off**（明确说"确认"或"OK"才继续）
 3. 飞书模式：Sign-off 后 **use feishu-agent** 将结果追加到飞书文档，再进入下一 Phase
 4. Session 模式：Sign-off 后在对话中记录本 Phase 摘要，直接进入下一 Phase
+
+## Git 规范
+
+- **分支名**：使用前缀 `feat-` / `fix-` / `refactor-`，分隔符用 `-`（不用 `/`）
+- **Commit message**：`<type>(<scope>): <简短描述>`，只写 title 不写 body
+
+```
+git commit -m "fix(custom-form): prevent cursor jumping in input fields"
+```
 
 ### Phase 0: Pre-flight（新建模式首步）
 
