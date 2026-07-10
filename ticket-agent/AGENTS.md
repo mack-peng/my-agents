@@ -152,7 +152,7 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 BOBKAT_PATH=/Users/mack/Strikingly/bobcat
 COMPONENT_KIT_PATH=/Users/mack/Strikingly/component-kit
 USE_FEISHU=true
-FEISHU_WIKI_ID=TKeVwHbeNiSVrOkbP2uclM5Znte
+FEISHU_WIKI_ID=<your_wiki_space_id>
 ```
 
 `.env` 已配置，格式见 `.env.example`。
