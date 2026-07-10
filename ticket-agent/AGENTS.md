@@ -164,6 +164,18 @@ FEISHU_WIKI_ID=<your_wiki_space_id>
 | `USE_FEISHU` | 是否启用飞书文档持久化（`true` / `false`） |
 | `FEISHU_WIKI_ID` | 飞书知识库 Space ID（仅 `USE_FEISHU=true` 时需要） |
 
+### Node 版本管理
+
+需要特定 Node 版本时，使用 `NODENV_VERSION=` 环境变量前置于命令，**禁止** `nodenv global`（会修改全局默认版本，影响其他项目）：
+
+```bash
+# 正确：按命令指定版本
+NODENV_VERSION=22.13.0 lark-cli docs +fetch --doc "..."
+
+# 错误：修改全局默认版本
+nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
+```
+
 ### Pre-flight 检查
 
 启动时确认 `.env` 中配置的路径存在且为有效的 git 仓库。缺失时提示用户补充。
