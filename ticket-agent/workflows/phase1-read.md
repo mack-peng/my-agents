@@ -8,15 +8,15 @@ Zendesk 工单 URL 或工单 ID。
 
 ## 流程
 
-### 1. 获取工单详情
+### 1. 获取工单详情和对话内容
 
-**Use zendesk-agent** → `zcli-ticket` 直接读取。
+**Use zendesk-agent** → `zcli-ticket` 直接读取。一条命令同时获取工单元数据和所有评论：
 
 ```bash
-zcli-ticket --json ticket-show <id>
+zcli-ticket --json ticket-thread <id>
 ```
 
-`--json` 输出结构化数据，关键字段：
+**工单元数据字段**：
 
 | JSON 字段 | 含义 | 提取内容 |
 |-----------|------|----------|
@@ -25,7 +25,7 @@ zcli-ticket --json ticket-show <id>
 | `status` | 状态 | open / pending / solved 等 |
 | `requester_id` | 请求人 ID | 需结合 user-show 获取姓名 |
 | `assignee_id` | 处理人 ID | 需结合 user-show 获取姓名 |
-| `group_id` | 处理组 ID | 需结合 group-show 获取名称 |
+| `group_id` | 处理组 ID | 内部分类参考 |
 | `tags` | 标签 | 标签列表 |
 | `custom_fields` | 自定义字段 | 分类、类型等 |
 | `created_at` / `updated_at` | 时间 | 创建/更新时间 |
@@ -33,37 +33,30 @@ zcli-ticket --json ticket-show <id>
 | `type` | 类型 | problem / incident / question / task |
 | `url` | API URL | 可拼接 Zendesk 页面链接 |
 
-### 2. 获取对话内容
-
-```bash
-zcli-ticket --json ticket-thread <id>
-```
-
-从输出中提取：
+**评论内容提取**：输出中包含 `_comments` 数组（CLI 客户端注入，前缀 `_` 避免与 API 原生字段冲突），每条评论关键字段：
 
 | 内容 | 来源 |
 |------|------|
-| 问题描述 | 第一条公开评论（`type: "Comment"`, `public: true`） |
-| 内部备注 | `type: "Comment"`, `public: false` 的评论 |
+| 问题描述 | 第一条公开评论（`"public": true`） |
+| 内部备注 | `"public": false` 的评论 |
 | 复现步骤 | 内部备注或评论中的步骤描述 |
-| Livesite URL | 评论/备注中的链接 |
+| Livesite URL | 评论中的链接 |
 | 附件引用 | 评论中的 `attachments` 数组（`file_name`, `content_url`） |
 
-### 3. 解析请求人 / 处理人信息
+### 2. 解析请求人 / 处理人信息
 
 ```bash
 zcli-ticket --json user-show <requester_id>
 zcli-ticket --json user-show <assignee_id>
-zcli-ticket --json group-show <group_id>
 ```
 
-### 4. 提取附件信息
+### 3. 提取附件信息
 
-从 ticket-thread 输出的 `attachments` 中提取：
+从 `_comments` 的 `attachments` 中提取：
 - 文件名、大小、类型
 - 附件 API URL（供后续引用，不读取内容）
 
-### 5. 输出摘要
+### 4. 输出摘要
 
 ```
 ## 工单 #ID — 标题
@@ -73,10 +66,8 @@ zcli-ticket --json group-show <group_id>
 | 状态 | OPEN |
 | 请求人 | xxx |
 | 处理人 | xxx |
-| 处理组 | xxx |
 | 分类 | xxx |
 | 类型 | xxx |
-| 优先级 | xxx |
 | 标签 | tag1, tag2 |
 | 创建时间 | xxx |
 
@@ -97,7 +88,7 @@ zcli-ticket --json group-show <group_id>
 - Editor: <URL>
 ```
 
-### 6. 等待 Sign-off
+### 5. 等待 Sign-off
 
 **"Phase 1 完成。问题描述是否准确？是否有补充信息？请确认后继续。（回复 OK / 或提出修改）"**
 
@@ -105,26 +96,18 @@ zcli-ticket --json group-show <group_id>
 - 如问题描述不清晰，提出具体问题请用户补充
 - 如 livesite URL 缺失，请用户提供
 
-### 7. Sign-off 后：创建飞书文档
+### 6. Sign-off 后
 
-**Use feishu-agent** → `lark-cli docs +create` 创建飞书文档。
+**飞书模式**：**Use feishu-agent** →
 
-文档内容格式：
+```bash
+# 1. 在知识库中创建文档节点
+lark-cli wiki +node-create --space-id <FEISHU_WIKI_ID> --title "[工单 #ID] 问题标题"
 
-```markdown
-# [工单 #ID] 问题标题
-
-## Phase 1: 问题描述
-- **工单链接**: ...
-- **状态**: ...
-- **请求人**: ...
-- **处理人**: ...
-- **分类**: ...
-- **问题描述**: ...
-- **复现步骤**: ...
-- **Livesite**: ...
-- **附件**: ...
-✅ Phase 1 Sign-off: 已确认
+# 2. 写入内容
+lark-cli docs +update --api-version v2 --doc "<doc_url>" --command append --doc-format markdown --content $'# [工单 #ID] 问题标题\n\n## Phase 1: 问题描述\n- **工单链接**: ...\n...'
 ```
 
 创建完成后，记录飞书文档 URL。后续 Phase 都会用到。
+
+**Session 模式**：在对话中记录 Phase 1 摘要（保持与飞书文档一致的 Markdown 格式），直接进入 Phase 2 调研策略询问。

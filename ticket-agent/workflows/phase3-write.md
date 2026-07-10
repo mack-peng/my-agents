@@ -2,15 +2,15 @@
 
 ## 输入
 
-飞书文档 URL（Phase 1 问题 + Phase 2 根因）
+飞书文档 URL（飞书模式）或对话上下文（Session 模式）
 
 ## 流程
 
-### 1. 读取飞书文档
+### 1. 获取上下文
 
-**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。提取：问题描述、livesite URL、根因、相关文件列表
 
-提取：问题描述、livesite URL、根因、相关文件列表
+**Session 模式**：从对话上下文中提取 Phase 1-2 的摘要和结论。
 
 ### 2. 阅读需要修改的文件
 
@@ -68,6 +68,8 @@
 
 **"Phase 3 完成。代码修改方案是否 OK？是否有遗漏？请确认后继续。"**
 
-### 8. Sign-off 后：追加飞书文档
+### 8. Sign-off 后
 
-**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 3: 解决方案` 到文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 3: 解决方案` 到文档。
+
+**Session 模式**：在对话中记录 Phase 3 摘要（保持 Markdown 格式），等待用户指令进入下一 Phase。

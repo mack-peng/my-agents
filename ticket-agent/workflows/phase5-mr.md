@@ -2,7 +2,7 @@
 
 ## 输入
 
-飞书文档 URL（Phase 1-4 全部内容） + 用户指定的 Reviewer
+飞书文档 URL（飞书模式）或对话上下文（Session 模式） + 用户指定的 Reviewer
 
 ## 前置条件
 
@@ -11,11 +11,11 @@
 
 ## 流程
 
-### 1. 读取飞书文档
+### 1. 获取上下文
 
-**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。提取：工单标题、Zendesk URL、问题描述、根因、解决方案、影响面、分支名、测试结果
 
-提取：工单标题、Zendesk URL、问题描述、根因、解决方案、影响面、分支名、测试结果
+**Session 模式**：从对话上下文中提取 Phase 1-4 的摘要和结论。
 
 ### 2. 询问 Reviewer
 
@@ -23,7 +23,9 @@
 
 ### 3. 生成 MR 描述
 
-使用 `references/mr-template.md` 模板，从飞书文档填充：
+使用 `references/mr-template.md` 模板，从 Phase 1-4 中填充：
+- **飞书模式**：从飞书文档提取
+- **Session 模式**：从对话上下文提取
 
 | 模板字段 | 数据来源 |
 |---------|---------|
@@ -72,9 +74,11 @@ glab api projects/<gitlab-project-path>/merge_requests/<iid> -X PUT -f descripti
 
 **"Phase 5 完成。MR 已创建。全部流程结束。"**
 
-### 7. Sign-off 后：追加飞书文档
+### 7. Sign-off 后
 
-**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 5: MR` 到文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 5: MR` 到文档。
+
+**Session 模式**：在对话中记录 Phase 5 摘要，流程结束。
 
 ### 8. 如 Reviewer 反馈需要修改
 

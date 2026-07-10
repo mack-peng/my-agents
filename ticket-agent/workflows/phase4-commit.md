@@ -2,7 +2,7 @@
 
 ## 输入
 
-飞书文档 URL（Phase 1-3 全部内容） + 用户指定的测试分支名称
+飞书文档 URL（飞书模式）或对话上下文（Session 模式） + 用户指定的测试分支名称
 
 ## 前置条件
 
@@ -11,11 +11,11 @@
 
 ## 流程
 
-### 1. 读取飞书文档
+### 1. 获取上下文
 
-**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。提取：工单标题（用于生成分支名）、修改文件列表
 
-提取：工单标题（用于生成分支名）、修改文件列表
+**Session 模式**：从对话上下文中提取 Phase 1-3 的摘要和结论。
 
 ### 2. 询问测试分支
 
@@ -76,9 +76,11 @@ git checkout <branch-name>
 
 **"Phase 4 完成。代码已推送到 <branch-name>，已 cherry-pick 到 <test-branch>。请通知测试验证。验证通过后回复确认继续。"**
 
-### 7. Sign-off 后：追加飞书文档
+### 7. Sign-off 后
 
-**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 4: 代码提交` 到文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 4: 代码提交` 到文档。
+
+**Session 模式**：在对话中记录 Phase 4 摘要（保持 Markdown 格式），等待用户指令进入下一 Phase。
 
 ### 8. 如测试反馈需要修改
 

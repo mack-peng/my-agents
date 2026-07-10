@@ -2,7 +2,7 @@
 
 ## 输入
 
-飞书文档 URL
+飞书文档 URL（飞书模式）或对话上下文（Session 模式）
 
 ## 工程原则
 
@@ -13,7 +13,11 @@
 
 ## TODO 纪律
 
-开始前在飞书文档创建 `## Phase 2 TODO` 节，按 `[~]` → `[x]` 规则实时更新。Phase 2 sign-off 前确认 `[ ]` 和 `[~]` 已全部清零。
+开始前维护 `## Phase 2 TODO` 追踪：
+- **飞书模式**：在飞书文档中创建 TODO 节
+- **Session 模式**：在对话中维护 TODO 列表
+
+按 `[~]` → `[x]` 规则实时更新。Phase 2 sign-off 前确认 `[ ]` 和 `[~]` 已全部清零。
 
 ## 差异对比策略
 
@@ -40,11 +44,11 @@
 
 ## 流程
 
-### 1. 读取飞书文档
+### 1. 获取上下文
 
-**Use feishu-agent** → `lark-cli docs +fetch` 读取文档内容。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +fetch` 读取文档内容。提取 Phase 1 中的：问题描述、复现步骤、livesite URL、问题类型（样式/逻辑/功能）
 
-提取 Phase 1 中的：问题描述、复现步骤、livesite URL、问题类型（样式/逻辑/功能）
+**Session 模式**：从对话上下文中提取 Phase 1 的摘要和结论。
 
 ### 2. 打开 Livesite（如有）
 
@@ -127,12 +131,14 @@
 
 **"Phase 2 完成。根因分析是否准确？调研是否充分？请确认后继续。"**
 
-### 7. Sign-off 后：追加飞书文档
+### 7. Sign-off 后
 
-**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 2: 调研分析` 到文档。
+**飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 2: 调研分析` 到文档。
+
+**Session 模式**：在对话中记录 Phase 2 摘要（保持 Markdown 格式），等待用户指令进入下一 Phase。
 
 ### 8. Hard Stop
 
 - Phase 2 完成后停止，不得自动进入 Phase 3
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
-- 如果 context compression 已开始，先写入飞书文档再停止
+- 如果 context compression 已开始，先落盘（飞书模式写文档 / Session 模式记录摘要）再停止
