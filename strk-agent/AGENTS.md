@@ -20,7 +20,7 @@ COMPONENT_KIT_REPO_PATH=/path/to/component-kit
 
 ## 可用 Skills
 
-已安装在 `~/.agents/skills/`，通过 `$skill` 语法或 skill tool 加载：
+> **⚠️ 按需加载**：Skills 位于 `strk-agent/.agents/skills/` 内，仅在使用本 agent 时由 opencode 自动发现。每个任务只加载对应 skill，不预加载全部。
 
 | Skill | 用途 |
 |-------|------|

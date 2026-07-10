@@ -18,7 +18,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [design-agent](./design-agent) | OpenCode 原生 | 产品设计审查：UI/UX、转化、品牌，输出 Spec |
 | [dify-agent](./dify-agent) | `dify-cli` | Dify AI 平台：聊天/补全、知识库、工作流 |
 | [doc-agent](./doc-agent) | `officecli` | Office 文档：创建/编辑 .docx/.xlsx/.pptx |
-| [feishu-agent](./feishu-agent) | `lark-cli` | 飞书：IM、文档、表格、多维表格、日历、邮件等 26 个技能 |
+| [feishu-agent](./feishu-agent) | `lark-cli` | 飞书：云文档、知识库、云空间、表格、Markdown（6 个 skill） |
 | [gitee-agent](./gitee-agent) | `gitee-cli` | Gitee 码云：repo、issue、PR、release、组织 |
 | [github-agent](./github-agent) | `gh` | GitHub：repo、issue、PR、Actions、release |
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
@@ -56,8 +56,7 @@ my-agents/
   <agent-name>/
     AGENTS.md           # agent 参考文档（12 个目录）
     AGENT.md            # 少数 agent 使用单数形式（dify-agent/、morph-agent/）
-    skills/             # 技能定义
-    .agents/skills/     # 已安装的 skills（feishu-agent 有 26 个 lark 技能）
+    skills/             # 技能定义（仅在 feishu-agent 内部）
 ```
 
 ## 快速开始

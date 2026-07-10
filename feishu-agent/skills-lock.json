@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "lark-doc": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "e8dea8526cb72123b8d09982596ee255f0b100fd8a91bb0871eba892809e4c9a"
+    },
+    "lark-drive": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "a23bfafcaa8d182cf9a96ce6f138a89f90c8cbfa26dde3ae836e488def0e7703"
+    },
+    "lark-markdown": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "38c5bfca09006e62c0a7d8521c8df5efa7091659fd256912430b95442f456931"
+    },
+    "lark-shared": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "e8e89604151cecac3b44e4dafce86bd8ec79a010f905192d0f5372d01572c415"
+    },
+    "lark-sheets": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "e70f01158cadd18eaa3b47337cd8f91499b0e129f13bddfbaab237f8d69cc3c2"
+    },
+    "lark-wiki": {
+      "source": "open.feishu.cn",
+      "sourceType": "well-known",
+      "computedHash": "e66e5485fb75062340af78b029e5b5e4b9481c91628dcec8dddd42f61d6a19b4"
+    }
+  }
+}

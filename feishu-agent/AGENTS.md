@@ -79,84 +79,71 @@ lark-cli auth status
 
 成功时 Bot 和 User 双身份均为 `ready`。
 
-## 已安装的 27 个 Skills
+## 已安装的 6 个 Skills
 
-项目 `.agents/skills/` 目录下已安装以下飞书技能，所有技能均使用 `lark-cli` 命令行操作：
+> **⚠️ 快捷命令优先**：云文档、知识库、表格、Markdown、云空间等基础操作使用下方快捷命令，**禁止加载 skill 文件**。仅在需要复杂操作（如 drive 权限管理、wiki 成员管理、sheets 公式/筛选等）时才读取对应的 `SKILL.md` 和 `references/`。
 
-| Skill | 功能 |
-|-------|------|
-| lark-im | 收发消息、管理群聊、搜索聊天记录、表情回复 |
-| lark-doc | 创建、读取、编辑、翻译飞书云文档 |
-| lark-sheets | 电子表格：创建表格、读写单元格、批量操作 |
-| lark-base | 多维表格：建表、字段管理、记录 CRUD、视图/仪表盘/工作流 |
-| lark-calendar | 查看日程、创建/更新会议、预约会议室、查询忙闲 |
-| lark-mail | 收发邮件、管理草稿、搜索邮件 |
-| lark-task | 创建待办、管理任务清单、分配协作成员 |
-| lark-drive | 上传/下载文件、文件夹管理、文件搜索、导入导出 |
-| lark-wiki | 管理知识空间、节点层级、成员权限 |
-| lark-approval | 审批实例和任务管理 |
-| lark-vc | 搜索历史会议、获取纪要/逐字稿 |
-| lark-vc-agent | 机器人入会/离会、读取会中实时事件 |
-| lark-minutes | 上传音视频转文字、搜索妙记列表 |
-| lark-slides | 创建和编辑演示文稿 |
-| lark-whiteboard | 查看/编辑画板，支持 Mermaid/PlantUML/D3 |
-| lark-okr | 管理目标与关键结果 |
-| lark-contact | 按姓名/邮箱搜索员工、解析 open_id |
-| lark-attendance | 查询考勤打卡记录 |
-| lark-apps | 部署 HTML 到飞书妙搭（公网可访问） |
-| lark-event | 实时事件流订阅与消费 |
-| lark-markdown | 创建、读取、编辑 Markdown 文件 |
-| lark-note | 查询会议纪要详情和逐字记录 |
-| lark-openapi-explorer | 查找和调用原生飞书 OpenAPI |
-| lark-skill-maker | 创建自定义 lark-cli Skill |
-| lark-shared | 身份切换、权限问题诊断、CLI 更新 |
-| lark-workflow-meeting-summary | 会议纪要整理工作流 |
-| lark-workflow-standup-report | 日程待办摘要 |
+Skills 位于 `feishu-agent/.agents/skills/` 内，仅在使用本 agent 时加载：
 
-## 使用方式
+| Skill | 功能 | 何时读 SKILL.md |
+|-------|------|-----------------|
+| lark-doc | 创建、读取、编辑飞书云文档 | 需要 XML block 操作、画板、媒体插入等高级用法 |
+| lark-drive | 上传/下载文件、文件夹管理、导入导出 | 权限管理、版本回退、评论等高级操作 |
+| lark-sheets | 电子表格：创建表格、读写单元格 | 公式、筛选视图、浮动图片、样式合并 |
+| lark-wiki | 管理知识空间、节点层级、成员权限 | 节点移动/复制、成员添加/移除 |
+| lark-markdown | 创建、读取、编辑 Markdown 文件 | 复杂 patch 操作、diff 对比 |
+| lark-shared | 身份切换、权限问题诊断、CLI 更新 | 遇到 `_notice` 或权限错误时 |
 
-### 云文档 / 知识库
+## 快捷命令（直接从本文件复制使用，禁止加载 skill）
 
-以下命令可直接使用，无需读取 skill 文件。
+### 云文档
 
 ```bash
-# 创建文档（默认 Docx，Markdown 格式内容）
+# 创建文档
 lark-cli docs +create --api-version v2 --doc-format markdown --content $'# 标题\n\n内容...'
-# 返回 document.document_id 和 url
-
-# 创建文档到指定知识空间
 lark-cli docs +create --api-version v2 --doc-format markdown --parent-token <space_id> --content $'# 标题\n\n...'
 
-# 读取文档内容
-lark-cli docs +fetch --doc "<url或token>"
-# 支持 /docx/ 和 /wiki/ 链接
+# 读取文档
+lark-cli docs +fetch --api-version v2 --doc "<url或token>"
 
-# 追加内容到文档末尾
+# 追加内容
 lark-cli docs +update --api-version v2 --doc "<url或token>" --command append --doc-format markdown --content $'...'
 
-# 替换文档内文本（str_replace）
+# 替换内容
 lark-cli docs +update --api-version v2 --doc "<url或token>" --command str_replace --pattern "旧文本" --content "新文本" --doc-format markdown
+```
 
-# 列出知识空间
+### 知识库
+
+```bash
 lark-cli wiki +space-list
-lark-cli wiki +space-list --page-all --format pretty
-
-# 列出空间内节点
 lark-cli wiki +node-list --space-id <space_id>
-lark-cli wiki +node-list --space-id my_library --format pretty
-
-# 在知识库中创建节点（文档）
 lark-cli wiki +node-create --space-id <space_id> --title "文档标题"
-lark-cli wiki +node-create --title "个人文档"  # user 身份默认 my_library
+lark-cli wiki +node-create --title "个人文档"
+```
 
-# 搜索云空间文件
+### 云空间
+
+```bash
 lark-cli drive +search --keyword "关键词"
 ```
 
-> Markdown 写入转义：`\*` `\_` `\[` `\]` `\~` `\$` `<` `\>`。行首 `#` `-` `+` 需转义。
-> 详细语法参考 `skills/lark-doc/references/lark-doc-md.md`。
+### 表格
 
-### 其他操作
+```bash
+lark-cli sheets +spreadsheet-create --title "标题"
+lark-cli sheets +spreadsheet-info --spreadsheet "<url或token>"
+lark-cli sheets +sheet-list --spreadsheet "<url或token>"
+lark-cli sheets +range-read --spreadsheet "<url或token>" --range "Sheet1!A1:C10"
+lark-cli sheets +range-write --spreadsheet "<url或token>" --range "Sheet1!A1" --values '[["a","b"]]'
+```
 
-表格、多维表格、日历、邮件、审批、IM 等操作需读取对应 skill 文件：
-- `.agents/skills/<skill-name>/SKILL.md`
+### Markdown
+
+```bash
+lark-cli markdown +create --title "标题" --content $'# H1\n\n内容'
+lark-cli markdown +fetch --file "<url或token>"
+lark-cli markdown +update --file "<url或token>" --content $'新内容'
+```
+
+> Markdown 写入转义：`\*` `\_` `\[` `\]` `\~` `\$` `\<` `\>`。行首 `#` `-` `+` 需转义。
