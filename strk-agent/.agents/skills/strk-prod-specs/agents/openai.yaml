@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Prod Specs"
+  short_description: "Read and define local STRK product specs"
+  default_prompt: "Use the strk-prod-specs skill to read or update the local STRK product spec cache contract."

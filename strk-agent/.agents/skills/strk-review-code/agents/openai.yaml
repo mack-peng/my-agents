@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Review Code"
+  short_description: "Review GitLab MRs with bounded batches and deterministic assembly"
+  default_prompt: "Use $strk-review-code to review a GitLab merge request against the synced STRK spec, code design, and code diff with a compact batch plan, low-context requirement cards, and deterministic review assembly."

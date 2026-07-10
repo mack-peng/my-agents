@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Review Spec"
+  short_description: "Review STRK specs against facts and code"
+  default_prompt: "Use the strk-review-spec skill to review a STRK product spec against external facts, code, and related specs with low-context requirement cards."

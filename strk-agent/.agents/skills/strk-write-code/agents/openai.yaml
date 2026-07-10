@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Write Code"
+  short_description: "Implement STRK designs with requirement cards"
+  default_prompt: "Use the strk-write-code skill to fully implement a STRK code design by lightly indexing dependencies, running scoped requirement writer/reviewer checkpoints, writing low-context requirement cards, using isolated worktrees, and producing patch files."

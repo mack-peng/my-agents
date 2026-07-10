@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Code Design"
+  short_description: "Read and write STRK code design docs"
+  default_prompt: "Use the strk-code-design skill to read, review, or create a STRK code design."

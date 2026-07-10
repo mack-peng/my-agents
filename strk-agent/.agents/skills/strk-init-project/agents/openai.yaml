@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Init Project"
+  short_description: "Initialize Strikingly project docs"
+  default_prompt: "Use the strk-init-project skill to ask setup questions and initialize project instructions plus specs/ for a Strikingly project."

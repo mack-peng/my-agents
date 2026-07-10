@@ -1,0 +1,4 @@
+interface:
+  display_name: "STRK Sync Specs"
+  short_description: "Sync Strikingly specs via acli"
+  default_prompt: "Use the strk-sync-specs skill to sync Strikingly Confluence specs into local structured files."
