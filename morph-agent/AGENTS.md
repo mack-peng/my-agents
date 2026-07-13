@@ -452,3 +452,30 @@ Maven 项目构建通过 `docker.m.daocloud.io` 镜像加速，`repo.maven.apach
 **原因**: `dagger.json` 中的 `"source": ".dagger"` 字段与 Dagger v0.21.x 不兼容。
 
 **修复 (已内置)**: 所有项目已迁移到 v0.21.7 模块结构，移除了 `"source"` 字段。
+
+### 通用: Dagger 引擎拉 SDK 镜像失败 (keychain 报错)
+
+**现象**: `keychain cannot be accessed` / `failed to resolve image "oven/bun:..."`
+
+**根因分析** (三层网络架构):
+```
+macOS:7897 (Clash 代理)
+  → Docker Desktop VM
+    → dagger-engine 容器  ← HTTP_PROXY 作用于这一层，帮引擎拉 SDK 镜像
+      → build 容器         ← 这一层走 daocloud.io 镜像加速 + npmmirror.com，直连即可
+```
+
+- **引擎层**: 拉 SDK 镜像（如 `oven/bun`）走 Docker Hub，国内不通 → 需要代理
+- **构建层**: `Container.from()` 经 `img()` 函数加 `docker.m.daocloud.io` 前缀；yarn 设 `registry.npmmirror.com` → 直连可用，**不需要代理**
+
+**关键规则**:
+1. 代理**只**给引擎用，内联传参：`HTTP_PROXY=http://host.docker.internal:7897 HTTPS_PROXY=http://host.docker.internal:7897 morph-cli build ...`
+2. 不可以用 shell `export`（Dagger 引擎容器读不到）
+3. **禁止在 Dagger 模块内给构建容器加 `HTTP_PROXY`/`HTTPS_PROXY`**（`host.docker.internal` 在容器内指向引擎而非 macOS）
+4. macOS Keychain 需要在交互终端解锁一次（`security unlock-keychain`），否则 Docker pull 会报 keychain 错误
+
+### official-website: 构建时 `sitemap.xml` 不存在
+
+**原因**: v20260713 重构后 `sitemap.xml` 从根目录移动到 `public/sitemap.xml`，构建后自动包含在 `build.server/` 内，不再需要单独打包。
+
+**修复 (已内置)**: Dagger 模块已移除 `.withFile("sitemap.xml", ...)` 和 deploy 中的 sitemap rsync 步骤。
