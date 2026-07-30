@@ -21,7 +21,7 @@ lark-cli auth status
 `lark-cli` 需要 Node.js >= 20.12.0。如使用 nodenv：
 
 ```bash
-NODENV_VERSION=22.13.0   # 或其他 >= 20.12 的版本
+NODENV_VERSION=24.10.0   # 本环境实际可用版本，所有 lark-cli 命令前必须带此前缀
 ```
 
 **禁止 `nodenv global`**：使用 `NODENV_VERSION=` 环境变量按命令指定版本，避免修改全局默认版本影响其他项目。

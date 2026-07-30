@@ -538,7 +538,7 @@ glab release create v1.0.0
 1. 确认目标仓库在本机的路径（如 `strikingly/Bobcat` → `/Users/mack/Projects/bobcat`）
 2. 确认 source branch 和 target branch
 3. 收集 MR 描述所需信息：Zendesk/Jira URL、Reviewer、Description、Reason、Solution、Scope of Impact
-4. 按模板 `references/bobcat-mr-bugfix-fe-template.md` 填充内容
+4. 按模板 `../references/bobcat-mr-bugfix-fe-template.md` 填充内容
 
 ```bash
 # 在仓库目录下执行
@@ -548,7 +548,7 @@ glab mr create --source-branch <branch> --target-branch develop --title "<title>
 glab api projects/strikingly%2FBobcat/merge_requests/<iid> -X PUT -f description="$(cat /tmp/desc.md)"
 ```
 
-BoBCat Bugfix-FE 模板：`references/bobcat-mr-bugfix-fe-template.md`
+BoBCat Bugfix-FE 模板：`../references/bobcat-mr-bugfix-fe-template.md`
 
 ---
 

@@ -17,14 +17,14 @@ No build, test, or lint at the root level.
 
 - **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
 - **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
-- **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/` (mirrored in `feishu-agent/skills/`), tracked via `feishu-agent/skills-lock.json` from `open.feishu.cn`. Skills are scoped inside feishu-agent and only loaded when using this agent.
+- **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/`, tracked via `feishu-agent/skills-lock.json` from `open.feishu.cn`. Skills are scoped inside feishu-agent. **禁止加载系统级 skill 文件（`~/.agents/skills/lark-*`）**：大多数飞书操作直接从 `feishu-agent/AGENTS.md` 的快捷命令抄写执行，仅在复杂操作（XML block、公式、权限管理等）时才读取 agent 自带的 skill 文件。
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 
 ## Skills
 
-- 飞书 skills 位于 `feishu-agent/.agents/skills/`（仅 feishu-agent 使用），通过 `npx -y skills add https://open.feishu.cn --skill -y` 安装/更新。
+- 飞书 skills 仅位于 `feishu-agent/.agents/skills/`，通过 `npx -y skills add https://open.feishu.cn --skill -y` 安装/更新。**不要安装到 `~/.agents/skills/`**（会导致系统 prompt 中 available_skills 膨胀），feishu-agent 的 AGENTS.md 已自带快捷命令覆盖常用操作。
 - `feishu-agent/skills-lock.json` 记录已安装的 skills 版本。
 - STRK skills 位于 `strk-agent/.agents/skills/`（仅 strk-agent 使用），从 `agent-rnd-skills` 仓库同步。
 
