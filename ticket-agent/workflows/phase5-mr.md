@@ -1,52 +1,112 @@
 # Phase 5: 提交 MR
 
-## 输入
+## 路径判断
 
-飞书文档 URL（飞书模式）或对话上下文（Session 模式） + 用户指定的 Reviewer
+| 修改范围 | MR 数量 | 流程 |
+|---------|--------|------|
+| 仅 bobcat | 1 个 MR | 直接跳到 [bobcat MR](#bobcat-mr) |
+| component-kit + bobcat 依赖更新 | 2 个 MR | 先 [component-kit 生产 tag](#component-kit-生产-tag)，再 [bobcat MR](#bobcat-mr) |
 
-## 前置条件
+---
 
-- Phase 4 已完成（代码已推送到开发分支，测试已通过）
-- `glab` 已认证（通过 gitlab-agent）
+## Component-kit 生产 tag
 
-## 流程
+### 前置条件
 
-### 1. 获取上下文
+- Phase 4 已完成，测试 tag（如 `v2.0.16.01T`）已推送
+- QA 验证通过
+- `$COMPONENT_KIT_PATH` 已在 `.env` 中配置
 
-**飞书模式**：**Use feishu-agent** → `lark-cli docs +fetch` 读取文档。提取：工单标题、Zendesk URL、问题描述、根因、解决方案、影响面、分支名、测试结果
+### 流程
 
-**Session 模式**：从对话上下文中提取 Phase 1-4 的摘要和结论。
+#### 1. 确定生产版本号
 
-### 2. 询问 Reviewer
-
-**"请提供 Reviewer 的名字（@chaipengrong 或 @walter.huang）："**
-
-### 3. 生成 MR 描述
-
-使用 `references/mr-template.md` 模板，从 Phase 1-4 中填充：
-- **飞书模式**：从飞书文档提取
-- **Session 模式**：从对话上下文提取
-
-| 模板字段 | 数据来源 |
-|---------|---------|
-| Zendesk ticket | Phase 1 的工单 URL |
-| Reviewer | 用户指定 |
-| Description | Phase 1 的问题描述 |
-| Reason | Phase 2 的根因分析 |
-| Solution | Phase 3 的解决方案 |
-| Scope Of Impact | Phase 3 的影响面 |
-| Test Result | Phase 4 的测试验证结果 |
-
-将填充后的模板写入临时文件 `/tmp/mr_desc.md`。
-
-### 4. 创建 MR
-
-**Use gitlab-agent**。
-
-生成 MR 描述 `/tmp/mr_desc.md` 时，**Self-checklist 中所有适用项必须根据实际情况勾选为 `[x]`**，不可留空。不适用项保留原文不勾选。
+从 Phase 4 上下文提取 base tag（如 `v2.0.16`），升版本号作为生产 tag：
+- `v2.0.16` → `v2.0.17`
+- `v2.0.17` → `v2.0.18`
 
 ```bash
-# 在 $BOBKAT_PATH 下执行
+git tag --sort=-v:refname | head -5
+```
+
+#### 2. 打生产 tag
+
+生产 tag 创建在测试 tag 同一个 commit 上（不含 `T` 后缀）：
+
+```bash
+cd $COMPONENT_KIT_PATH
+git checkout <test-tag>
+git tag v<production-version>
+git push origin v<production-version>
+```
+
+#### 3. 输出
+
+```
+## Phase 5: Component-kit 生产 tag
+
+- **测试 tag**: <test-tag>
+- **生产 tag**: v<production-version>
+- **Tag URL**: https://cd.i.strikingly.com/strikingly/component-kit/tags
+- **状态**: 已发布
+```
+
+---
+
+## Bobcat MR
+
+### 前置条件
+
+- 测试验证已通过
+- Component-kit 生产 tag 已发布
+- `glab` 已认证（通过 gitlab-agent）
+
+### 流程
+
+#### 1. 创建 bobcat 开发分支
+
+```bash
+cd $BOBKAT_PATH
+git checkout develop && git pull origin develop
+git checkout -b <branch-name>
+```
+
+分支命名：`fix-deps-component-kit-<简短描述>`
+
+#### 2. 更新 component-kit 依赖为生产 tag
+
+将 3 个 package.json 中的 component-kit 引用从测试 tag 改为生产 tag：
+
+```diff
+- "component-kit": "...component-kit.git#<test-tag>",
++ "component-kit": "...component-kit.git#v<production-version>",
+```
+
+| 文件 |
+|------|
+| `package.json` |
+| `fe-apps/fujian-edu/package.json` |
+| `fe-apps/support/package.json` |
+
+```bash
+yarn
+git add package.json fe-apps/fujian-edu/package.json fe-apps/support/package.json yarn.lock
+git commit -m "fix(deps): update component-kit to v<production-version>"
+git push origin <branch-name>
+```
+
+#### 3. 询问 Reviewer
+
+> **"请提供 Reviewer 的名字："**
+
+#### 4. 生成 MR 描述
+
+使用 `references/mr-template.md` 模板填充 MR 描述。
+
+#### 5. 创建 MR
+
+```bash
+cd $BOBKAT_PATH
 glab mr create \
   --source-branch <branch-name> \
   --target-branch develop \
@@ -54,10 +114,10 @@ glab mr create \
   --description "$(cat /tmp/mr_desc.md)"
 ```
 
-### 5. 输出总结
+#### 6. 输出总结
 
 ```
-## Phase 5: MR 提交
+## Phase 5: Bobcat MR
 
 ### MR 信息
 - **标题**: <title>
@@ -66,17 +126,21 @@ glab mr create \
 - **MR 链接**: <URL>
 ```
 
-### 6. 等待 Sign-off
+#### 7. 等待 Sign-off
 
-**"Phase 5 完成。MR 已创建。全部流程结束。"**
+> **"Phase 5 完成。MR 已创建。全部流程结束。"**
 
-### 7. Sign-off 后
+---
 
-**飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 5: MR` 到文档。
+## 飞书模式：组件-tag + MR 追加
 
-**Session 模式**：在对话中记录 Phase 5 摘要，流程结束。
+每个子阶段完成后追加到飞书文档：
+- Component-kit 生产 tag 完成 → 追加 tag 信息
+- Bobcat MR 创建 → 追加 MR 链接
 
-### 8. 如 Reviewer 反馈需要修改
+---
+
+## MR Review 反馈处理
 
 1. 在开发分支上修改代码
 2. 重新 cherry-pick 到测试分支验证

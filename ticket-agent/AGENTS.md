@@ -81,15 +81,30 @@ zcli-ticket -p <profile> ticket-show <id>
 
 如果 URL 中无法提取子域名（如仅提供 ID），默认使用当前 active profile，并告知用户。
 
-## 五阶段流程
+## 阶段流程
 
-| # | 阶段 | 委托 | 飞书模式产出 | Session 模式产出 |
-|---|------|------|-------------|-----------------|
-| 1 | 阅读工单 | 详见 `workflows/phase1-read.md` | 飞书文档：问题描述 | 对话摘要：问题描述 |
-| 2 | 调研分析 | 详见 `workflows/phase2-investigate.md` | 追加：根因 + 代码路径 | 对话摘要：根因 + 代码路径 |
-| 3 | 代码编写 | 详见 `workflows/phase3-write.md` | 追加：方案 + 影响面 | 对话摘要：方案 + 影响面 |
-| 4 | 提交代码 | 详见 `workflows/phase4-commit.md` | 追加：分支 + commit | 对话摘要：分支 + commit |
-| 5 | 提交 MR | 详见 `workflows/phase5-mr.md` | 追加：MR 链接 | 对话摘要：MR 链接 |
+修改目标分为两类：**component-kit 源码**和 **bobcat 源码**，流程不同。
+
+### 修改在 component-kit 时
+
+| # | 阶段 | 委托 | 产出 |
+|---|------|------|------|
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述 |
+| 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
+| 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
+| 4 | 提交代码（component-kit） | `workflows/phase4-commit.md` | 开发分支（仅源码）+ 测试 tag（源码 + 构建产物） |
+| 4b | bobcat 依赖更新 | `workflows/phase4-bobcat-update.md` | 用户通知后才执行：直接在测试分支上更新 package.json 指向测试 tag |
+| 5 | 提交 MR（双 MR） | `workflows/phase5-mr.md` | component-kit 生产 tag + bobcat MR |
+
+### 修改仅在 bobcat 时
+
+| # | 阶段 | 委托 | 产出 |
+|---|------|------|------|
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述 |
+| 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
+| 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
+| 4 | 提交代码（bobcat） | `workflows/phase4-commit.md` | 分支 + commit |
+| 5 | 提交 MR | `workflows/phase5-mr.md` | MR 链接 |
 
 每个 Phase 完成后：
 1. 输出总结给用户
@@ -101,6 +116,7 @@ zcli-ticket -p <profile> ticket-show <id>
 
 - **分支名**：使用前缀 `feat-` / `fix-` / `refactor-`，分隔符用 `-`（不用 `/`）
 - **Commit message**：`<type>(<scope>): <简短描述>`，只写 title 不写 body
+- **禁止 force push**：禁止 `git push --force` / `git push -f` / `git push origin +<branch>`。如需修改已推送的 commit，追加新 commit，不 amend 已推送的 commit
 
 ```
 git commit -m "fix(custom-form): prevent cursor jumping in input fields"
@@ -123,6 +139,30 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。
 - **不写注释**：用自描述的命名和结构表达意图。
+
+### Phase 4: 代码提交
+
+根据修改目标选择路径：
+
+- **component-kit 变更**：详见 `workflows/phase4-commit.md` — 开发分支（仅源码）+ base tag 上 cherry-pick 源码 + 构建 + 测试 tag
+- **bobcat 变更**：详见 `workflows/phase4-commit.md` — 标准 git 提交流程
+
+### Phase 4b: bobcat 依赖更新（仅 component-kit 变更时，用户通知后执行）
+
+用户提供 bobcat 测试分支名，直接在测试分支上操作：
+- 修改 3 个 `package.json` 中的 component-kit 引用为测试 tag（如 `v2.0.16.01T`）
+- 用户执行 yarn → 提交 yarn.lock → 推送测试分支
+- 通知用户 build 部署测试环境
+
+详见 `workflows/phase4-bobcat-update.md`。
+
+### Phase 5: 提交 MR
+
+**component-kit 生产 tag**：基于 Phase 4 的 base tag 升版本号（如 `v2.0.16` → `v2.0.17`）创建生产 tag
+
+**bobcat MR**：package.json 改为生产 tag 引用 → yarn → commit → `glab mr create`
+
+详见 `workflows/phase5-mr.md`。
 
 ### TODO 执行纪律
 
@@ -234,6 +274,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 3. **飞书模式**：用户确认后，先通过 feishu-agent 追加飞书文档，再进入下一 Phase
 4. **Session 模式**：用户确认后，在对话中记录本 Phase 摘要，直接进入下一 Phase
 5. 如用户提出修改意见，回到当前 Phase 的对应步骤
+6. **component-kit 变更时**：Phase 4 sign-off 后停止，等待用户通知是否进入 Phase 4b（bobcat 依赖更新）。用户说"跳过"则直接进入 Phase 5
 
 ## Hard Stop
 
@@ -241,6 +282,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 用户 sign-off 前不得追加飞书文档 / 进入下一 Phase
 - 如果 context compression 已开始或即将开始，先完成当前 TODO 项并等待 sign-off
 - Phase 5 sign-off 后任务结束，不得自动开启新工单
+- Phase 4b（bobcat 依赖更新）仅在用户明确要求时执行，不得在 Phase 4 完成后自动触发
 
 ## 注意事项
 
