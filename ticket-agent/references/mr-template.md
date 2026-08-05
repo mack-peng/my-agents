@@ -6,6 +6,8 @@
 | Zendesk ticket | REPLACE_NAME   |
 | Reviewer       | REPLACE_NAME   |
 
+> **⚠️ 上表中 `REPLACE_NAME` / `REPLACE_URL` 必须替换为实际值。尤其是 Reviewer 栏位，填入用户选择的 reviewer username（如 `@walter.huang`），不可留空。**
+
 ## Problem Solving Process
 
 ### Description

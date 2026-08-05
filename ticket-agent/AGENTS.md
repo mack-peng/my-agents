@@ -50,8 +50,10 @@
 | 有 `✅ Phase 1 Sign-off` 但无 Phase 2 标记 | Phase 2 |
 | 有 `✅ Phase 2 Sign-off` 但无 Phase 3 标记 | Phase 3 |
 | 有 `✅ Phase 3 Sign-off` 但无 Phase 4 标记 | Phase 4 |
-| 有 `✅ Phase 4 Sign-off` 但无 Phase 5 标记 | Phase 5 |
-| 有 `✅ Phase 5 Sign-off` | 已完成 |
+| 有 `✅ Phase 4 Sign-off` 但无 Phase 4b 标记（component-kit 变更时） | Phase 4b |
+| 有 `✅ Phase 4/4b Sign-off` 但无 Phase 5 标记 | Phase 5 |
+| 有 `✅ Phase 5 Sign-off` 但无 Phase 5b 标记（component-kit 变更时） | Phase 5b |
+| 有 `✅ Phase 5b Sign-off` 或仅 bobcat 时 `✅ Phase 5 Sign-off` | 已完成 |
 
 ### Session 模式：阶段跳转规则
 
@@ -94,7 +96,8 @@ zcli-ticket -p <profile> ticket-show <id>
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（component-kit） | `workflows/phase4-commit.md` | 开发分支（仅源码）+ 测试 tag（源码 + 构建产物） |
 | 4b | bobcat 依赖更新 | `workflows/phase4-bobcat-update.md` | 用户通知后才执行：直接在测试分支上更新 package.json 指向测试 tag |
-| 5 | 提交 MR（双 MR） | `workflows/phase5-mr.md` | component-kit 生产 tag + bobcat MR |
+| 5 | 提交 Component-kit MR | `workflows/phase5-mr-component-kit.md` | component-kit MR 链接（`fix-component-kit-*` → develop） |
+| 5b | 生产 tag + Bobcat MR | `workflows/phase5-mr-component-kit.md` | 用户通知后才执行（review 通过后）：component-kit 生产 tag + bobcat MR |
 
 ### 修改仅在 bobcat 时
 
@@ -104,7 +107,7 @@ zcli-ticket -p <profile> ticket-show <id>
 | 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（bobcat） | `workflows/phase4-commit.md` | 分支 + commit |
-| 5 | 提交 MR | `workflows/phase5-mr.md` | MR 链接 |
+| 5 | 提交 MR | `workflows/phase5-mr-bobcat.md` | MR 链接 |
 
 每个 Phase 完成后：
 1. 输出总结给用户
@@ -156,13 +159,20 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 详见 `workflows/phase4-bobcat-update.md`。
 
-### Phase 5: 提交 MR
+### Phase 5: 提交 Component-kit MR（仅 component-kit 变更时）
 
-**component-kit 生产 tag**：基于 Phase 4 的 base tag 升版本号（如 `v2.0.16` → `v2.0.17`）创建生产 tag
+- 从 Phase 4 的开发分支（`fix-component-kit-*`）向 develop 提交 MR
+- 使用 `glab mr create` 在 `$COMPONENT_KIT_PATH` 目录下创建 MR
+- 等待 reviewer 审核通过后 sign-off，进入 Phase 5b
 
-**bobcat MR**：package.json 改为生产 tag 引用 → yarn → commit → `glab mr create`
+详见 `workflows/phase5-mr-component-kit.md`。
 
-详见 `workflows/phase5-mr.md`。
+### Phase 5b: 生产 tag + Bobcat MR（仅 component-kit 变更时，review 通过后执行）
+
+- Component-kit 生产 tag：从 develop 切本地构建分支 → `yarn build` → commit 构建产物 → 打 tag → 推 tag，停下等用户确认
+- Bobcat MR：从 develop 切分支 → 更新 package.json 为生产 tag → `yarn` → commit → push → `glab mr create`
+
+详见 `workflows/phase5-mr-component-kit.md`。
 
 ### TODO 执行纪律
 
@@ -275,14 +285,15 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 4. **Session 模式**：用户确认后，在对话中记录本 Phase 摘要，直接进入下一 Phase
 5. 如用户提出修改意见，回到当前 Phase 的对应步骤
 6. **component-kit 变更时**：Phase 4 sign-off 后停止，等待用户通知是否进入 Phase 4b（bobcat 依赖更新）。用户说"跳过"则直接进入 Phase 5
+7. **component-kit 变更时**：Phase 5 sign-off（MR review 通过）后停止，等待用户通知是否进入 Phase 5b（生产 tag + bobcat MR）。用户说"跳过"则直接结束
 
 ## Hard Stop
 
 - 每个 Phase 完成后必须停止，不得自动推进下一 Phase
 - 用户 sign-off 前不得追加飞书文档 / 进入下一 Phase
 - 如果 context compression 已开始或即将开始，先完成当前 TODO 项并等待 sign-off
-- Phase 5 sign-off 后任务结束，不得自动开启新工单
-- Phase 4b（bobcat 依赖更新）仅在用户明确要求时执行，不得在 Phase 4 完成后自动触发
+- Phase 5b sign-off 后任务结束，不得自动开启新工单
+- Phase 5b（生产 tag + bobcat MR）仅在用户明确要求时执行，不得在 Phase 5 完成后自动触发
 
 ## 注意事项
 

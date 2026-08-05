@@ -33,9 +33,16 @@ Phase 4b: bobcat 依赖更新（用户通知后触发）
   └── 通知用户 build 部署测试环境
   │
   ▼
-Phase 5: MR
-  ├── component-kit: 基于 base tag 升版本号 → 打生产 tag（v2.0.16 → v2.0.17）
-  └── bobcat: package.json 改生产 tag → yarn → commit → glab mr create
+Phase 5: Component-kit MR
+  ├── 从开发分支向 develop 提交 MR
+  ├── 生成 MR 描述（参考 mr-template.md）
+  ├── glab mr create
+  └── 等待 review 通过
+  │
+  ▼
+Phase 5b: 生产 tag + Bobcat MR（review 通过后触发）
+  ├── component-kit: fetch tags → develop 切本地构建分支 → yarn build → commit 构建产物 → 打 tag → 推 tag
+  └── bobcat: develop 切分支 → 更新 package.json 为生产 tag → yarn → commit → push → glab mr create
 ```
 
 ## 1. component-kit 代码提交（Phase 4）
@@ -137,37 +144,69 @@ git push origin <test-branch>
 
 然后通知用户 build 部署测试环境。
 
-## 3. 提交 MR（Phase 5）
+## 3. 提交 Component-kit MR（Phase 5）
 
-### 3a. Component-kit 生产 tag
+详见 `workflows/phase5-mr-component-kit.md`。
 
-基于 Phase 4 的 base tag 升版本号（如 `v2.0.16` → `v2.0.17`），打生产 tag（不带 `T` 后缀）：
+从开发分支（`fix-component-kit-*`）向 develop 提交 MR：
 
 ```bash
 cd $COMPONENT_KIT_PATH
+glab mr create \
+  --source-branch <branch-name> \
+  --target-branch develop \
+  --title "<title>" \
+  --reviewer <reviewer-username> \
+  --description "$(cat /tmp/component-kit-mr-desc.md)"
+```
+
+等待 review 通过后进入 Phase 5b。
+
+## 4. 生产 tag + Bobcat MR（Phase 5b）
+
+详见 `workflows/phase5-mr-component-kit.md`。
+
+### 4a. Component-kit 生产 tag
+
+从 develop 切本地构建分支、构建、打 tag：
+
+```bash
+cd $COMPONENT_KIT_PATH
+git fetch origin --tags
+git checkout develop && git pull origin develop
+git checkout -b publish-product-YYYYMMDD    # 本地分支，不推送；已存在则接 -01 后缀
+yarn build
+git add -A && git commit -m 'Build: product'
 git tag v<production-version>
 git push origin v<production-version>
 ```
 
-Tag 可在 https://cd.i.strikingly.com/strikingly/component-kit/tags 查看。
+生产版本号 = 最新生产 tag 版本号 +1。Tag 在 https://cd.i.strikingly.com/strikingly/component-kit/tags 查看。
 
-### 3b. Bobcat MR
+Tag 推送后停下等用户确认，再继续 Bobcat MR。
 
-将 package.json 中的 component-kit 引用从测试 tag 改为生产 tag：
+### 4b. Bobcat MR
+
+从 develop 切分支，更新 3 个 package.json 中 component-kit 引用为生产 tag：
 
 ```diff
-- "component-kit": "...component-kit.git#<test-tag>",
-+ "component-kit": "...component-kit.git#v<production-version>",
+- "...component-kit.git#<old-ref>",
++ "...component-kit.git#v<production-version>",
 ```
 
 ```bash
+cd $BOBKAT_PATH
+git checkout develop && git pull origin develop
+git checkout -b use-new-component-kit-v<production-version>
+# 修改 package.json / fe-apps/fujian-edu/package.json / fe-apps/support/package.json
 yarn
 git add package.json fe-apps/fujian-edu/package.json fe-apps/support/package.json yarn.lock
-git commit -m "fix(deps): update component-kit to v<production-version>"
+git commit -m "feat(component-kit): update component kit version for v<production-version>"
 git push origin <branch-name>
+glab mr create --source-branch <branch-name> --target-branch develop ...
 ```
 
-然后 `glab mr create` 创建 MR。
+
 
 ### Git 操作原则
 
