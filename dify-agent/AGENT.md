@@ -2,6 +2,8 @@
 
 `@orangemust/dify-cli` is a CLI tool that lets you control Dify applications programmatically — chat apps, completion apps, workflow apps, knowledge bases, all from the command line.
 
+Full skill documentation and pitfalls reference at `.agents/skills/dify-cli/SKILL.md`. Use `dify-cli --help` for command discovery — do not memorize all commands.
+
 Install globally:
 ```bash
 npm install -g @orangemust/dify-cli
@@ -32,22 +34,37 @@ sudo npm install -g @orangemust/dify-cli
 
 ## Config
 
-Stored at `~/.dify/config.json`. One key at a time.
+Stored at `~/.dify/config.json`. Verify with `dify-cli config path` or `dify-cli config show`.
+
+### Multi-Profile Setup (recommended)
 
 ```bash
-dify-cli config get              # View current config
+dify-cli config new app              # Create profile for app key
+dify-cli config new kb               # Create profile for dataset key
 
-# For app operations
-dify-cli config init --api-key app-xxxx
+dify-cli config init --api-key app-xxxx -p app
+dify-cli config init --api-key dataset-xxxx -p kb
 
-# For knowledge base operations
-dify-cli config init --api-key dataset-xxxx
-
-# If self-hosted
-dify-cli config init --api-key app-xxxx --base-url https://dify.example.com/v1
+# Self-hosted
+dify-cli config init --api-key app-xxxx --base-url https://dify.example.com/v1 -p self
 
 # Set a user identifier
-dify-cli config init --api-key app-xxxx --default-user bot-agent
+dify-cli config init --api-key app-xxxx --default-user bot-agent -p app
+
+dify-cli config use app              # Switch active profile
+dify-cli --profile kb knowledge list # Use specific profile without switching
+```
+
+### Profile Commands
+
+```bash
+dify-cli config new <name>           # Create profile
+dify-cli config use <name>           # Switch active profile
+dify-cli config list                 # List all profiles
+dify-cli config show [-p <name>]     # Show config (masked)
+dify-cli config path                 # Config file path
+dify-cli config get [key] [-p <name>]
+dify-cli config set <key> <value> [-p <name>]
 ```
 
 ### Env Vars (skip config entirely)
@@ -56,14 +73,15 @@ dify-cli config init --api-key app-xxxx --default-user bot-agent
 export DIFY_API_KEY=app-xxxx
 export DIFY_BASE_URL=https://dify.example.com/v1
 export DIFY_DEFAULT_USER=bot-agent
+export DIFY_PROFILE=app              # Override active profile
 ```
 
-Priority: CLI flag `--api-key` > env var `DIFY_API_KEY` > config file.
+**Priority:** CLI flags (`--api-key`, `--profile`) > env vars (`DIFY_API_KEY`, `DIFY_PROFILE`) > active profile in config.
 
 Override per command without touching config:
 ```bash
 dify-cli chat send "hello" --api-key app-xxxx
-dify-cli knowledge list --api-key dataset-xxxx
+dify-cli --profile kb knowledge list
 ```
 
 ---
@@ -81,23 +99,38 @@ Keys are **not interchangeable**:
 
 ## App Key Commands (`app-`)
 
+Output is always JSON. Two response modes:
+
+```bash
+dify-cli chat send "message"                     # Blocking (default) — single JSON
+dify-cli chat send "message" --mode streaming    # Streaming — SSE events
+dify-cli chat send "message" -c <conversation_id> # Continue conversation
+dify-cli chat send "message" --inputs '{"k":"v"}' # With variables
+echo "long text" | dify-cli chat send            # Stdin pipe (no arg = read stdin)
 ```
-dify-cli info                               # App info
-dify-cli chat send "message"                # Chat (blocking)
-dify-cli chat send "message" --mode streaming  # Chat (streaming)
-dify-cli completion send "prompt"           # Completion
-dify-cli chatflow send "message"            # Chatflow
-dify-cli workflow run                       # Workflow
-dify-cli conversation list                  # Conversations
-dify-cli file upload ./doc.pdf              # Upload file
-dify-cli audio to-text ./a.mp3              # Speech-to-text
-dify-cli feedback list --app-type chat      # Feedback
-dify-cli annotation list                    # Annotations
+
+```
+dify-cli info
+dify-cli chat send "message"
+dify-cli chat stop <task_id>
+dify-cli chat feedback <message_id> -r like
+dify-cli completion send "prompt"
+dify-cli chatflow send "message"
+dify-cli workflow run
+dify-cli workflow run --inputs '{"key":"value"}'
+dify-cli workflow logs
+dify-cli conversation list
+dify-cli file upload ./doc.pdf
+dify-cli audio to-text ./a.mp3
+dify-cli feedback list --app-type chat
+dify-cli annotation list
 ```
 
 ---
 
 ## Dataset Key Commands (`dataset-`)
+
+`knowledge` can be abbreviated as `kb`.
 
 ```
 dify-cli knowledge list                     # List datasets
@@ -115,11 +148,23 @@ dify-cli knowledge retrieve <dataset_id> --query "test" --retrieval-model '{"sea
 
 ---
 
+## Anti-patterns
+
+- Use `--profile` to switch between app/dataset keys instead of reconfiguring.
+- `--mode streaming` outputs SSE, not JSON — parse as SSE events.
+- 401 = wrong key or wrong base URL. Check `config show`.
+- base-url must end with `/v1`.
+- `chat send` without message arg reads from stdin (pipe support).
+- Use jq to extract fields from JSON output.
+- See `.agents/skills/dify-cli/references/pitfalls.md` for more.
+
+---
+
 ## Common Failures
 
 **"Authorization header must be provided and start with 'Bearer'"** — Key is empty. Run `config init` or set `DIFY_API_KEY`.
 
-**"Access token is invalid"** — Key is wrong or expired. Get a fresh one from Dify.
+**"Access token is invalid"** — Key is wrong or expired. Get a fresh one from Dify, or verify profile with `dify-cli config show`.
 
 **"Cannot find module"** — Global install didn't register. Re-run `npm install -g @orangemust/dify-cli`.
 
