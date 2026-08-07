@@ -12,10 +12,12 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 |---|---|---|
 | [acli-agent](./acli-agent) | `acli` | Atlassian 全家桶：Jira issues/sprints、Confluence pages/blogs |
 | [apihz-agent](./apihz-agent) | `apihz-cli` | 479+ API（天气、IP、翻译、OCR、短信等） |
+| [aliyun-agent](./aliyun-agent) | `bl` (bailian-cli) | 阿里云百炼：AI 图片生成/编辑、视频生成 |
 | [browser-agent](./browser-agent) | `playwright-cli` | 浏览器自动化：导航、截图、表单、网络监控、测试 |
 | [code-agent](./code-agent) | OpenCode 原生 | Feature 开发：按 Spec + Code Design 实现代码 |
 | [code-design-agent](./code-design-agent) | OpenCode 原生 | 前端代码设计：从产品 Spec 产出 FE Code Design 文档 |
 | [design-agent](./design-agent) | OpenCode 原生 | 产品设计审查：UI/UX、转化、品牌，输出 Spec |
+| [develop-agent](./develop-agent) | OpenCode 原生 | 需求开发协调器：串联 design → code-design → code → morph → gitee 全流程 |
 | [dify-agent](./dify-agent) | `dify-cli` | Dify AI 平台：聊天/补全、知识库、工作流 |
 | [doc-agent](./doc-agent) | `officecli` | Office 文档：创建/编辑 .docx/.xlsx/.pptx |
 | [feishu-agent](./feishu-agent) | `lark-cli` | 飞书：云文档、知识库、云空间、表格、Markdown（6 个 skill） |
@@ -27,14 +29,25 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 
 ### 流水线串联
 
-三个 OpenCode 原生 agent 可串联成一条产品交付流水线：
+#### 手动串联
+
+三个 OpenCode 原生 agent 可按需串联：
 
 ```
 设计审查 → 代码设计 → 代码实现
 design-agent → code-design-agent → code-agent
 ```
 
-人类在每个环节审阅并确认后，再进入下一环节。
+#### 全流程自动化
+
+`develop-agent` 作为协调器，统一调度六阶段交付流水线：
+
+```
+需求 → Phase 1 Design → Phase 2 Code Design → Phase 3 Code → Phase 4 Verify → Phase 5 Release
+        design-agent      code-design-agent       code-agent       morph-agent       gitee-agent
+```
+
+每个 Phase 后人工 sign-off 确认，支持飞书文档跨 session 续接。
 
 ## 使用方式
 
@@ -54,7 +67,7 @@ cd code-agent
 my-agents/
   AGENTS.md             # 本文档
   <agent-name>/
-    AGENTS.md           # agent 参考文档（12 个目录）
+    AGENTS.md           # agent 参考文档（18 个目录）
     AGENT.md            # 少数 agent 使用单数形式（dify-agent/、morph-agent/）
     skills/             # 技能定义（仅在 feishu-agent 内部）
 ```
