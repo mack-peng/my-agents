@@ -21,14 +21,24 @@
 | `SEARCH_ENGINE_URL` | `https://www.google.com` | 搜索引擎首页 |
 | `REPORT_OUTPUT_DIR` | `output` | 报告输出目录 |
 
+## 设计理念
+
+采用 **ReAct（Reasoning + Acting）** 模式的深度研究代理：
+
+- **知识缺口驱动** — 不预设搜索计划。每轮搜索后，LLM 审查所有已累积发现 + 已搜索主题，识别知识缺口，动态决定下一步搜索方向。搜索计划在执行过程中逐渐成形，而非提前固化。
+- **双层 LLM 分工** — 搜索决策使用低温度（0.3）追求精确性；报告生成使用高温度（0.7）追求创造性和可读性。
+- **结构化决策输出** — 每轮搜索决策输出 JSON `{nextSearchTopic, shouldContinue, reasoning}`，配合容错解析，防止 LLM 格式偏差导致流程崩溃。
+- **灵活终止** — LLM 自主判断信息是否充分（`shouldContinue`），`DEFAULT_DEPTH` 仅作安全兜底，不做硬约束。
+
 ## 工具分工
 
-| 工具 | 用途 | 来源 |
-|------|------|------|
-| browser-agent | 打开 Google、执行搜索、获取结果列表 | playwright-cli |
-| webfetch | 抓取搜索结果页的完整文章内容 | OpenCode 内置 |
-| LLM | 拆解问题、评估缺口、综合报告 | OpenCode 对话 |
-| snapshot | 提取搜索引擎结果页的链接和摘要 | playwright-cli |
+| 工具 | 用途 | 来源 | 角色 |
+|------|------|------|------|
+| browser-agent | 打开 Google、执行搜索、获取结果列表 | playwright-cli | 执行层 |
+| webfetch | 抓取搜索结果页的完整文章内容 | OpenCode 内置 | 执行层 |
+| LLM (决策, 0.3) | 审查已有发现、识别知识缺口、决定下一步搜索 | OpenCode 对话 | 搜索决策层 |
+| LLM (报告, 0.7) | 汇总发现、综合生成结构化调研报告 | OpenCode 对话 | 报告生成层 |
+| snapshot | 提取搜索引擎结果页的链接和摘要 | playwright-cli | 执行层 |
 
 ## 报告格式
 
