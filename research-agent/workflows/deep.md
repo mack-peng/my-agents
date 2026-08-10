@@ -40,9 +40,12 @@ playwright-cli press Enter
 playwright-cli snapshot
 ```
 
+**反爬虫处理**：如果页面 URL 变为 `/sorry/index` 或出现 reCAPTCHA（"I'm not a robot"、"Select all images"），则暂停并提示用户手动在浏览器中完成验证。用户告知"OK"/"好了"后，用 snapshot 确认搜索结果页已加载，继续流程。
+
 #### 1.3 提取 & 抓取
 - 从 snapshot 提取结果：标题、URL、摘要
 - 用 webfetch 抓取前 `MAX_RESULTS_PER_QUERY` 篇全文
+- **webfetch 回退**：如果 webfetch 无法访问某 URL（返回 Transport error / 403 / 空内容），则用 playwright-cli 导航到该 URL 并 snapshot 获取页面文本内容作为替代
 - 将本轮发现追加到 `findings[]`
 - 将抓取的 URL 追加到 `urls[]`
 - `round += 1`
@@ -111,7 +114,8 @@ playwright-cli snapshot
 1. LLM 汇总所有 `findings`（全量上下文）
 2. 按 `templates/report.md` 格式生成结构化报告
 3. 写入 `output/{主题}-{YYYY-MM-DD}.md`
-4. 输出最终统计："共 {N} 轮搜索、{M} 个来源，报告已保存至 output/{主题}-{YYYY-MM-DD}.md"
+4. 输出最终统计和核心发现摘要："共 {N} 轮搜索、{M} 个来源，报告已保存至 output/{主题}-{YYYY-MM-DD}.md"
+5. **等待用户审核**：输出报告后暂停，询问用户是否需要修改或补充。用户确认"OK"/"没问题"后，进入 Phase 4 质量检查。
 
 ### Phase 4: 质量检查
 
@@ -120,6 +124,13 @@ playwright-cli snapshot
 - [ ] 来源链接完整可访问
 - [ ] 覆盖多个维度/立场，无明显知识缺口
 - [ ] 防重复有效：topics 列表无重复搜索词
+
+### Phase 5: 飞书知识库上传（按需）
+
+1. 检查 `.env` 中 `USE_FEISHU` 是否为 `true`
+2. 如果为 `true`，询问用户是否需要上传到飞书知识库
+3. 用户确认后，使用 feishu-agent 将报告内容上传到 `FEISHU_WIKI_ID` 指定的知识库
+4. 上传后反馈飞书链接
 
 ## 终止条件（优先级从高到低）
 
@@ -135,3 +146,9 @@ playwright-cli snapshot
 - 报告中的引用必须附带来源 URL
 - 搜索决策 LLM 的 instruction 使用低温度（0.3），报告生成 LLM 使用高温度（0.7）
 - findings 必须全量传给搜索决策 LLM，不要截断 — 信息越完整决策越准
+- 遇到 reCAPTCHA 反爬虫时，不要自行尝试绕过，等待用户手动完成验证后继续
+- **禁止使用 Google AI Overview 内容**：不引用、不采信搜索结果页中的 "AI Overview" 归纳，只使用实际抓取到的文章原文
+- 搜索结果的 snippet 摘要（非 AI Overview）可作为初步筛选参考，但具体数据和事实必须以 webfetch/playwright-cli 抓取的原文为准
+- webfetch 无法访问的链接，用 playwright-cli goto + snapshot 兜底抓取
+- 报告生成后必须等待用户审核通过才算完成，不要自动跳过
+- 飞书上传仅为按需操作，需用户主动确认
