@@ -7,37 +7,47 @@
 ### 1. 收集上下文
 
 从 Phase 3 获取：
-- 分支名
-- commit hash
+- 开发分支名
+- commit hash 列表
 - 修改范围摘要
 
 向用户确认：
-- 部署目标（preprod / 其他环境）
-- 分支名（默认 Phase 3 的推送分支）
+- 部署目标（preprod）
+- 测试分支名称（若不存在则新建）
 
-### 2. 委托 morph-agent 构建
+### 2. 创建测试分支并 cherry-pick
 
+**注意：不要直接在开发分支上构建。** 应从 master 创建专用测试分支，将开发分支的 commits cherry-pick 上去。
+
+```bash
+git checkout master
+git pull origin master
+git checkout -b <test-branch>
+git cherry-pick <commit1> <commit2> ...   # Phase 3 的所有 commits
+git push origin <test-branch>
 ```
-use morph-agent build
-```
+
+> 若测试分支已存在，先拉到最新，再 cherry-pick 增量 commits。
+
+### 3. 委托 morph-agent 构建
+
+**使用上下文切换模式（`use morph-agent build`），非 Task 工具委托。**
 
 morph-agent 执行：
 - 环境预检（Docker 磁盘、morph-cli 可用）
-- `morph-cli build <project> <branch>`
+- `morph-cli build <project> <test-branch>`（project 名从项目 AGENTS.md 或用户确认）
 - 返回 Build ID
 
-### 3. 委托 morph-agent 部署
+### 4. 委托 morph-agent 部署
 
-```
-use morph-agent deploy
-```
+**使用上下文切换模式（`use morph-agent deploy`），非 Task 工具委托。**
 
 morph-agent 执行：
 - `morph-cli deploy <project> <buildId>`
 - 返回 Deploy ID
 - 确认 PM2 重启成功
 
-### 4. 线上验证
+### 5. 线上验证
 
 协调器自动执行以下验证：
 

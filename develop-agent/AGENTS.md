@@ -105,7 +105,7 @@
 - [ ] 检查项目 AGENTS.md 存在，读取了解项目约定
 - [ ] 询问用户需求描述
 - [ ] 判定是否跳过 Phase 2（简单需求直接 Spec → Code）
-- [ ] 飞书模式：在 `FEISHU_SPEC_WIKI_ID` 知识库创建任务文档
+- [ ] 飞书模式：在 `FEISHU_DEVELOP_WIKI_ID` 知识库创建任务文档
 
 ### Phase 1: Design
 
@@ -154,8 +154,8 @@
 委托 morph-agent 构建并部署到 preprod 环境。
 
 流程：
-1. 确认分支名（Phase 3 提交的分支或用户指定分支）
-2. morph-agent 构建 → 等待 build ID
+1. 询问测试分支名称（不存在则新建），cherry-pick Phase 3 commits → push
+2. morph-agent 构建测试分支 → 等待 build ID
 3. morph-agent 部署到 preprod
 4. 协调器验证线上效果（fetch 页面、检查关键变更点）
 5. 自动验证（OG 图片 200、JSON-LD 正确、meta 标签存在等）
@@ -275,3 +275,18 @@
 - 需要飞书操作 → `use feishu-agent`
 - 协调器自身可执行简单 git 操作（分支创建、切换），不执行代码修改或提交
 - 飞书模式下跨机器提供飞书文档 URL 即可续接
+
+## Agent 委托机制
+
+**"use X-agent" 不等于 `Task` 工具委托。** develop-agent 作为协调器，对子 agent 采用 **上下文切换** 模式：
+
+| 方式 | 适用场景 |
+|------|---------|
+| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-agent / morph-agent / gitee-agent / feishu-agent）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
+| **`Task` 工具** | 仅用于轻量、独立、无需用户交互的子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
+
+**为什么不能用 Task 委托？**
+- 子 agent 无 agent 上下文（不加载目标 AGENTS.md）
+- 子 agent 无法与用户交互（→ code-agent 的 sign-off/checkpoint 不可用）
+- 子 agent 可能无权访问目标项目的工具链（codegraph/cssgraph）
+- 子 agent 被设计为根 agent，内部需要多级派发（→ 子 agent 不能再派发子 agent）

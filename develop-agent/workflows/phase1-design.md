@@ -13,9 +13,7 @@
 
 ### 2. 委托 design-agent
 
-```
-use design-agent
-```
+**使用上下文切换模式（`use design-agent`），非 Task 工具委托。**
 
 告知 design-agent：
 - 模式选择（审查模式 / Spec 输出模式）

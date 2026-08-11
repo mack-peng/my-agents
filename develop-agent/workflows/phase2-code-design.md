@@ -26,9 +26,7 @@
 
 ### 2. 委托 code-design-agent
 
-```
-use code-design-agent
-```
+**使用上下文切换模式（`use code-design-agent`），非 Task 工具委托。**
 
 告知 code-design-agent：
 - Spec 来源（路径 or 飞书 URL）

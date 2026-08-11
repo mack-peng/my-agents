@@ -27,11 +27,9 @@ git checkout -b feat-{需求短名}
 
 ### 3. 委托 code-agent
 
-```
-use code-agent
-```
+**使用上下文切换模式（`use code-agent`），非 Task 工具委托。**
 
-告知 code-agent：
+将 code-agent 的 AGENTS.md 加载为当前操作指令，告知：
 - Spec 文件路径 + Code Design 路径（如有）
 - 目标项目路径
 - 已切换到开发分支，可直接修改
