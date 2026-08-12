@@ -178,7 +178,7 @@
 ## Git 规范
 
 - **分支名**：使用前缀 `feat-` / `fix-` / `refactor-`，分隔符用 `-`
-- **Commit message**：`<type>(<scope>): <简短描述>`
+- **Commit message**：`<type>(<scope>): <简短描述>`，**全部使用英文**，禁止中文 commit message
 - **禁止 force push**：禁止 `git push --force`。如需修改已推送的 commit，追加新 commit
 
 ## TODO 执行纪律
