@@ -140,12 +140,14 @@
 委托 code-agent 按 Spec + Code Design 实现代码修改。
 
 流程：
+0. **确认当前在开发分支**（`git branch --show-current`），禁止在 `master` 或 `test-preprod-*` 上操作
 1. **协调器创建开发分支**（从 master 切出，命名：`feat-` / `fix-` 前缀）
 2. 将 Spec + Code Design + 目标项目传递给 code-agent
 3. code-agent 调研代码 → 实现修改 → 验证（typecheck + lint）
 4. code-agent 提交 commit 并 push 到命名远程分支
-5. 协调器向用户展示 diff 摘要
-6. 用户确认后 sign-off
+5. **协调器确认当前在开发分支上**（`git branch --show-current` 非 test-preprod 或 master），再继续
+6. 协调器向用户展示 diff 摘要
+7. 用户确认后 sign-off
 
 详见 `workflows/phase3-code.md`。
 
@@ -154,7 +156,9 @@
 委托 morph-agent 构建并部署到 preprod 环境。
 
 流程：
+0. **确认切换到测试分支**（如 `test-preprod-*`），再从开发分支 cherry-pick commits
 1. 询问测试分支名称（不存在则新建），cherry-pick Phase 3 commits → push
+   > 冲突时优先 `git checkout --theirs <file>` 接受开发分支版本，再 `git cherry-pick --continue`
 2. morph-agent 构建测试分支 → 等待 build ID
 3. morph-agent 部署到 preprod
 4. 协调器验证线上效果（fetch 页面、检查关键变更点）
