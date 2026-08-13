@@ -4,15 +4,26 @@
 
 ## 前置检查
 
-每次使用前，先检查 CLI 是否可用和已登录：
+每次使用前，先读 `firecrawl-agent/.env` 确定运行模式，再检查 CLI 是否可用。
+
+### 运行模式（由 `.env` 的 `USE_SELF_HOST` 决定）
+
+- `USE_SELF_HOST=true` → 自托管模式，用 `FIRECRAWL_SELF_HOST_URL` 作为 API 地址，跳过云端 key 鉴权。
+- `USE_SELF_HOST=false` → 云端模式，用已存全局凭证 / keyless 免费档。
 
 ```bash
 # 检查 CLI 是否安装
 which firecrawl || echo "未安装"
 
-# 检查认证状态、并发额度与剩余 credits
-firecrawl --status
+# 按 .env 应用 API 地址
+# USE_SELF_HOST=true：
+firecrawl login --api-url "$FIRECRAWL_SELF_HOST_URL"
+# USE_SELF_HOST=false：无需额外操作，沿用全局已存凭证 / keyless
 ```
+
+### 关于 `--status` 的 "Not authenticated"
+
+自托管模式下，`firecrawl --status` / `view-config` **永远显示 "Not authenticated"**——它只看有没有 `apiKey`，而自托管模式本就没有 key。**这属预期，不是未配置**，无需 login，直接下任务即可（实际请求走的是自托管 URL）。只有云端模式（`USE_SELF_HOST=false`）下 "Not authenticated" 才需要处理。
 
 ## 安装
 
