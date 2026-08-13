@@ -57,8 +57,9 @@ export FIRECRAWL_API_KEY=fc-YOUR-API-KEY
 # 临时指定
 firecrawl --api-url http://localhost:3002 scrape https://example.com
 
-# 持久化自定义 API 地址
-firecrawl config --api-url http://localhost:3002
+# 持久化自定义 API 地址（用 login，它是 config 的别名；
+# config 拼写因 --api-url 与全局选项重名而读不到值，会误入云登录流程）
+firecrawl login --api-url http://localhost:3002
 
 # 或环境变量
 export FIRECRAWL_API_URL=http://localhost:3002
