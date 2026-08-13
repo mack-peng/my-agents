@@ -2,6 +2,20 @@
 
 `firecrawl-cli` 是 Firecrawl 官方 CLI，提供网页抓取、搜索、地图、爬取、交互、监控与 agent 任务能力。配置持久化在 CLI 自身，无需 `.env`。
 
+## 硬规则（最先读，直接决定能否调用）
+
+当前 `.env` 为 `USE_SELF_HOST=true`（自托管模式）。**此模式下只允许以下 5 个命令：**
+
+- ✅ `scrape`、`crawl`、`map`、`search`、`parse`
+
+**以下命令/能力一律禁止调用（会报错）：**
+
+- ❌ `agent`（自然语言调研）→ 改用 `search --scrape` + 人工归纳
+- ❌ `interact`、`monitor`、`developer`、`research`、`feedback` / `search-feedback`
+- ❌ `scrape --screenshot` / 页面动作、LLM 类格式（`--format json`+schema / `summary` / extract）
+
+> 若 `.env` 改为 `USE_SELF_HOST=false`（云端模式），本条硬规则作废，改用下方「❌ 仅云端」章节的完整命令。
+
 ## 前置检查
 
 每次使用前，先读 `firecrawl-agent/.env` 确定运行模式，再检查 CLI 是否可用。
@@ -24,6 +38,37 @@ firecrawl login --api-url "$FIRECRAWL_SELF_HOST_URL"
 ### 关于 `--status` 的 "Not authenticated"
 
 自托管模式下，`firecrawl --status` / `view-config` **永远显示 "Not authenticated"**——它只看有没有 `apiKey`，而自托管模式本就没有 key。**这属预期，不是未配置**，无需 login，直接下任务即可（实际请求走的是自托管 URL）。只有云端模式（`USE_SELF_HOST=false`）下 "Not authenticated" 才需要处理。
+
+## 自托管能力边界
+
+> 本清单仅在 `USE_SELF_HOST=true`（自托管）模式下成立；切换云端模式后以「❌ 仅云端」章节的命令为准。
+
+自托管实例只提供核心抓取路由，以下 CLI 命令依赖 Firecrawl Cloud 或额外服务，调用会直接报错（404 / 通用 error / 静默忽略）。**不要对 ❌ 项下任务，直接改用可用命令或降级到 search + scrape 人工归纳。** 自托管实例无 `/capabilities` 等运行时探针，能力判断只能依赖本文档，请严格遵守。
+
+官方依据：<https://docs.firecrawl.dev/contributing/self-host> → "Self-hosted feature support" 表。
+
+### ✅ 可用
+
+| 命令 | 说明 |
+|------|------|
+| `scrape` | 单页抓取（markdown / html / rawHtml / links 等基础格式） |
+| `crawl` | 整站爬取 |
+| `map` | 站点 URL 发现 |
+| `search` | 网页搜索 |
+| `parse` | 解析本地文件（HTML/PDF/DOCX/XLSX 等），不依赖服务端 |
+
+### ❌ 不可用
+
+| 命令 | 失败表现 |
+|------|---------|
+| `agent` | `Failed to start agent`（自然语言调研不可用，需 Firecrawl Cloud） |
+| `interact` | `Scrape interact requires stored scrape context...` |
+| `monitor` | 通用 error（Error ID） |
+| `developer` | `Request failed with status code 404` |
+| `research` | `Request failed with status code 404` |
+| `feedback` / `search-feedback` | Cloud-only |
+| `scrape --screenshot` / 页面动作 | **静默忽略**，不返回截图；需 Fire-engine 服务 |
+| LLM 类格式（`--format json` + schema / `summary` / extract） | 需另接 OpenAI-compatible 或 Ollama provider |
 
 ## 安装
 
@@ -80,7 +125,10 @@ export FIRECRAWL_API_URL=http://localhost:3002
 
 ## 快捷命令（直接从本文件复制使用）
 
-### Scrape（单页抓取）
+> 标注 ❌ 的命令为云端专属，自托管实例不可用（见「自托管能力边界」）。
+> 自然语言调研需求 → 用 `search --scrape` + 抓取全文 + 人工归纳，**不要**用 `agent`。
+
+### Scrape（单页抓取）✅
 
 ```bash
 firecrawl https://example.com                          # 默认 markdown 输出
@@ -88,17 +136,14 @@ firecrawl scrape https://example.com                   # 显式 scrape 命令
 firecrawl https://example.com --only-main-content      # 仅正文（去导航/页脚/广告，推荐）
 firecrawl https://example.com --html                   # HTML 输出
 firecrawl https://example.com --format markdown,links  # 多格式（返回 JSON）
-firecrawl https://example.com --format summary         # 页面摘要
-firecrawl https://example.com --format json --schema '{"type":"object","properties":{"title":{"type":"string"}}}'
 firecrawl https://example.com --wait-for 3000          # 等 JS 渲染
-firecrawl https://example.com --screenshot             # 截图
 firecrawl https://example.com --redact-pii             # 脱敏 PII
 firecrawl https://example.com -o output.md             # 保存到文件
 ```
 
-格式：`markdown, html, rawHtml, links, screenshot, json, images, summary, changeTracking, attributes, branding, product`。
+格式：`markdown, html, rawHtml, links, screenshot, json, images, summary, changeTracking, attributes, branding, product`（`screenshot`、`json`+schema、`summary` 等依赖额外服务，自托管不可用，见「自托管能力边界」）。
 
-### Search（网页搜索）
+### Search（网页搜索）✅
 
 ```bash
 firecrawl search "web scraping tutorials"
@@ -110,13 +155,7 @@ firecrawl search "documentation" --scrape --scrape-formats markdown   # 搜索�
 firecrawl search "<关键词>" --limit 3 --scrape --scrape-formats markdown --json
 ```
 
-### Developer（开发者索引：issues/PR/README/文档）
-
-```bash
-firecrawl developer "how do I configure retries" --limit 10
-```
-
-### Map（站点 URL 发现）
+### Map（站点 URL 发现）✅
 
 ```bash
 firecrawl map https://example.com
@@ -125,7 +164,7 @@ firecrawl map https://example.com --limit 500 --json
 firecrawl map https://example.com --sitemap only       # 仅用 sitemap
 ```
 
-### Crawl（整站爬取）
+### Crawl（整站爬取）✅
 
 ```bash
 firecrawl crawl https://example.com --wait             # 等待完成
@@ -137,7 +176,30 @@ firecrawl crawl <job-id> --cancel                      # 取消
 firecrawl crawl https://example.com --wait --pretty -o results.json
 ```
 
-### Interact（页面交互）
+### Parse（本地文件解析）✅
+
+```bash
+firecrawl parse ./report.pdf                     # PDF → markdown
+firecrawl parse ./report.pdf -f markdown,links   # 多格式（返回 JSON）
+firecrawl parse ./page.html -H                   # 输出 HTML
+firecrawl parse ./contract.docx --only-main-content
+firecrawl parse ./report.pdf -Q "What is the total revenue?"   # 就内容提问
+firecrawl parse ./report.pdf --json --pretty -o report.json
+```
+
+支持 `.html/.htm/.pdf/.docx/.doc/.odt/.rtf/.xlsx/.xls`，最大 50 MB。不依赖服务端，本地即可用。
+
+### ❌ 仅云端（自托管不可用）
+
+以下命令依赖 Firecrawl Cloud，仅供云端模式（`USE_SELF_HOST=false`）参考，自托管模式请勿调用。
+
+#### Developer（开发者索引：issues/PR/README/文档）❌
+
+```bash
+firecrawl developer "how do I configure retries" --limit 10
+```
+
+#### Interact（页面交互）❌
 
 ```bash
 firecrawl scrape https://www.amazon.com                # 先抓取（scrape ID 自动保存）
@@ -146,7 +208,7 @@ firecrawl interact "Click on the first result and tell me the price"
 firecrawl interact stop                                # 结束会话
 ```
 
-### Monitor（周期性抓取/爬取 + 变更 diff）
+#### Monitor（周期性抓取/爬取 + 变更 diff）❌
 
 ```bash
 firecrawl monitor create --name "Hacker News AI" \
@@ -160,7 +222,7 @@ firecrawl monitor update <monitorId> --goal "..."
 firecrawl monitor delete <monitorId>
 ```
 
-### Agent（自然语言调研/数据采集）
+#### Agent（自然语言调研/数据采集）❌
 
 ```bash
 firecrawl agent "Find the top 5 AI startups and their funding amounts" --wait
@@ -193,12 +255,16 @@ firecrawl version                     # 查看 CLI 版本
 - **单格式** → 输出原始内容（markdown 文本 / HTML 等）；**多格式** → 输出 JSON。
 - `--pretty` 美化 JSON；`--json` 强制 JSON；`-o <path>` 保存到文件。
 - 输出默认到 stdout，可直接管道或重定向：`firecrawl https://example.com | head -50`。
+- **大输出（如 `search --json`、`crawl --json`）优先用 `-o <文件>` 落盘再解析**，避免 stdout 被 shell/agent 环境截断并重定向到临时 tool-output 文件：
 
 ```bash
-# 用 jq 组合
+# 用 jq 组合（jq 已通过 `sudo apt-get install -y jq` 安装）
 firecrawl https://example.com --format links --json | jq -r '.links[]'
 firecrawl map https://example.com | wc -l
-jq -r '.data.web[].url' search-results.json
+
+# 搜索 + 抓取全文，落盘后用 jq 解析（推荐写法，避免截断）
+firecrawl search "<关键词>" --limit 3 --scrape --scrape-formats markdown --json -o /tmp/opencode/search.json
+jq -r '.data.web[] | "### \(.title)\nURL: \(.url)\n\(.description)\n"' /tmp/opencode/search.json
 ```
 
 - 关闭匿名遥测：`export FIRECRAWL_NO_TELEMETRY=1`（遥测只含 CLI 版本/OS/Node 版本/开发工具，不含 URL 与文件内容）。
