@@ -55,6 +55,11 @@ No build, test, or lint at the root level.
 - Agents have clear boundaries: dify-builder-agent executes modifications; design-agent only reviews and outputs specs, never implements.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
 
+## Git commit conventions
+
+- Commit message 一律使用英文，格式 `<type>(<scope>): <简短描述>`，禁止中文 commit message。
+- 禁止 force push。如需修改已推送的 commit，追加新 commit。
+
 ## Dify DSL app conventions
 
 - `input/` holds exported Dify `.yml` DSL files sourced from `https://dify.orangemust.com`.
