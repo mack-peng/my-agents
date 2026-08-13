@@ -1,6 +1,6 @@
 # Research Agent
 
-独立的深度调研代理。使用 browser-agent 搜索网页，webfetch 抓取内容，LLM 综合整理成结构化报告。**零外部依赖**，不需要任何 API Key。
+独立的深度调研代理。搜索与抓取委托 browser-agent（浏览器模式）或 firecrawl-agent（Firecrawl 模式）执行，LLM 负责搜索决策与报告生成。**零外部依赖**，不需要任何 API Key。
 
 ## 触发规则
 
@@ -20,6 +20,7 @@
 | `MAX_RESULTS_PER_QUERY` | 3 | 每轮搜索抓取的文章数 |
 | `SEARCH_ENGINE_URL` | `https://www.google.com` | 搜索引擎首页 |
 | `REPORT_OUTPUT_DIR` | `output` | 报告输出目录 |
+| `USE_FIRECRAWL` | `false` | 执行方选择：`true` 委托 firecrawl-agent，`false` 委托 browser-agent |
 
 ## 设计理念
 
@@ -32,13 +33,14 @@
 
 ## 工具分工
 
-| 工具 | 用途 | 来源 | 角色 |
-|------|------|------|------|
-| browser-agent | 打开 Google、执行搜索、获取结果列表 | playwright-cli | 执行层 |
-| webfetch | 抓取搜索结果页的完整文章内容 | OpenCode 内置 | 执行层 |
-| LLM (决策, 0.3) | 审查已有发现、识别知识缺口、决定下一步搜索 | OpenCode 对话 | 搜索决策层 |
-| LLM (报告, 0.7) | 汇总发现、综合生成结构化调研报告 | OpenCode 对话 | 报告生成层 |
-| snapshot | 提取搜索引擎结果页的链接和摘要 | playwright-cli | 执行层 |
+搜索与抓取**不直接调用底层 CLI**，而是委托对应 agent 目录执行（先 read 其 AGENTS.md，按其快捷命令操作）。
+
+| 执行方 | 用途 | 角色 |
+|------|------|------|
+| firecrawl-agent | Firecrawl 模式：搜索 + 抓取全文一步完成 | 执行层 |
+| browser-agent | 浏览器模式：打开 Google、执行搜索、获取结果列表、兜底抓取 | 执行层 |
+| LLM (决策, 0.3) | 审查已有发现、识别知识缺口、决定下一步搜索 | 搜索决策层 |
+| LLM (报告, 0.7) | 汇总发现、综合生成结构化调研报告 | 报告生成层 |
 
 ## 报告格式
 

@@ -95,6 +95,8 @@ firecrawl search "AI news" --limit 10 --pretty
 firecrawl search "AI" --sources web,news,images
 firecrawl search "tech news" --tbs qdr:d              # qdr:h/d/w/m/y 时间过滤
 firecrawl search "documentation" --scrape --scrape-formats markdown   # 搜索并抓取结果
+# 搜索 + 抓取全文 + JSON 输出（供 research-agent 深度/简单搜索调用）
+firecrawl search "<关键词>" --limit 3 --scrape --scrape-formats markdown --json
 ```
 
 ### Developer（开发者索引：issues/PR/README/文档）

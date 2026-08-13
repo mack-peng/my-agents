@@ -33,35 +33,21 @@ ReAct 模式的深度研究代理：LLM 驱动搜索决策，每轮根据已累�
 
 #### 1.2 执行搜索
 
-搜索方式由 `USE_FIRECRAWL` 配置控制：
-
-> **注意**：若使用 Firecrawl 模式，需先确保 Firecrawl CLI 已安装并完成自托管配置：`firecrawl config --api-url <your-url>`。
+执行方由 `USE_FIRECRAWL` 配置控制。**不直接调用底层 CLI**：先 read 对应 agent 的 AGENTS.md，按其快捷命令执行。
 
 **若 `USE_FIRECRAWL=true`（Firecrawl 模式）：**
-```bash
-# 一条命令完成搜索 + 抓取全文
-firecrawl search "<搜索关键词>" \
-  --limit $MAX_RESULTS_PER_QUERY \
-  --scrape \
-  --scrape-formats markdown \
-  --json
-```
-从 JSON 输出中提取每条结果的标题、URL、markdown 正文，将正文追加到 `findings[]`，将 URL 追加到 `urls[]`，`round += 1`。直接进入 Phase 2。
+委托 firecrawl-agent 执行：read `firecrawl-agent/AGENTS.md`，按「Search（网页搜索）」快捷命令一条完成搜索 + 抓取全文（带 `--scrape --scrape-formats markdown`，`--limit $MAX_RESULTS_PER_QUERY`，`--json`）。从结果中提取每条结果的标题、URL、markdown 正文，将正文追加到 `findings[]`，将 URL 追加到 `urls[]`，`round += 1`。直接进入 Phase 2。
+- **抓取兜底**：若某条结果正文为空（scrape 被反爬拦截或页面加载失败），用 webfetch 抓取该 URL 作为替代；webfetch 也失败则委托 browser-agent goto + snapshot 兜底。
 
-**若 `USE_FIRECRAWL=false`（浏览器模式，默认）：**
-```bash
-playwright-cli open https://www.google.com --headed
-playwright-cli snapshot
-playwright-cli fill "input[name=q]" "<搜索关键词>"
-playwright-cli press Enter
-```
+**若 `USE_FIRECRAWL=false`（浏览器模式）：**
+委托 browser-agent 执行：read `browser-agent/AGENTS.md`，按其工作流打开 Google、输入关键词、执行搜索并 snapshot 结果列表。
 
 **反爬虫处理**：如果页面 URL 变为 `/sorry/index` 或出现 reCAPTCHA（"I'm not a robot"、"Select all images"），则暂停并提示用户手动在浏览器中完成验证。用户告知"OK"/"好了"后，用 snapshot 确认搜索结果页已加载，继续流程。
 
 #### 1.3 提取 & 抓取（仅浏览器模式）
 - 从 snapshot 提取结果：标题、URL、摘要
 - 用 webfetch 抓取前 `MAX_RESULTS_PER_QUERY` 篇全文
-- **webfetch 回退**：如果 webfetch 无法访问某 URL（返回 Transport error / 403 / 空内容），则用 playwright-cli 导航到该 URL 并 snapshot 获取页面文本内容作为替代
+- **webfetch 回退**：如果 webfetch 无法访问某 URL（返回 Transport error / 403 / 空内容），则委托 browser-agent 导航到该 URL 并 snapshot 获取页面文本内容作为替代
 - 将本轮发现追加到 `findings[]`
 - 将抓取的 URL 追加到 `urls[]`
 - `round += 1`
@@ -164,7 +150,7 @@ playwright-cli press Enter
 - findings 必须全量传给搜索决策 LLM，不要截断 — 信息越完整决策越准
 - 遇到 reCAPTCHA 反爬虫时，不要自行尝试绕过，等待用户手动完成验证后继续
 - **禁止使用 Google AI Overview 内容**：不引用、不采信搜索结果页中的 "AI Overview" 归纳，只使用实际抓取到的文章原文
-- 搜索结果的 snippet 摘要（非 AI Overview）可作为初步筛选参考，但具体数据和事实必须以 webfetch/playwright-cli 抓取的原文为准
-- webfetch 无法访问的链接，用 playwright-cli goto + snapshot 兜底抓取
+- 搜索结果的 snippet 摘要（非 AI Overview）可作为初步筛选参考，但具体数据和事实必须以 webfetch/browser-agent 抓取的原文为准
+- webfetch 无法访问的链接，委托 browser-agent goto + snapshot 兜底抓取
 - 报告生成后必须等待用户审核通过才算完成，不要自动跳过
 - 飞书上传仅为按需操作，需用户主动确认

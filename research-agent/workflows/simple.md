@@ -9,22 +9,15 @@
 
 ## 执行流程
 
-搜索方式由 `USE_FIRECRAWL` 配置控制。
+执行方由 `USE_FIRECRAWL` 配置控制。**不直接调用底层 CLI**：先 read 对应 agent 的 AGENTS.md，按其快捷命令执行。
 
 ### Firecrawl 模式（`USE_FIRECRAWL=true`）
 
 #### Step 1: 搜索+抓取
-```bash
-# 一条命令完成搜索 + 抓取全文
-firecrawl search "<关键词>" \
-  --limit 5 \
-  --scrape \
-  --scrape-formats markdown \
-  --json
-```
+委托 firecrawl-agent：read `firecrawl-agent/AGENTS.md`，按「Search（网页搜索）」快捷命令一条完成搜索 + 抓取全文（带 `--scrape --scrape-formats markdown`，`--limit 5`，`--json`）。正文为空的条目用 webfetch 兜底抓取。
 
 #### Step 2: 整理
-- LLM 根据 JSON 输出中的 markdown 正文直接回答
+- LLM 根据返回的 markdown 正文直接回答
 - 格式：简洁直接，引用来源
 - 如果信息不够，主动提示用户是否需要深度调研
 
@@ -33,28 +26,13 @@ firecrawl search "<关键词>" \
 ### 浏览器模式（`USE_FIRECRAWL=false`，默认）
 
 #### Step 1: 搜索
-```bash
-playwright-cli open https://www.google.com --headed
-playwright-cli snapshot
-playwright-cli fill "input[name=q]" "<关键词>"
-playwright-cli press Enter
-```
+委托 browser-agent：read `browser-agent/AGENTS.md`，按其工作流打开 Google、输入关键词、执行搜索并 snapshot 结果列表。
 
 #### Step 2: 提取
-```bash
-playwright-cli snapshot
-# 从 snapshot 中提取前 3-5 条结果的：
-# - 标题
-# - URL
-# - 摘要
-```
+从 snapshot 中提取前 3-5 条结果的标题、URL、摘要。
 
 #### Step 3: 抓取
-```bash
-# 用 webfetch 逐个抓取感兴趣的结果
-webfetch <url1>
-webfetch <url2>
-```
+用 webfetch 逐个抓取感兴趣的结果（webfetch 不可用时委托 browser-agent goto + snapshot 兜底）。
 
 #### Step 4: 整理
 - LLM 根据抓取内容回答用户问题
