@@ -21,6 +21,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [dify-agent](./dify-agent) | `dify-cli` | Dify AI 平台：聊天/补全、知识库、工作流 |
 | [doc-agent](./doc-agent) | `officecli` | Office 文档：创建/编辑 .docx/.xlsx/.pptx |
 | [feishu-agent](./feishu-agent) | `lark-cli` | 飞书：云文档、知识库、云空间、表格、Markdown（6 个 skill） |
+| [firecrawl-agent](./firecrawl-agent) | `firecrawl` | 网页抓取/搜索/爬取/地图/交互/监控/agent 任务 |
 | [gitee-agent](./gitee-agent) | `gitee-cli` | Gitee 码云：repo、issue、PR、release、组织 |
 | [github-agent](./github-agent) | `gh` | GitHub：repo、issue、PR、Actions、release |
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
