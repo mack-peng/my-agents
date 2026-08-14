@@ -446,6 +446,27 @@ Maven 项目构建通过 `docker.m.daocloud.io` 镜像加速，`repo.maven.apach
 
 **修复 (已内置)**: 部署时 SSH 写入 `.npmrc` 设置 `puppeteer_skip_download=true`。
 
+### door-applets: 「Deploy 成功」为假阳性，需核验微信后台
+
+**现象**: `morph-cli deploy door-applets` 总是打印 `✅ Deploy 成功!`，但微信公众平台「开发版本」列表中没有新版本。
+
+**原因**: 
+1. morph-cli 的成功提示不校验 dagger 返回内容，dagger 调用不抛错即打印成功
+2. dagger 模块 (`Ci-Dagger/door-applets/src/index.ts`) 用 `result.includes("upload success")` 判断成功，但新版 miniprogram-ci 不再输出该字样，检测永远失败也不报错
+
+**修复建议**: dagger 模块改为检测 `"upload","status":"done"` 或捕获非零退出码；morph-cli 应透传 dagger 返回值而非无条件打印成功。
+
+**可靠验证方式**（本地直跑）:
+```bash
+# 前置: env.ts 用 Ci-Dagger/door-applets/.env.staging 的内容
+cp /Users/Mack/Ci-Dagger/door-applets/.env.staging /path/to/door-applets/env.ts
+cd /path/to/door-applets
+npx miniprogram-ci pack-npm --pp . --pkp /Users/Mack/Ci-Dagger/door-applets/private.wx7832004096eaa744.key --appid wx7832004096eaa744
+npx miniprogram-ci upload --pp . --pkp /Users/Mack/Ci-Dagger/door-applets/private.wx7832004096eaa744.key --appid wx7832004096eaa744 --uv "<version>" --r 1
+# 成功标志: request url .../wxa/ci/upload?... + [log] {"message":"upload","status":"done"} + [log] done
+# 最终以微信公众平台 → 管理 → 版本管理 → 开发版本 列表为准
+```
+
 ### Dagger 模块加载失败: `stat <project>/.dagger: no such file or directory`
 
 **原因**: `dagger.json` 中的 `"source": ".dagger"` 字段与 Dagger v0.21.x 不兼容。
