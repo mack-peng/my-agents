@@ -26,7 +26,7 @@
 
 ### 写模式（Write Mode）
 
-用户要求从 Spec 产出新 Code Design 时进入写模式，走下方 Multi-Agent 工作流。
+用户要求从 Spec 产出新 Code Design 时进入写模式。写模式下先由 Coordinator 判定执行模式（**轻量模式** / 完整 Multi-Agent），判定规则见「轻量模式」章节。
 
 ---
 
@@ -42,6 +42,34 @@ Spec (input/*.spec.md) → FE Code Design → 上传到飞书 Code Design 知识
 - Fallback checkpoint 模式仅当 sub-agent 工具不可用/不可调用、或用户明确禁止时使用，并在 `code_design/TASK_STATE.md` 中记录 fallback 原因。
 - Fallback 下每次只允许完成一个 phase 或一个 requirement，完成后停止并汇报 checkpoint。
 - **禁止用单个 agent 在一次长上下文 pass 中连续完成所有 requirement 的深度调研、设计、review 和最终汇总。**
+- **轻量模式（Lightweight Mode）例外**：满足下节判定条件时，由 Coordinator 单 pass 完成全部调研与设计 + 单人 review，跳过 Worker/Reviewer 分派轮次。
+
+### 轻量模式（Lightweight Mode）
+
+**主条件**（全部满足 → Phase 0 由 Coordinator 自动判定为轻量，判定依据逐项写入 `TASK_STATE.md`）：
+
+1. Requirement 总数 ≤ 15 且涉及代码文件 ≤ 15
+2. 全部为既有文件局部修改，无新增页面/组件/架构
+3. 无新 API、无后端/数据迁移变更
+4. 无跨 Requirement 的复杂状态流/时序依赖
+
+**否决项**（任一命中 → 强制完整 Multi-Agent，并记录原因）：
+
+- 新增页面且含新组件树/数据流
+- 后端 API / 数据结构设计
+- 单个 Requirement 需精读调研文件 > 8 个
+
+同文件被多个 Requirement 并发修改**不否决**（条目级修改按 path/rolloutKey 锚点合并即可），轻量模式下同样遵守合并锚点纪律。
+
+**轻量流程**（单 pass）：
+
+1. Phase 0 判定轻量并在 `TASK_STATE.md` 逐项记录判定依据
+2. Coordinator 本人完成全部 requirement 调研 + 设计；每个 Requirement 仍输出完整 11 个 H3 章节（结构不降级），直接写入合并稿 `code_design/{project}.code-design.md`
+3. 单个 Reviewer pass 全量 review 合并稿，直接修正，不另写 review.md
+4. 保留 `global/spec-overview.md`、`final-readiness.md`；**不创建** `rN-*` 独立目录与 per-requirement 六件套
+5. Final gate（wc -l 行数检查 + 章节完整性检查）同完整模式
+
+**回退规则**：任一主条件不满足或命中否决项 → 回退完整 Multi-Agent 流程并记录原因。用户可显式指定「轻量」/「完整」覆盖自动判定。
 
 ### Requirement 拆分不可合并规则
 
@@ -55,6 +83,8 @@ Code design 的基本单位必须严格对应 Spec 中的单个 Requirement。
 - Reviewer Agent review 轮次
 
 即使多个 Requirement 共享同一批代码路径、同一段 UI、同一个 API、同一套状态流，仍然必须保持 Requirement 级别的一对一产物。共享事实和公共设计只能放入 `code_design/global/`。
+
+轻量模式下允许合并 Worker/Reviewer 执行轮次（单 pass），但合并稿内仍保持 Requirement 级一一对应章节；共享事实与公共设计仍放入 `code_design/global/`。
 
 ### Context 隔离
 
