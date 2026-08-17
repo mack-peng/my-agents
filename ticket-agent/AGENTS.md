@@ -170,7 +170,7 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 ### Phase 5b: 生产 tag + Bobcat MR（仅 component-kit 变更时，review 通过后执行）
 
 - Component-kit 生产 tag：从 develop 切本地构建分支 → `yarn build` → commit 构建产物 → 打 tag → 推 tag，停下等用户确认
-- Bobcat MR：从 develop 切分支 → 更新 package.json 为生产 tag → `yarn` → commit → push → `glab mr create`
+- Bobcat MR：从 develop 切分支 → 更新 package.json 为生产 tag → **用户手动 `yarn`**（agent 不执行，yarn.lock 同步后）→ commit → push → `glab mr create`
 
 详见 `workflows/phase5-mr-component-kit.md`。
 

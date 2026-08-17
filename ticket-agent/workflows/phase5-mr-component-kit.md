@@ -177,11 +177,19 @@ git checkout -b use-new-component-kit-v<production-version>
 + "component-kit": "...component-kit.git#v<production-version>",
 ```
 
-#### B12. 安装依赖
+> **⚠️ 不要单独 commit package.json**：pre-commit 钩子（`precheck`）要求 yarn.lock 与 package.json 同步，单独提交会报 `Please run npm run update`。必须等 yarn 更新 yarn.lock 后（B12）一起提交（B14）。
+
+#### B12. 用户手动执行 yarn
+
+**此步骤由用户手动完成，agent 不执行 `yarn`**：
 
 ```bash
-yarn
+cd $BOBKAT_PATH && NODENV_VERSION=12.16.1 yarn
 ```
+
+- `yarn install` 会从 `cd.i.strikingly.com` 用 HTTPS git 拉取 component-kit，可能偶发 `gnutls_handshake() failed` TLS 握手失败（网络抖动）。重试或转人工执行。
+- bobcat 的 Node 版本由 `.node-version`（`12.16.1`）决定，yarn 为 classic 1.x，务必用 `NODENV_VERSION=12.16.1` 前缀。
+- 用户 yarn 完成后（yarn.lock 已更新）通知 agent，再继续 B13/B14。
 
 #### B13. 询问 Reviewer 并生成 MR 描述
 
