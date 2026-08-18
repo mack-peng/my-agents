@@ -1,21 +1,27 @@
 /**
- * DOM Reality Report — 真实 DOM 结构 + Render 效果取证脚本
+ * DOM Reality Report — Runtime DOM shape cognition + layout forensics
  *
- * 用法（两步）:
+ * Usage (two steps):
  *   1. playwright-cli eval "() => { window.__DOM_REPORT_CFG = { ROOT_SELECTOR: '.xxx', ZOOM_DIAGNOSIS: true } }"
  *   2. playwright-cli run-code --filename scripts/dom-report.js
  *
- * 配置（可省略，用默认值；也可直接改下方 CFG_DEFAULTS）:
- *   ROOT_SELECTOR   问题根节点（默认 .site-version-history-dialog-wrapper）
- *   UP_TO           祖先链向上走到哪一级（默认 html，可按工单调整如 body）
- *   DOWN_DEPTH      向下展开层数（默认 6）
- *   ZOOM_DIAGNOSIS  是否在 1x / 0.5x 各测一次并输出差异（默认 false）
- *   MAX_NODES       节点数上限防 context 爆炸（默认 60）
+ * Config (optional, defaults below; or set via window.__DOM_REPORT_CFG):
+ *   ROOT_SELECTOR   Problem root node (default: .site-version-history-dialog-wrapper)
+ *   UP_TO           Ancestor chain stop tag (default: html)
+ *   DOWN_DEPTH      Downward tree depth (default: 6)
+ *   ZOOM_DIAGNOSIS  Test at 1x/0.5x and report diffs (default: false)
+ *   MAX_NODES       Node count cap to prevent context explosion (default: 60)
  *
- * 输出三层合一（Markdown）:
- *   1. 真实 DOM 树（tag/class/id/inline style/文本摘要，重复结构聚合为 1 代表 + 计数）
- *   2. Render 效果（每节点 rect、scrollHeight/clientHeight、containing-block 检查）
- *   3. 判定行（锚点断裂点 + 修复层）
+ * Output (unified Markdown):
+ *   1. Ancestor chain with shape classification (role, sizing strategy, declared values)
+ *   2. DOM tree with per-node shape info (layout role, scroll tag, height/width strategy)
+ *   3. Shape analysis:
+ *      - Scroll container analysis (scrollable, content-sized, collapsed)
+ *      - Height anchor analysis (absolute/percent/missing declarations)
+ *      - Width anchor analysis
+ *      - Flex child constraint analysis (min-height:auto, flex-grow/shrink)
+ *      - Containing block analysis (transform/filter/perspective)
+ *      - Layout pattern recognition (fixed+no-anchor, flex-col, content-sized chain)
  */
 async (page) => {
   const CFG_DEFAULTS = {
@@ -74,12 +80,82 @@ async (page) => {
       return out;
     };
 
+    // Shape classification: layout role + sizing strategy
+    const classifyShape = (cs, declared) => {
+      const display = cs.display;
+      const position = cs.position;
+      const flexDir = cs.flexDirection;
+      const overflowY = cs.overflowY;
+      const overflowX = cs.overflowX;
+
+      // Layout role
+      let role = 'block';
+      if (position === 'fixed') role = 'fixed';
+      else if (position === 'absolute') role = 'absolute';
+      else if (position === 'sticky') role = 'sticky';
+      else if (display === 'grid' || display === 'inline-grid') role = 'grid';
+      else if (display === 'flex' || display === 'inline-flex') {
+        role = flexDir === 'column' ? 'flex-col' : 'flex-row';
+      }
+      else if (display === 'inline' || display === 'inline-block') role = 'inline';
+
+      // Scroll container detection
+      const isScrollY = overflowY === 'auto' || overflowY === 'scroll';
+      const isScrollX = overflowX === 'auto' || overflowX === 'scroll';
+      const scrollTag = isScrollY ? (isScrollX ? 'scroll-xy' : 'scroll-y') : (isScrollX ? 'scroll-x' : '');
+
+      // Sizing strategy: use DECLARED values (not computed, which is always px)
+      const getDeclared = (prop) => {
+        const arr = declared && declared[prop];
+        if (!arr || arr.length === 0) return null;
+        const inline = arr.find(d => d.selector === 'inline');
+        return inline ? inline.value : arr[0].value;
+      };
+
+      const sizeClass = (prop, maxProp) => {
+        const val = getDeclared(prop);
+        const maxVal = getDeclared(maxProp);
+        if (val) {
+          if (/^(0|[1-9]\d*)(\.\d+)?(px|pt|cm|mm|in)$/.test(val)) return 'fixed';
+          if (/^(0|[1-9]\d*)(\.\d+)?(vh|vw|vmin|vmax)$/.test(val)) return 'viewport';
+          if (val.endsWith('%')) return 'percent';
+          if (/^calc\(/.test(val)) return 'calc';
+          if (val === 'min-content' || val === 'max-content' || val === 'fit-content') return 'content';
+        }
+        if (maxVal && maxVal !== 'none' && maxVal !== 'auto') return 'constrained';
+        return 'content';
+      };
+
+      const heightStrategy = sizeClass('height', 'max-height');
+      const widthStrategy = sizeClass('width', 'max-width');
+
+      // Flex child: check declared flex properties (not computed defaults)
+      const hasFlexDecl = !!(getDeclared('flex-grow') || getDeclared('flex-shrink') || getDeclared('flex-basis') || getDeclared('flex'));
+      const isFlexChild = hasFlexDecl;
+
+      return { role, scrollTag, heightStrategy, widthStrategy, isFlexChild };
+    };
+
     const collectNode = (el, maxText) => {
       const cs = getComputedStyle(el);
       const rect = el.getBoundingClientRect();
       const props = {};
       for (const p of LAYOUT_PROPS) props[p] = cs[p];
       const text = (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, maxText);
+      const declared = matchDeclarations(el, [
+        'height', 'max-height', 'min-height', 'width', 'max-width', 'min-width',
+        'overflow', 'overflow-x', 'overflow-y',
+        'position', 'display', 'box-sizing',
+        'flex', 'flex-grow', 'flex-shrink', 'flex-basis', 'flex-direction',
+        'align-items', 'justify-content', 'align-self',
+        'grid-template-columns', 'grid-template-rows',
+        'top', 'left', 'right', 'bottom',
+        'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
+        'padding', 'padding-top', 'padding-bottom',
+        'transform', 'filter', 'perspective', 'will-change', 'contain',
+        'z-index', 'visibility', 'opacity',
+      ]);
+      const shape = classifyShape(cs, declared);
       return {
         tag: el.tagName.toLowerCase(),
         id: el.id || null,
@@ -87,7 +163,8 @@ async (page) => {
         inlineStyle: el.getAttribute('style') || null,
         text,
         props,
-        declared: matchDeclarations(el, ['height', 'max-height', 'min-height', 'overflow', 'position', 'display', 'box-sizing', 'flex', 'flex-direction', 'align-items']),
+        declared,
+        shape,
         metrics: {
           rect: { x: +rect.x.toFixed(1), y: +rect.y.toFixed(1), width: +rect.width.toFixed(1), height: +rect.height.toFixed(1) },
           rectBottom: +rect.bottom.toFixed(1),
@@ -149,8 +226,27 @@ async (page) => {
       return chain;
     };
 
-    const analyzeAnchors = (rootNode, ancestors) => {
+    const analyzeShape = (rootNode, ancestors) => {
       const findings = [];
+
+      // === Shape summary: classify the ancestor chain ===
+      const chainShapes = ancestors.map(a => ({
+        label: a.label,
+        role: a.shape.role,
+        scrollTag: a.shape.scrollTag,
+        hStrategy: a.shape.heightStrategy,
+        wStrategy: a.shape.widthStrategy,
+        isFlexChild: a.shape.isFlexChild,
+        computed: { w: a.metrics.clientWidth, h: a.metrics.offsetHeight },
+      }));
+      findings.push(`## Shape chain (root→up)`);
+      for (const s of chainShapes) {
+        const flex = s.isFlexChild ? ' flex-child' : '';
+        const scroll = s.scrollTag ? ` ${s.scrollTag}` : '';
+        findings.push(`  ${s.label}: ${s.role}${scroll} | h:${s.hStrategy} w:${s.wStrategy} | ${s.computed.w}×${s.computed.h}${flex}`);
+      }
+
+      // === Scroll container analysis ===
       const scrollNodes = [];
       const collectScroll = (n) => {
         if (!n) return;
@@ -158,7 +254,7 @@ async (page) => {
         for (const child of n.children) collectScroll(child);
       };
       collectScroll(rootNode);
-      // 非滚动容器溢出父级 → 约束问题候选。仅当父容器有正常高度（clientHeight>0，非塌陷连锁）时才有意义
+
       const constraintNodes = [];
       const collectOverflow = (n, parent) => {
         if (!n) return;
@@ -169,44 +265,44 @@ async (page) => {
         for (const child of n.children) collectOverflow(child, n);
       };
       collectOverflow(rootNode, null);
-      // root 自身溢出父级时，用真实父元素判断父容器健康度
       if (rootNode.flags.overflowsParent && !(rootNode.props.overflowY === 'auto' || rootNode.props.overflowY === 'scroll')) {
         const pEl = root.parentElement;
         if (pEl && pEl.clientHeight > 0) constraintNodes.push(rootNode);
       }
+
+      findings.push(`## Scroll analysis`);
       for (const n of constraintNodes.slice(0, 8)) {
         const label = `${n.tag}.${(n.classes || []).join('.')}`;
-        findings.push(`⚠ ${label} 溢出父级但非滚动容器 → 约束问题候选（flex 子项 min-height:auto 撑破 / 父级高度未受限）`);
+        findings.push(`⚠ ${label} overflows parent but is not a scroll container → constraint candidate (flex child min-height:auto or parent height unconstrained)`);
       }
       for (const n of scrollNodes) {
         const label = `${n.tag}.${(n.classes || []).join('.')}`;
         const isScrollDeclared = n.props.overflowY === 'auto' || n.props.overflowY === 'scroll';
         if (n.flags.scrollable) {
-          findings.push(`✔ ${label} 可滚动（scrollHeight ${n.metrics.scrollHeight} > clientHeight ${n.metrics.clientHeight}）`);
+          findings.push(`✔ ${label} scrollable (scrollHeight ${n.metrics.scrollHeight} > clientHeight ${n.metrics.clientHeight})`);
         } else if (!n.flags.hasScrollY && n.metrics.clientHeight === 0) {
-          findings.push(`⚠ ${label} 高度塌陷为 0 → overflow-y:auto 无可用视区 → 高度链未受限（锚点问题）`);
+          findings.push(`⚠ ${label} height collapsed to 0 → overflow-y:auto has no viewport → height chain unconstrained (anchor issue)`);
         } else if (!n.flags.hasScrollY && isScrollDeclared && Math.abs(n.metrics.offsetHeight - n.metrics.scrollHeight) <= 1) {
-          // 滚动容器高度 == 内容高度（计算值恒为 px，不能靠 props.height==='auto' 判断）
-          findings.push(`⚠ ${label} 高度为内容尺寸(${n.metrics.offsetHeight}px, scrollHeight==clientHeight) → overflow-y:auto 永不触发 → 滚动链未受限（锚点问题）`);
+          findings.push(`⚠ ${label} content-sized (${n.metrics.offsetHeight}px, scrollHeight==clientHeight) → overflow-y:auto never triggers → height chain unconstrained (anchor issue)`);
         } else if (!n.flags.hasScrollY) {
-          findings.push(`✔ ${label} 无溢出，无需滚动`);
+          findings.push(`✔ ${label} no overflow, no scroll needed`);
         } else if (n.metrics.clientHeight === 0) {
-          findings.push(`⚠ ${label} 内容溢出(${n.metrics.scrollHeight}>0)且视区为 0（clientHeight=0）→ overflow=${n.props.overflowY} 无可用空间 → 高度链未受限（锚点问题）`);
+          findings.push(`⚠ ${label} content overflows (${n.metrics.scrollHeight}>0) but viewport is 0 (clientHeight=0) → overflow=${n.props.overflowY} has no space → height chain unconstrained (anchor issue)`);
         } else {
-          findings.push(`⚠ ${label} 内容溢出(${n.metrics.scrollHeight}>${n.metrics.clientHeight})被 overflow=${n.props.overflowY} 裁切 → 高度链未受限（锚点问题）`);
+          findings.push(`⚠ ${label} content overflows (${n.metrics.scrollHeight}>${n.metrics.clientHeight}) clipped by overflow=${n.props.overflowY} → height chain unconstrained (anchor issue)`);
         }
       }
-      // 锚点判定基于声明值：计算值(height)全是 px 无法区分 % / 绝对单位
+
+      // === Height anchor analysis ===
+      findings.push(`## Height anchor`);
       const anchorInfo = ancestors.map(a => {
-        // inline 声明优先（可覆盖 stylesheet），其余取第一条
         const dh = (a.declared && a.declared.height) || [];
         const first = dh.find(d => d.selector === 'inline') || dh[0] || null;
-        // max-height 声明：上限约束 ≠ 锚点，单独列出避免误导
         const mh = (a.declared && a.declared['max-height']) || [];
         const maxFirst = mh.find(d => d.selector === 'inline') || mh[0] || null;
         return {
           label: a.label,
-          declared: first ? `${first.value} (${first.selector} ${first.href})` : '(无 height 声明)',
+          declared: first ? `${first.value} (${first.selector} ${first.href})` : '(no height declaration)',
           maxDeclared: maxFirst ? `${maxFirst.value} (${maxFirst.selector} ${maxFirst.href})` : null,
           computed: a.props.height,
           hasAbsolute: !!(first && /^(0|[1-9]\d*)(\.\d+)?(px|vh|vw|rem|em)$/.test(first.value)),
@@ -214,19 +310,128 @@ async (page) => {
         };
       });
       const anchored = anchorInfo.find(a => a.hasAbsolute);
-      findings.push(`锚点检查: ${anchored ? `链中含绝对单位 height 声明 ${anchored.label}: ${anchored.declared}` : '链中所有 height 均为 % 或无声明 → 全链依赖 containing block 运行时解析（可能为 auto）'}`);
+      findings.push(`Anchor check: ${anchored ? `chain has absolute-unit height at ${anchored.label}: ${anchored.declared}` : 'all heights are % or missing → chain depends on containing block runtime resolution (may resolve to auto)'}`);
       for (const a of anchorInfo) {
         const maxPart = a.maxDeclared ? ` | max-height:${a.maxDeclared}` : '';
-        findings.push(`  - ${a.label}: 声明 ${a.declared}${maxPart} → 计算 ${a.computed}`);
+        findings.push(`  - ${a.label}: declared ${a.declared}${maxPart} → computed ${a.computed}`);
       }
-      // max-height 是上限不是锚：若某级仅 max-height 而无 height，提示其不能为 % 子级提供确定性高度
       const maxOnly = anchorInfo.filter(a => !a.declared.includes('px') && !a.declared.includes('vh') && a.maxDeclared);
       if (maxOnly.length) {
-        findings.push(`⚠ 以下节点仅有 max-height（上限）无 height 声明 → % 子级仍解析为 auto，不构成锚点: ${maxOnly.map(a => a.label).join(', ')}`);
+        findings.push(`⚠ These nodes only have max-height (cap, not anchor) → % children still resolve to auto: ${maxOnly.map(a => a.label).join(', ')}`);
       }
       if (rootNode.props.position === 'fixed' && /%/.test(rootNode.props.height)) {
-        findings.push(`⚠ 根节点为 position:fixed + 百分比高度（计算值 ${rootNode.metrics.offsetHeight}px）— 锚定依赖 containing block，静态不可证，以本报告计算值为准`);
+        findings.push(`⚠ Root is position:fixed + percent height (computed ${rootNode.metrics.offsetHeight}px) → anchor depends on containing block, unprovable statically`);
       }
+
+      // === Width analysis ===
+      findings.push(`## Width analysis`);
+      const widthInfo = ancestors.map(a => {
+        const dw = (a.declared && a.declared.width) || [];
+        const first = dw.find(d => d.selector === 'inline') || dw[0] || null;
+        const mw = (a.declared && a.declared['max-width']) || [];
+        const maxFirst = mw.find(d => d.selector === 'inline') || mw[0] || null;
+        return {
+          label: a.label,
+          declared: first ? `${first.value} (${first.selector})` : '(no width declaration)',
+          maxDeclared: maxFirst ? `${maxFirst.value} (${maxFirst.selector})` : null,
+          computed: a.metrics.clientWidth,
+          hasAbsolute: !!(first && /^(0|[1-9]\d*)(\.\d+)?(px|vh|vw|rem|em)$/.test(first.value)),
+        };
+      });
+      const widthAnchored = widthInfo.find(a => a.hasAbsolute);
+      findings.push(`Width anchor: ${widthAnchored ? `chain has absolute-unit width at ${widthAnchored.label}: ${widthAnchored.declared}` : 'no absolute width in chain → width depends on parent/content'}`);
+      for (const a of widthInfo) {
+        if (a.declared !== '(no width declaration)' || a.maxDeclared) {
+          const maxPart = a.maxDeclared ? ` | max-width:${a.maxDeclared}` : '';
+          findings.push(`  - ${a.label}: declared ${a.declared}${maxPart} → computed ${a.computed}px`);
+        }
+      }
+
+      // === Flex child constraint analysis ===
+      findings.push(`## Flex constraints`);
+      const flexParents = [];
+      const collectFlexParents = (n, parent) => {
+        if (!n) return;
+        if (parent && (parent.props.display === 'flex' || parent.props.display === 'inline-flex')) {
+          flexParents.push({ parent, child: n });
+        }
+        for (const child of n.children) collectFlexParents(child, n);
+      };
+      collectFlexParents(rootNode, null);
+      for (const { parent, child } of flexParents.slice(0, 10)) {
+        const pLabel = `${parent.tag}.${(parent.classes || []).join('.')}`;
+        const cLabel = `${child.tag}.${(child.classes || []).join('.')}`;
+        const pDir = parent.props.flexDirection || 'row';
+        const cMinH = child.props.minHeight;
+        const cMinW = child.props.minWidth;
+        const cFlexGrow = child.props.flexGrow;
+        const cFlexShrink = child.props.flexShrink;
+        const cOverflow = child.props.overflowY;
+
+        if (pDir === 'column') {
+          // Flex column: children height constrained by flex properties
+          if (cMinH === 'auto' || cMinH === '0px') {
+            if (child.metrics.scrollHeight > child.metrics.clientHeight + 1) {
+              findings.push(`⚠ ${cLabel} is flex-col child with min-height:${cMinH} → content (${child.metrics.scrollHeight}px) may overflow parent (${parent.metrics.clientHeight}px)`);
+            }
+          }
+          if (cFlexGrow === '0' && cFlexShrink === '0' && cMinH === 'auto') {
+            findings.push(`  ${cLabel}: flex:0 0 auto in ${pLabel}(column) → height is content-driven, not constrained by flex`);
+          }
+        } else {
+          // Flex row: children width constrained by flex, height unconstrained
+          if (cMinW === 'auto' || cMinW === '0px') {
+            if (child.metrics.scrollWidth > child.metrics.clientWidth + 1) {
+              findings.push(`⚠ ${cLabel} is flex-row child with min-width:${cMinW} → content (${child.metrics.scrollWidth}px) may overflow parent`);
+            }
+          }
+        }
+      }
+      if (flexParents.length === 0) {
+        findings.push(`  No flex parent-child relationships found in the tree`);
+      }
+
+      // === Containing block analysis ===
+      findings.push(`## Containing block`);
+      const cbNodes = [];
+      const collectCB = (n) => {
+        if (!n) return;
+        if (n.containingBlockModifiers && n.containingBlockModifiers.length > 0) {
+          cbNodes.push(n);
+        }
+        for (const child of n.children) collectCB(child);
+      };
+      collectCB(rootNode);
+      for (const n of cbNodes.slice(0, 5)) {
+        const label = `${n.tag}.${(n.classes || []).join('.')}`;
+        findings.push(`  ${label}: CB modifiers: ${n.containingBlockModifiers.join(', ')}`);
+      }
+      if (cbNodes.length === 0) {
+        findings.push(`  No containing block modifiers found in the tree`);
+      }
+
+      // === Pattern recognition ===
+      findings.push(`## Layout patterns`);
+      const hasFixedAncestor = ancestors.some(a => a.shape.role === 'fixed');
+      const hasFlexColAncestor = ancestors.some(a => a.shape.role === 'flex-col');
+      const scrollContainer = scrollNodes.find(n => n.flags.scrollable);
+      const noHeightAnchor = !anchored;
+      const allContentSized = ancestors.every(a => a.shape.heightStrategy === 'content');
+
+      if (hasFixedAncestor && noHeightAnchor) {
+        findings.push(`Pattern: fixed ancestor + no height anchor → children % resolve to auto → content-sized overflow`);
+      }
+      if (hasFlexColAncestor) {
+        const flexCol = ancestors.find(a => a.shape.role === 'flex-col');
+        findings.push(`Pattern: flex-col at ${flexCol.label} → children height governed by flex-grow/shrink/min-height`);
+      }
+      if (scrollContainer && noHeightAnchor) {
+        findings.push(`Pattern: scroll container exists but no height anchor above → overflow:auto never triggers (content-sized)`);
+      }
+      if (allContentSized) {
+        findings.push(`Pattern: all ancestors are content-sized → height entirely depends on content, no constraints propagate`);
+      }
+
       return findings;
     };
 
@@ -245,13 +450,14 @@ async (page) => {
         metrics: n.metrics,
         flags: n.flags,
         declared: n.declared,
+        shape: n.shape,
         containingBlockModifiers: n.containingBlockModifiers,
         inlineStyle: n.inlineStyle,
       };
     });
     const state = { count: 0 };
     const tree = buildTree(root, c.DOWN_DEPTH, state);
-    const findings = analyzeAnchors(tree, ancestors);
+    const findings = analyzeShape(tree, ancestors);
     return {
       rootSelector: c.ROOT_SELECTOR,
       upTo: c.UP_TO,
@@ -271,20 +477,25 @@ async (page) => {
     const id = node.id ? `#${node.id}` : '';
     const repeat = node.repeat ? ` ×${node.repeat}` : '';
     const m = node.metrics;
+    const s = node.shape || {};
     const flag = [];
-    if (node.flags.overflowsViewport) flag.push('⚠溢出视口');
-    if (node.flags.overflowsParent) flag.push('⚠溢出父级');
-    if (m.clientHeight === 0 && m.offsetHeight === 0) flag.push('⚠高度塌陷(0px)');
-    if (node.flags.scrollable) flag.push('✔可滚动');
-    if (node.flags.hasScrollY && !node.flags.scrollable) flag.push(`⚠有溢出(${m.scrollHeight}>${m.clientHeight})但overflow=${node.props.overflowY}`);
+    if (node.flags.overflowsViewport) flag.push('⚠viewport-overflow');
+    if (node.flags.overflowsParent) flag.push('⚠parent-overflow');
+    if (m.clientHeight === 0 && m.offsetHeight === 0) flag.push('⚠collapsed(0px)');
+    if (node.flags.scrollable) flag.push('✔scrollable');
+    if (node.flags.hasScrollY && !node.flags.scrollable) flag.push(`⚠overflow(${m.scrollHeight}>${m.clientHeight})but-overflow=${node.props.overflowY}`);
     if (node.containingBlockModifiers.length) flag.push(`CB:${node.containingBlockModifiers.join(' ')}`);
     const styleHint = node.inlineStyle ? ` style="${node.inlineStyle}"` : '';
     const h = node.props.height;
     const heightStr = h === 'auto' ? `auto→${m.offsetHeight}px` : `${h}`;
+    const w = node.props.width;
+    const widthStr = w === 'auto' ? `auto→${m.clientWidth}px` : `${w}`;
     const mhStr = node.declared && node.declared['max-height'] ? ` maxH:${node.declared['max-height'].map(x => x.value).join(';')}` : '';
+    const shapeStr = s.role ? `[${s.role}${s.scrollTag ? ' ' + s.scrollTag : ''} h:${s.heightStrategy} w:${s.widthStrategy}]` : '';
     lines.push(
       `${'  '.repeat(indent)}<${node.tag}${id}${cls}${styleHint}${repeat}>` +
-      ` [${node.props.position},${node.props.display},h:${heightStr}${mhStr}]` +
+      ` ${shapeStr}` +
+      ` [${node.props.position},${node.props.display},h:${heightStr},w:${widthStr}${mhStr}]` +
       ` rect(${m.rect.width}×${m.rect.height}) bottom=${m.rectBottom} scroll=${m.clientHeight}/${m.scrollHeight}` +
       (flag.length ? ` ${flag.join(' ')}` : '') +
       (node.text ? ` 「${node.text.slice(0, 30)}」` : ''),
@@ -294,10 +505,13 @@ async (page) => {
   };
 
   const renderAncestors = (chain) => chain.map(a => {
-    const d = (a.declared && a.declared.height) ? a.declared.height.map(x => `${x.selector}→${x.value}`).join('; ') : 'auto';
-    const m = (a.declared && a.declared['max-height']) ? a.declared['max-height'].map(x => `${x.selector}→${x.value}`).join('; ') : null;
-    const maxPart = m ? ` max-height:${m}` : '';
-    return `${a.label} [${a.props.position},${a.props.display}] 声明height:${d}${maxPart} → 计算${a.metrics.offsetHeight}px rect.bottom=${a.metrics.rectBottom}` +
+    const dh = (a.declared && a.declared.height) ? a.declared.height.map(x => `${x.selector}→${x.value}`).join('; ') : 'auto';
+    const dw = (a.declared && a.declared.width) ? a.declared.width.map(x => `${x.selector}→${x.value}`).join('; ') : 'auto';
+    const mh = (a.declared && a.declared['max-height']) ? a.declared['max-height'].map(x => `${x.selector}→${x.value}`).join('; ') : null;
+    const maxPart = mh ? ` max-height:${mh}` : '';
+    const s = a.shape || {};
+    const shapeStr = s.role ? `[${s.role}${s.scrollTag ? ' ' + s.scrollTag : ''} h:${s.heightStrategy} w:${s.widthStrategy}]` : '';
+    return `${a.label} ${shapeStr} [${a.props.position},${a.props.display}] h:${dh}${maxPart} w:${dw} → ${a.metrics.clientWidth}×${a.metrics.offsetHeight}` +
       (a.containingBlockModifiers.length ? ` CB:${a.containingBlockModifiers.join(' ')}` : '') +
       (a.inlineStyle ? ` style="${a.inlineStyle}"` : '');
   });
@@ -305,27 +519,35 @@ async (page) => {
   const renderReport = (snapshot, vp) => {
     const lines = [];
     lines.push(`# DOM Reality Report`);
-    lines.push(`viewport: ${vp.width}×${vp.height} | root: ${snapshot.rootSelector} | 节点数: ${snapshot.nodeCount}`);
+    lines.push(`viewport: ${vp.width}×${vp.height} | root: ${snapshot.rootSelector} | nodes: ${snapshot.nodeCount}`);
     if (snapshot.error) {
       lines.push(`⚠ ${snapshot.error}`);
       if (snapshot.candidates && snapshot.candidates.length) {
-        lines.push(`候选相似节点: ${snapshot.candidates.join(', ')}`);
+        lines.push(`Similar nodes: ${snapshot.candidates.join(', ')}`);
       }
       return lines.join('\n');
     }
     lines.push('');
-    lines.push(`## 祖先链（root 向上到 ${snapshot.upTo}）`);
+    lines.push(`## Ancestor chain (root→${snapshot.upTo})`);
     lines.push('```');
     lines.push(...renderAncestors(snapshot.ancestors));
     lines.push('```');
     lines.push('');
-    lines.push(`## 真实 DOM 树（向下 ${snapshot.downDepth} 层）`);
+    lines.push(`## DOM tree (${snapshot.downDepth} levels deep)`);
     lines.push('```');
     lines.push(...renderNode(snapshot.tree, 0));
     lines.push('```');
     lines.push('');
-    lines.push('## 判定');
-    for (const f of snapshot.findings) lines.push(`- ${f}`);
+    for (const f of snapshot.findings) {
+      if (f.startsWith('##')) {
+        lines.push('');
+        lines.push(f);
+      } else if (f.startsWith('  ') || f.startsWith('Pattern:')) {
+        lines.push(f);
+      } else {
+        lines.push(`- ${f}`);
+      }
+    }
     return lines.join('\n');
   };
 
