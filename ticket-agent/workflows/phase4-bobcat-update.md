@@ -7,14 +7,14 @@
 ## 前置条件
 
 - Phase 4（component-kit 提交）已完成
-- 已有 component-kit 测试 tag（如 `v2.0.16.01T`）
+- 已有 component-kit 公共测试分支上的构建产物 commit ID
 - `$BOBKAT_PATH` 已在 `.env` 中配置
 
 ## 流程
 
 ### 1. 获取上下文
 
-从飞书文档或对话上下文中提取：Phase 4 的 component-kit **测试 tag**（如 `v2.0.16.01T`）。
+从飞书文档或对话上下文中提取：Phase 4 的 component-kit **commit ID**（构建产物 commit）。
 
 ### 2. 获取测试分支
 
@@ -29,7 +29,7 @@ git checkout <test-branch> && git pull origin <test-branch>
 
 ### 3. 更新 component-kit 依赖
 
-修改以下 3 个文件中的 component-kit 引用，**使用 Phase 4 的测试 tag（如 `v2.0.16.01T`）：**
+修改以下 3 个文件中的 component-kit 引用，**使用 Phase 4 的 commit ID：**
 
 | 文件 | 说明 |
 |------|------|
@@ -39,19 +39,19 @@ git checkout <test-branch> && git pull origin <test-branch>
 
 ```diff
 - "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<old-tag-or-hash>",
-+ "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<test-tag>",
++ "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<commit-id>",
 ```
 
 提交：
 
 ```bash
 git add package.json fe-apps/fujian-edu/package.json fe-apps/support/package.json
-git commit -m "fix(deps): update component-kit to <test-tag>"
+git commit -m "fix(deps): update component-kit to <commit-id>"
 ```
 
 ### 4. 用户手动操作
 
-> **"package.json 已更新为 component-kit tag `<test-tag>`。请执行 `yarn` 安装依赖。"**
+> **"package.json 已更新为 component-kit commit `<commit-id>`。请执行 `yarn` 安装依赖。"**
 
 用户完成 yarn 后，提交 yarn.lock：
 
@@ -77,7 +77,7 @@ git push origin <test-branch>
 
 ### 分支信息
 - **测试分支**: <test-branch>
-- **依赖 commit**: <hash> — fix(deps): update component-kit to <test-tag>
+- **依赖 commit**: <hash> — fix(deps): update component-kit to <commit-id>
 - **lock  commit**: <hash> — chore(deps): update yarn.lock
 
 ### 修改文件

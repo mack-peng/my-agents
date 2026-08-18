@@ -17,17 +17,17 @@ Phase 4: component-kit 提交
   ├── 从 develop 创建开发分支
   ├── 提交源码 commit（不含构建产物）
   ├── 推送开发分支（仅源码）
-  ├── 用户提供 base tag → git checkout <base-tag>（游离 HEAD）
-  ├── cherry-pick 源码 commit
-  ├── yarn build → 提交构建产物 commit
-  ├── 打测试 tag（v2.0.16 → v2.0.16.01T）
-  └── 推送测试 tag
+  ├── 用户提供公共测试分支名（如 `test`）
+  ├── cherry-pick 源码到公共测试分支
+  ├── 在公共测试分支上 yarn build → 提交构建产物
+  ├── 获取 commit ID
+  └── 记录 commit ID（供 bobcat 使用）
   │
   ▼
 Phase 4b: bobcat 依赖更新（用户通知后触发）
   ├── 用户提供 bobcat 测试分支名
   ├── 直接拉取测试分支
-  ├── 修改 3 个 package.json 的 component-kit 引用为测试 tag
+  ├── 修改 3 个 package.json 的 component-kit 引用为 commit ID
   ├── 用户 yarn → 提交 yarn.lock
   ├── 推送测试分支
   └── 通知用户 build 部署测试环境
@@ -78,32 +78,35 @@ git push origin fix-component-kit-<short-desc>
 
 开发分支仅保留源码 commit，不包含构建产物。
 
-### 1d. 切换到 base tag 并 cherry-pick
+### 1d. Cherry-pick 到公共测试分支
 
-用户提供生产 base tag（如 `v2.0.16`）：
+用户提供 component-kit 的公共测试分支名（如 `test`、`integration`）：
 
 ```bash
-git fetch --tags
-git checkout <base-tag>        # 进入 detached HEAD 状态
+git checkout <test-branch> && git pull origin <test-branch>
 git cherry-pick <source-commit-hash>
 ```
 
-### 1e. 构建并打测试 tag
+如 cherry-pick 有冲突，向用户报告冲突文件和内容。
+
+### 1e. 在公共测试分支上构建
 
 ```bash
 # 构建
-NODENV_VERSION=<required> yarn build
+yarn build
 
 # 提交构建产物
 git add es/
 git commit -m "Build: product"
 
-# 打测试 tag（v2.0.16 → v2.0.16.01T，v2.0.16.01T → v2.0.16.02T）
-git tag <test-tag>
-git push origin <test-tag>
+# 推送到公共测试分支
+git push origin <test-branch>
+
+# 获取 commit ID（供 bobcat 引用）
+git rev-parse HEAD
 ```
 
-测试 tag 末尾带 `T` 后缀，区别于生产 tag。
+记录 commit ID，用于 Phase 4b bobcat 依赖更新。
 
 ## 2. bobcat 依赖更新（Phase 4b，用户通知后触发）
 
@@ -116,7 +119,7 @@ cd $BOBKAT_PATH
 git checkout <test-branch> && git pull origin <test-branch>
 ```
 
-修改以下 3 个文件中的 component-kit 引用，**使用 Phase 4 的测试 tag（如 `v2.0.16.01T`）：**
+修改以下 3 个文件中的 component-kit 引用，**使用 Phase 4 的 commit ID：**
 
 | 文件 | 
 |------|
@@ -126,12 +129,12 @@ git checkout <test-branch> && git pull origin <test-branch>
 
 ```diff
 - "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<old-tag-or-hash>",
-+ "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<test-tag>",
++ "component-kit": "https://private-gem:...@cd.i.strikingly.com/.../component-kit.git#<commit-id>",
 ```
 
 ```bash
 git add package.json fe-apps/fujian-edu/package.json fe-apps/support/package.json
-git commit -m "fix(deps): update component-kit to <test-tag>"
+git commit -m "fix(deps): update component-kit to <commit-id>"
 ```
 
 **用户手动操作**：`yarn` → 提交 `yarn.lock`。
@@ -232,7 +235,7 @@ glab mr create --source-branch <branch-name> --target-branch develop ...
 
 ```
 fix(searchable-dropdown): calculate viewport space for fixed positioning
-fix(deps): update component-kit to v2.0.16.01T
+fix(deps): update component-kit to <commit-id>
 chore(deps): update yarn.lock
 Build: product
 ```

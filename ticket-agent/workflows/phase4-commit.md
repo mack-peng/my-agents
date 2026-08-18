@@ -58,20 +58,17 @@ git commit -m "fix(<area>): <简短描述>"
 git push origin <branch-name>
 ```
 
-#### 5. 获取 base tag
+#### 5. 获取公共测试分支名
 
-用户提供生产 base tag（如 `v2.0.16` 或 `v2.0.16.01T`）：
+用户提供 component-kit 的公共测试分支名（如 `test`、`integration`）：
 
-> **"请提供 component-kit 的 base tag："**
+> **"请提供 component-kit 的公共测试分支名："**
 
 ```bash
-git fetch --tags
-git checkout <base-tag>
+git checkout <test-branch> && git pull origin <test-branch>
 ```
 
-此时处于 detached HEAD 状态。
-
-#### 6. Cherry-pick 源码 commit
+#### 6. Cherry-pick 源码到公共测试分支
 
 ```bash
 git cherry-pick <source-commit-hash>
@@ -79,9 +76,7 @@ git cherry-pick <source-commit-hash>
 
 如 cherry-pick 有冲突，向用户报告冲突文件和内容。
 
-#### 7. 构建
-
-确认 `.node-version` 中的 Node 版本可用，如未安装对应的 yarn，使用最接近的已安装版本。
+#### 7. 在公共测试分支上构建
 
 ```bash
 yarn build
@@ -94,18 +89,16 @@ yarn build
 ```bash
 git add es/
 git commit -m "Build: product"
+git push origin <test-branch>
 ```
 
-#### 9. 打测试 tag
-
-Tag 命名规则：base tag 末尾加 `.01T`。已带 `T` 后缀时递增序号：
-- `v2.0.16` → `v2.0.16.01T`
-- `v2.0.16.01T` → `v2.0.16.02T`
+#### 9. 获取 commit ID
 
 ```bash
-git tag <test-tag>
-git push origin <test-tag>
+git rev-parse HEAD
 ```
+
+记录 commit ID，供 Phase 4b bobcat 依赖更新使用。
 
 #### 10. 输出总结
 
@@ -115,19 +108,16 @@ git push origin <test-tag>
 ### 分支信息
 - **开发分支**: <branch-name>（仅源码）
 - **源码 commit**: <hash> — <message>
-
-### Tag 信息
-- **Base tag**: <base-tag>
-- **测试 tag**: <test-tag>（源码 + 构建产物）
-- **Tag URL**: https://cd.i.strikingly.com/strikingly/component-kit/tags
+- **公共测试分支**: <test-branch>
+- **构建产物 commit**: <commit-id> — Build: product
 
 ### 下一步
-等待用户通知是否进入 bobcat 依赖更新。
+等待用户通知是否进入 bobcat 依赖更新，使用 commit ID `<commit-id>` 引用 component-kit。
 ```
 
 #### 11. 等待 Sign-off
 
-> **"Phase 4 完成。开发分支 `<branch-name>`（仅源码）和测试 tag `<test-tag>` 已推送。是否进行 bobcat 依赖更新？回复 '跳过' 则直接进入 Phase 5。"**
+> **"Phase 4 完成。开发分支 `<branch-name>`（仅源码）已推送。构建产物已推送到公共测试分支 `<test-branch>`，commit ID 为 `<commit-id>`。是否进行 bobcat 依赖更新？回复 '跳过' 则直接进入 Phase 5。"**
 
 ---
 

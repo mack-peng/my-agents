@@ -32,7 +32,7 @@ git log --oneline -3 <branch-name>
 
 #### A3. 生成 MR 描述
 
-使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。写入 `/tmp/component-kit-mr-desc.md`。
+使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入 `/tmp/component-kit-mr-desc.md`。
 
 #### A4. 创建 MR
 
@@ -193,7 +193,7 @@ cd $BOBKAT_PATH && NODENV_VERSION=12.16.1 yarn
 
 #### B13. 询问 Reviewer 并生成 MR 描述
 
-使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。写入 `/tmp/bobcat-dep-mr-desc.md`。
+使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入 `/tmp/bobcat-dep-mr-desc.md`。
 
 #### B14. 提交
 
