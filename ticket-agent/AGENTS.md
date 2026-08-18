@@ -131,10 +131,13 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 - [ ] 如果工单涉及代码修改 → `.codegraph/` 存在 → 否则提示用户：`codegraph init -i`
 - [ ] 如果工单涉及样式修改 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
+- [ ] 如果工单涉及布局/滚动/定位 → `browser-agent/scripts/dom-report.js` 存在（DOM Reality Report 取证脚本）
 
 ### Phase 2 调研策略
 
 详见 `workflows/phase2-investigate.md`。
+
+**CSS 布局类工单取证门**：工单问题涉及布局/滚动/高度/溢出/定位/缩放时，**必须先跑 DOM Reality Report 取证**（browser-agent `scripts/dom-report.js`）再下根因结论。静态分析（cssgraph）与真实渲染冲突时**以真实渲染为准**。无法取证（无登录态等）时根因标注 UNVERIFIABLE，禁止断言。
 
 ### Phase 3: 代码编写原则
 

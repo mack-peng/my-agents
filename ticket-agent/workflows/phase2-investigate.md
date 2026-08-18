@@ -97,15 +97,64 @@
 4. cssgraph_explore(query="className") → cssgraph_callers(className)
 ```
 
-### 4. 分析根因
+### 4. CSS 布局问题取证门（样式类工单必须）
 
-结合代码调研和 livesite 测试结果，分析：
+工单问题涉及 **布局/滚动/高度/溢出/定位/缩放** 时，静态代码分析（cssgraph / 代码审阅）不足以定根因。**必须先跑 DOM Reality Report 取证，拿到真实 DOM 结构 + 计算值，再下根因结论。**
+
+#### 4.1 触发条件（满足任一即触发）
+
+- 问题涉及滚动容器（overflow-y:auto 不滚动 / 滚动条不出现）
+- 问题涉及高度链（height:100% / vh / auto 行为异常）
+- 问题涉及 `position:fixed` + 百分比高度元素
+- 问题只在特定视口 / 缩放 / 浏览器下出现
+- 静态分析结论与用户观察冲突（如 cssgraph 判定"锚定良好"但实际不滚）
+- flex 布局子项撑破 / 溢出容器
+
+#### 4.2 取证步骤
+
+**Use browser-agent**，命令在 `browser-agent/` 目录执行（session `-s=ticket-agent`）：
+
+```bash
+# 1. 打开复现页面（livesite 或编辑器；无登录态时请求用户提供 cookie / 登录）
+playwright-cli -s=ticket-agent goto "<复现 URL>"
+
+# 2. 设置报告配置（ROOT_SELECTOR 指向问题根节点，如对话框 / 滚动容器）
+playwright-cli -s=ticket-agent eval "() => { window.__DOM_REPORT_CFG = { ROOT_SELECTOR: '.xxx', ZOOM_DIAGNOSIS: true }; return 'ok'; }"
+
+# 3. 运行取证脚本
+playwright-cli -s=ticket-agent run-code --filename scripts/dom-report.js
+```
+
+#### 4.3 取证结论规则
+
+- **以真实渲染为准**：报告判定（`✔可滚动` / `⚠高度塌陷` / `⚠内容尺寸永不触发` / `⚠锚点问题`）优先于静态分析。冲突时以报告为准并记入工单。
+- **声明值 vs 计算值**：`getComputedStyle().height` 是 used value（px），无法区分 `100%` 与 `2264px`。必须看报告的 **声明值配对**（stylesheets + inline）判断锚点。`max-height` 是上限不是锚，% 子级仍解析为 auto。
+- **锚点问题 vs 约束问题**：报告会给出两类判定，修复方向不同：
+  - 锚点问题（高度链未受限）→ 给链条某级确定高度（如 `height:100vh`）
+  - 约束问题（flex 子项撑破）→ 子项加 `min-height:0`
+- **无法取证时**：无登录态 / 页面不可达 → 根因标注 **UNVERIFIABLE**，列出待验证项，禁止断言根因。
+
+#### 4.4 症状 → 假设 → 修复映射（取证后对照）
+
+| 报告标记 | 假设 | 修复方向 |
+|---|---|---|
+| 滚动容器 `clientHeight=0` + 溢出 | 锚点问题：高度链全 auto/% → 塌陷 | 链条某级确定高度（`height:100vh`） |
+| 滚动容器内容尺寸（scrollHeight==clientHeight） | 锚点问题：内容撑开代替受限高度 | 同上，或 flex 中加 `min-height:0` |
+| 有溢出但 `overflow=hidden` 裁切 | 锚点问题或父级 overflow 误设 | 检查裁切点是否应滚 |
+| 链中有 `CB:transform` + fixed 根节点 | **containing block 劫持**：% 高度相对 transform 祖先 | 视口单位（vh）或去掉 transform |
+| flex 子项撑破容器 | 约束问题：`min-height:auto` 默认值 | 子项 `min-height:0` |
+| 仅有 `max-height` 无 `height` | 上限 ≠ 锚点，% 子级解析 auto | 给明确 height |
+
+### 5. 分析根因
+
+结合代码调研、取证结果（CSS 布局类）和 livesite 测试结果，分析：
 
 - **问题链路**：从触发点到出问题的完整路径
 - **根因定位**：具体文件、代码段、逻辑
 - **影响范围**：哪些组件/页面/流程受影响
+- **CSS 布局类**：根因必须与取证结论一致（锚点问题 / 约束问题 / containing block 劫持），不一致时说明原因
 
-### 5. 输出总结
+### 6. 输出总结
 
 ```
 ## Phase 2: 调研分析
@@ -119,6 +168,12 @@
 |------|------|
 | apps/.../file.tsx:123 | 问题根因所在 |
 | apps/.../style.less:45 | 样式问题 |
+
+### 取证结果（CSS 布局类工单）
+- 报告摘要: 滚动容器 xxx 内容尺寸(1280px) → overflow 永不触发 → 锚点问题
+- 锚点链: 声明值逐级（% / 绝对单位 / max-height 上限）→ 计算值
+- 修复方向: 链条某级 height:100vh（锚点问题）或 min-height:0（约束问题）
+- 置信度: 真实渲染取证 / UNVERIFIABLE（阻塞原因: ...）
 
 ### 根因
 （完整的根因分析）
