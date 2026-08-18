@@ -95,6 +95,8 @@
 3. codegraph_callers(symbol) / codegraph_callees(symbol)
    ↓ 样式问题时
 4. cssgraph_explore(query="className") → cssgraph_callers(className)
+   ↓ 样式被覆盖 / specificity 冲突时
+5. cssgraph_cascade(className) → 按 specificity 排序列出所有定义
 ```
 
 ### 4. CSS 布局问题取证门（样式类工单必须）
@@ -125,6 +127,19 @@ playwright-cli -s=ticket-agent eval "() => { window.__DOM_REPORT_CFG = { ROOT_SE
 playwright-cli -s=ticket-agent run-code --filename scripts/dom-report.js
 ```
 
+#### 4.2b 静态诊断（cssgraph_diagnose）
+
+dom-report.js 拿到 ancestor chain 后，用 `cssgraph_diagnose` 做静态规则分析：
+
+```
+cssgraph_diagnose(className="目标class", chain=["div.wrapper", "div.modal", "div.target"])
+```
+
+- dom-report.js = **运行时真相**（计算值、实际尺寸）
+- cssgraph_diagnose = **静态规则**（声明值分类：DEFINITE / INDEFINITE / UNVERIFIABLE）
+- 两者互补：静态分析预判锚点链，运行时验证实际解析结果
+- **冲突时以 dom-report.js 为准**，并记入工单
+
 #### 4.3 取证结论规则
 
 - **以真实渲染为准**：报告判定（`✔可滚动` / `⚠高度塌陷` / `⚠内容尺寸永不触发` / `⚠锚点问题`）优先于静态分析。冲突时以报告为准并记入工单。
@@ -144,6 +159,15 @@ playwright-cli -s=ticket-agent run-code --filename scripts/dom-report.js
 | 链中有 `CB:transform` + fixed 根节点 | **containing block 劫持**：% 高度相对 transform 祖先 | 视口单位（vh）或去掉 transform |
 | flex 子项撑破容器 | 约束问题：`min-height:auto` 默认值 | 子项 `min-height:0` |
 | 仅有 `max-height` 无 `height` | 上限 ≠ 锚点，% 子级解析 auto | 给明确 height |
+
+#### 4.5 cssgraph 使用约束
+
+| 工具 | 约束 |
+|------|------|
+| `cssgraph_diagnose` chain 参数 | 用完整后代选择器（如 `.wrapper .modal`），单类宽匹配会命中无关规则 |
+| `cssgraph_impact` / `cssgraph_callers` | 仅追踪 FTS5 排名第一的匹配，多文件同名 class 时需手动补充 |
+| `cssgraph_explore` | 不支持复合选择器（`.a.b` / `.a > .b`），复合用 `cssgraph_rule` |
+| 跨文件覆盖 | overrides 仅限同文件内，跨文件优先级靠 specificity 排序，不代表实际 cascade |
 
 ### 5. 分析根因
 

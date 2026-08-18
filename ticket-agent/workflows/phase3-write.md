@@ -26,6 +26,16 @@
 > - **理由**: 对应 Phase 2 的根因
 > - **影响面**: 这些改动会影响哪些功能
 
+### 3b. CSS 改动影响面检查
+
+涉及 CSS 修改时，用 cssgraph 评估爆炸半径：
+
+- **单 class 改动**：`cssgraph_impact(className="target-class")` → 查看受影响文件
+- **复合选择器改动**：`cssgraph_rule(selector=".parent .target")` → 含相关选择器 + loose/strict 影响
+- **仅代码文件**：`cssgraph_impact_selector(selector=".target")` → 过滤出 .js/.ts/.jsx/.tsx
+
+结果纳入修改方案的影响面说明。注意 `cssgraph_impact` 仅追踪 FTS5 第一匹配，多文件同名 class 需手动补充。
+
 ### 4. 编写代码
 
 注意事项：
