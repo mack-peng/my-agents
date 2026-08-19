@@ -2,6 +2,8 @@
 
 When a CSS layout issue cannot be diagnosed from static code alone (flex fix failed, height chain suspicious, only appears in real rendering), use browser forensics to get the **real DOM structure + computed values**, then cross-validate with cssgraph static analysis.
 
+> **Build source**: `scripts/dom-report.js` is a build product from `/Users/mack/Open-projects/dom-report/`. Edit the TypeScript sources there, then `npm run build` to regenerate.
+
 ## When to use
 
 - Layout bug reproduces in devtools but code review cannot pinpoint the root cause

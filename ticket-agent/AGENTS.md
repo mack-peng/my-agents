@@ -137,7 +137,15 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 详见 `workflows/phase2-investigate.md`。
 
-**CSS 布局类工单取证门**：工单问题涉及布局/滚动/高度/溢出/定位/缩放时，**必须先跑 DOM Reality Report 取证**（browser-agent `scripts/dom-report.js`）再下根因结论。静态分析（cssgraph）与真实渲染冲突时**以真实渲染为准**。无法取证（无登录态等）时根因标注 UNVERIFIABLE，禁止断言。
+### Phase 2b: CSS 布局取证（仅布局/滚动类工单，Phase 2 判断后触发）
+
+Phase 2 步骤 2 判断为布局/滚动类问题时：
+1. DOM Reality Report 拿运行时数据（dom-report.js）
+2. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
+3. 对比两者，以 dom-report 为准，cssgraph 补充文件定位
+4. 浏览器注入验证修复方案
+
+详见 `workflows/phase2b-css-forensics.md`。
 
 ### Phase 3: 代码编写原则
 

@@ -50,7 +50,23 @@
 
 **Session 模式**：从对话上下文中提取 Phase 1 的摘要和结论。
 
-### 2. 打开 Livesite（如有）
+### 2. 判断问题类型
+
+工单问题涉及 **布局/滚动/高度/溢出/定位/缩放** 时，进入 **Phase 2b: CSS 布局取证**。
+
+触发条件（满足任一即触发）：
+- 问题涉及滚动容器（overflow-y:auto 不滚动 / 滚动条不出现）
+- 问题涉及高度链（height:100% / vh / auto 行为异常）
+- 问题涉及 `position:fixed` + 百分比高度元素
+- 问题只在特定视口 / 缩放 / 浏览器下出现
+- flex 布局子项撑破 / 溢出容器
+- 用户描述 "无法滚动" / "显示不全" / "被截断" / "看不到底部"
+
+**布局类工单** → 进入 Phase 2b（详见 `workflows/phase2b-css-forensics.md`）。Phase 2b 完成 sign-off 后回到步骤 4（分析根因）。
+
+**非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。
+
+### 3. 打开 Livesite（如有）
 
 **Use browser-agent**。如果工单提供了 livesite URL，打开并测试。
 
@@ -61,9 +77,9 @@
 3. `playwright-cli -s=ticket-agent console` — 检查控制台错误
 4. 根据复现步骤操作，验证问题
 
-### 3. 代码调研 — 搜索策略（必须遵守）
+### 4. 代码调研 — 搜索策略（必须遵守）
 
-#### 3.1 陈述策略（执行前）
+#### 4.1 陈述策略（执行前）
 
 在动手搜索之前，先向用户陈述：
 
@@ -74,7 +90,7 @@
 
 获得用户确认后再执行。
 
-#### 3.2 搜索约束
+#### 4.2 搜索约束
 
 | 规则 | 说明 |
 |------|------|
@@ -85,7 +101,7 @@
 | **样式问题用 cssgraph** | 样式相关 bug 使用 `cssgraph_explore` 追溯 className → CSS 规则 → 组件引用 |
 | **不重复验证 codegraph 结果** | codegraph 结果来自 AST 解析，不要用 grep 重新确认 |
 
-#### 3.3 分层递进路径
+#### 4.3 分层递进路径
 
 ```
 1. codegraph_explore(query="关键词1 关键词2", maxFiles=8)
@@ -98,142 +114,6 @@
    ↓ 样式被覆盖 / specificity 冲突时
 5. cssgraph_cascade(className) → 按 specificity 排序列出所有定义
 ```
-
-### 4. CSS 布局问题取证门（样式类工单必须）
-
-工单问题涉及 **布局/滚动/高度/溢出/定位/缩放** 时，静态代码分析（cssgraph / 代码审阅）不足以定根因。**必须先跑 DOM Reality Report 取证，拿到真实 DOM 结构 + 计算值，再下根因结论。**
-
-#### 4.1 触发条件（满足任一即触发）
-
-- 问题涉及滚动容器（overflow-y:auto 不滚动 / 滚动条不出现）
-- 问题涉及高度链（height:100% / vh / auto 行为异常）
-- 问题涉及 `position:fixed` + 百分比高度元素
-- 问题只在特定视口 / 缩放 / 浏览器下出现
-- 静态分析结论与用户观察冲突（如 cssgraph 判定"锚定良好"但实际不滚）
-- flex 布局子项撑破 / 溢出容器
-
-#### 4.2 取证步骤
-
-**Use browser-agent**，命令在 `browser-agent/` 目录执行（session `-s=ticket-agent`）：
-
-```bash
-# 1. 打开复现页面（livesite 或编辑器；无登录态时请求用户提供 cookie / 登录）
-playwright-cli -s=ticket-agent goto "<复现 URL>"
-
-# 2. 设置报告配置（ROOT_SELECTOR 指向问题根节点，如对话框 / 滚动容器）
-playwright-cli -s=ticket-agent eval "() => { window.__DOM_REPORT_CFG = { ROOT_SELECTOR: '.xxx', ZOOM_DIAGNOSIS: true }; return 'ok'; }"
-
-# 3. 运行取证脚本
-playwright-cli -s=ticket-agent run-code --filename scripts/dom-report.js
-```
-
-#### 4.2b 静态诊断（cssgraph_diagnose）
-
-dom-report.js 拿到 ancestor chain 后，用 `cssgraph_diagnose` 做静态规则分析：
-
-```
-cssgraph_diagnose(className="目标class", chain=["div.wrapper", "div.modal", "div.target"])
-```
-
-- dom-report.js = **运行时真相**（计算值、实际尺寸）
-- cssgraph_diagnose = **静态规则**（声明值分类：DEFINITE / INDEFINITE / UNVERIFIABLE）
-- 两者互补：静态分析预判锚点链，运行时验证实际解析结果
-- **冲突时以 dom-report.js 为准**，并记入工单
-
-#### 4.2c 浏览器注入验证（CSS 布局类工单必须）
-
-确认根因后、进入 Phase 3 前，**用 `playwright-cli eval` 注入修复样式到浏览器**，实时验证方案是否生效。
-
-**步骤**：
-
-1. 构造修复 CSS，通过 `eval` 注入 `<style>` 标签：
-```bash
-playwright-cli -s=ticket-agent eval "() => {
-  const style = document.createElement('style');
-  style.id = 'test-fix';
-  style.textContent = \`修复 CSS\`;
-  document.head.appendChild(style);
-  return 'injected';
-}"
-```
-
-2. 程序化验证（以滚动问题为例）：
-```bash
-playwright-cli -s=ticket-agent eval "() => {
-  const el = document.querySelector('.滚动容器');
-  return JSON.stringify({
-    clientHeight: el.clientHeight,
-    scrollHeight: el.scrollHeight,
-    scrollable: el.scrollHeight > el.clientHeight + 1
-  });
-}"
-```
-
-3. **等待用户人工验证**：提示用户在浏览器中手动操作（滚动、点击等），确认修复生效。程序化验证通过不等于视觉正确。
-
-4. 验证通过后移除测试样式：
-```bash
-playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')?.remove(); return 'removed'; }"
-```
-
-**反模式**：
-- ❌ 不等待用户验证就进入 Phase 3（程序化验证可能遗漏视觉问题）
-- ❌ 忘记移除测试样式（影响后续操作）
-
-#### 4.3 取证结论规则
-
-- **以真实渲染为准**：报告判定（`✔可滚动` / `⚠高度塌陷` / `⚠内容尺寸永不触发` / `⚠锚点问题`）优先于静态分析。冲突时以报告为准并记入工单。
-- **声明值 vs 计算值**：`getComputedStyle().height` 是 used value（px），无法区分 `100%` 与 `2264px`。必须看报告的 **声明值配对**（stylesheets + inline）判断锚点。`max-height` 是上限不是锚，% 子级仍解析为 auto。
-- **锚点问题 vs 约束问题**：报告会给出两类判定，修复方向不同：
-  - 锚点问题（高度链未受限）→ 给链条某级确定高度（如 `height:100vh`）
-  - 约束问题（flex 子项撑破）→ 子项加 `min-height:0`
-- **无法取证时**：无登录态 / 页面不可达 → 根因标注 **UNVERIFIABLE**，列出待验证项，禁止断言根因。
-
-#### 4.4 症状 → 假设 → 修复映射（取证后对照）
-
-| 报告标记 | 假设 | 修复方向 |
-|---|---|---|
-| 滚动容器 `clientHeight=0` + 溢出 | 锚点问题：高度链全 auto/% → 塌陷 | 链条某级确定高度（`height:100vh`） |
-| 滚动容器内容尺寸（scrollHeight==clientHeight） | 锚点问题：内容撑开代替受限高度 | 同上，或 flex 中加 `min-height:0` |
-| 有溢出但 `overflow=hidden` 裁切 | 锚点问题或父级 overflow 误设 | 检查裁切点是否应滚 |
-| 链中有 `CB:transform` + fixed 根节点 | **containing block 劫持**：% 高度相对 transform 祖先 | 视口单位（vh）或去掉 transform |
-| flex 子项撑破容器 | 约束问题：`min-height:auto` 默认值 | 子项 `min-height:0` |
-| 仅有 `max-height` 无 `height` | 上限 ≠ 锚点，% 子级解析 auto | 给明确 height |
-
-#### 4.5 cssgraph 使用约束
-
-| 工具 | 约束 |
-|------|------|
-| `cssgraph_diagnose` chain 参数 | 用完整后代选择器（如 `.wrapper .modal`），单类宽匹配会命中无关规则 |
-| `cssgraph_impact` / `cssgraph_callers` | 仅追踪 FTS5 排名第一的匹配，多文件同名 class 时需手动补充 |
-| `cssgraph_explore` | 不支持复合选择器（`.a.b` / `.a > .b`），复合用 `cssgraph_rule` |
-| 跨文件覆盖 | overrides 仅限同文件内，跨文件优先级靠 specificity 排序，不代表实际 cascade |
-
-#### 4.6 高度链推理（CSS 布局类工单必须）
-
-当 dom-report 显示 `height: 100%` 链回退为 content-sized 时，执行以下推理：
-
-**Step 1：列出祖先链高度声明**
-从问题节点向上，记录每层：
-- height 声明（% / px / vh / auto / 无）
-- max-height 声明
-- computed height
-
-**Step 2：定位 definite height 断点**
-- definite height = 显式 `height` 声明（px / vh / vw）
-- **`max-height` ≠ definite height**（CSS 规范：`height:100%` 不依据 `max-height` 解析）
-- 无 definite height → `height:100%` = auto = 内容高度
-- 找到第一个无 definite height 的祖先 → 断点
-
-**Step 3：修复策略**
-- 断点处建立 definite height（`height:100vh`）→ 下游 `height:100%` 恢复传递
-- 或用 flex 替代 `height:100%` 链（`flex:1` + `min-height:0`）
-- 或两者结合
-
-**反模式（禁止）**：
-- ❌ `overflow: hidden` 不能约束 `height:100%` 解析（只裁切内容）
-- ❌ `max-height` 不能作为 `height:100%` 的解析基准
-- ❌ 在无 definite height 的容器上期望 `height:100%` 生效
 
 ### 5. 分析根因
 
@@ -259,11 +139,9 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 | apps/.../file.tsx:123 | 问题根因所在 |
 | apps/.../style.less:45 | 样式问题 |
 
-### 取证结果（CSS 布局类工单）
-- 报告摘要: 滚动容器 xxx 内容尺寸(1280px) → overflow 永不触发 → 锚点问题
-- 锚点链: 声明值逐级（% / 绝对单位 / max-height 上限）→ 计算值
-- 修复方向: 链条某级 height:100vh（锚点问题）或 min-height:0（约束问题）
-- 置信度: 真实渲染取证 / UNVERIFIABLE（阻塞原因: ...）
+### 取证结果（如有 Phase 2b）
+- 引用 Phase 2b 的根因结论
+- 修复方向: ...
 
 ### 根因
 （完整的根因分析）
@@ -272,17 +150,17 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 - ...
 ```
 
-### 6. 等待 Sign-off
+### 7. 等待 Sign-off
 
 **"Phase 2 完成。根因分析是否准确？调研是否充分？请确认后继续。"**
 
-### 7. Sign-off 后
+### 8. Sign-off 后
 
 **飞书模式**：**Use feishu-agent** → `lark-cli docs +update` 追加 `## Phase 2: 调研分析` 到文档。
 
 **Session 模式**：在对话中记录 Phase 2 摘要（保持 Markdown 格式），等待用户指令进入下一 Phase。
 
-### 8. Hard Stop
+### 9. Hard Stop
 
 - Phase 2 完成后停止，不得自动进入 Phase 3
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
