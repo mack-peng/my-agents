@@ -140,6 +140,46 @@ cssgraph_diagnose(className="目标class", chain=["div.wrapper", "div.modal", "d
 - 两者互补：静态分析预判锚点链，运行时验证实际解析结果
 - **冲突时以 dom-report.js 为准**，并记入工单
 
+#### 4.2c 浏览器注入验证（CSS 布局类工单必须）
+
+确认根因后、进入 Phase 3 前，**用 `playwright-cli eval` 注入修复样式到浏览器**，实时验证方案是否生效。
+
+**步骤**：
+
+1. 构造修复 CSS，通过 `eval` 注入 `<style>` 标签：
+```bash
+playwright-cli -s=ticket-agent eval "() => {
+  const style = document.createElement('style');
+  style.id = 'test-fix';
+  style.textContent = \`修复 CSS\`;
+  document.head.appendChild(style);
+  return 'injected';
+}"
+```
+
+2. 程序化验证（以滚动问题为例）：
+```bash
+playwright-cli -s=ticket-agent eval "() => {
+  const el = document.querySelector('.滚动容器');
+  return JSON.stringify({
+    clientHeight: el.clientHeight,
+    scrollHeight: el.scrollHeight,
+    scrollable: el.scrollHeight > el.clientHeight + 1
+  });
+}"
+```
+
+3. **等待用户人工验证**：提示用户在浏览器中手动操作（滚动、点击等），确认修复生效。程序化验证通过不等于视觉正确。
+
+4. 验证通过后移除测试样式：
+```bash
+playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')?.remove(); return 'removed'; }"
+```
+
+**反模式**：
+- ❌ 不等待用户验证就进入 Phase 3（程序化验证可能遗漏视觉问题）
+- ❌ 忘记移除测试样式（影响后续操作）
+
 #### 4.3 取证结论规则
 
 - **以真实渲染为准**：报告判定（`✔可滚动` / `⚠高度塌陷` / `⚠内容尺寸永不触发` / `⚠锚点问题`）优先于静态分析。冲突时以报告为准并记入工单。
@@ -168,6 +208,32 @@ cssgraph_diagnose(className="目标class", chain=["div.wrapper", "div.modal", "d
 | `cssgraph_impact` / `cssgraph_callers` | 仅追踪 FTS5 排名第一的匹配，多文件同名 class 时需手动补充 |
 | `cssgraph_explore` | 不支持复合选择器（`.a.b` / `.a > .b`），复合用 `cssgraph_rule` |
 | 跨文件覆盖 | overrides 仅限同文件内，跨文件优先级靠 specificity 排序，不代表实际 cascade |
+
+#### 4.6 高度链推理（CSS 布局类工单必须）
+
+当 dom-report 显示 `height: 100%` 链回退为 content-sized 时，执行以下推理：
+
+**Step 1：列出祖先链高度声明**
+从问题节点向上，记录每层：
+- height 声明（% / px / vh / auto / 无）
+- max-height 声明
+- computed height
+
+**Step 2：定位 definite height 断点**
+- definite height = 显式 `height` 声明（px / vh / vw）
+- **`max-height` ≠ definite height**（CSS 规范：`height:100%` 不依据 `max-height` 解析）
+- 无 definite height → `height:100%` = auto = 内容高度
+- 找到第一个无 definite height 的祖先 → 断点
+
+**Step 3：修复策略**
+- 断点处建立 definite height（`height:100vh`）→ 下游 `height:100%` 恢复传递
+- 或用 flex 替代 `height:100%` 链（`flex:1` + `min-height:0`）
+- 或两者结合
+
+**反模式（禁止）**：
+- ❌ `overflow: hidden` 不能约束 `height:100%` 解析（只裁切内容）
+- ❌ `max-height` 不能作为 `height:100%` 的解析基准
+- ❌ 在无 definite height 的容器上期望 `height:100%` 生效
 
 ### 5. 分析根因
 
