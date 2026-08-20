@@ -86,6 +86,7 @@
 > **调研策略**：
 > - 关键词/符号：[列出要搜索的关键词]
 > - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_explore]
+> - 取证手段：[运行时取证/验证方式，如注入 scrollTo 监听抓调用栈、route abort 修改加载时序、dom-report 等]
 > - 预期范围：[预估涉及的文件范围]
 
 获得用户确认后再执行。

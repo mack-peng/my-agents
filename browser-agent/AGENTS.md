@@ -6,7 +6,21 @@ This directory is configured for browser automation using `playwright-cli` and P
 
 - `playwright-cli`: Installed globally via npm
 - Default browser: Chromium (use `--browser=firefox` or `--browser=webkit` to switch)
+- **本机未安装 Chrome**：`open` 不带 `--browser` 时可能尝试 Chrome 而报错，必须显式 `--browser=chromium`
 - Run `playwright-cli --help` for full command list
+
+### run-code 文件格式
+
+`run-code --filename <file>` 的文件必须是一个**箭头函数表达式**（将被包装为 `await (async (page) => {...})(page)` 执行）：
+
+```js
+async (page) => {
+  await page.goto('https://example.com');
+  return 'done';
+}
+```
+
+文件内**禁止**顶层 `const` / `module.exports` / IIFE — 会报 `SyntaxError`。需要 `setTimeout` 时用 `page.waitForTimeout(ms)`。
 
 ## playwright-cli Quick Reference (v0.1.13)
 
