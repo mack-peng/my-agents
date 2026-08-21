@@ -51,30 +51,13 @@ ve configure profile --profile <name>     # 切换到指定 profile
 ve configure delete <name>
 ```
 
-## 配置与登录
-
-`ve` 支持 ak / sso / console-login / ramrolearn / oidc / ecsrole 六种凭证模式。
-
-```bash
-# AK/SK 模式（最常用）
-ve configure set --profile default --region cn-beijing --access-key <AK> --secret-key <SK>
-
-# 其他凭证模式
-ve configure set --profile sso-1 --mode sso --region cn-beijing
-ve configure set --profile ecs-1 --mode ecsrole --region cn-beijing --role-name <role>
-
-# 查看 / 切换 / 删除 profile
-ve configure get
-ve configure list
-ve configure profile <name>
-ve configure delete <name>
-```
-
 > AK/SK 在火山引擎控制台「访问控制」创建；未配置凭证时调用 API 会因鉴权失败报错。
 
 ## 快捷命令
 
-通用调用格式：`ve [service] [action] [--Param value ...] [system flags]`
+### 通用调用
+
+调用格式：`ve [service] [action] [--Param value ...] [system flags]`
 
 ```bash
 ve <service> -h                 # 查看某服务可用的 Action
@@ -86,34 +69,7 @@ System flags（v1.0.48+ 用三横线，与 API 双横线参数不冲突）：`--
 
 > 💡 **拿准确命令的最快方式**：用火山 **API Explorer CLI 生成器** https://api.volcengine.com/api-explorer?tab=cli ，选服务/Action 填参数即可自动生成 ve 命令。
 
-### 视觉智能（即梦相关）— cv20240606
-
-```bash
-# 智能扩图（outpainting）
-ve cv20240606 Img2ImgOutpainting --req_key high_aes_general_v21.1 \
-  --custom_prompt "..." --image_urls '["https://..."]'
-
-# 交互编辑 inpainting
-ve cv20240606 Img2ImgInpainting --req_key high_aes_general_v21.1 --custom_prompt "..." --image_urls '["..."]'
-
-# 文生图（XLSft 轻量版）
-ve cv20240606 Text2ImgXLSft --req_key <req_key> --prompt "一只猫" --width 1024 --height 1024
-
-# 图生图（XLSft）
-ve cv20240606 Img2ImgXLSft --req_key <req_key> --prompt "改风格" --image_urls '["..."]'
-
-# 换脸 / 风格化 / 数字人
-ve cv20240606 FaceSwap --req_key <req_key> --image_urls '["..."]'
-ve cv20240606 AIGCStylizeImage --req_key <req_key> --image_urls '["..."]'
-
-# 视频类异步任务（submit + get result 两步）
-ve cv20240606 FaceFusionMovieSubmitTask --req_key <req_key> --image_urls '["..."]'
-ve cv20240606 FaceFusionMovieGetResult --req_key <req_key> --task_id <id>
-```
-
-cv20240606 主要 Action：`AIGCStylizeImage`（风格化）、`FaceSwap`/`FaceSwapAI`（换脸）、`HairStyle`、`HighAesGeneralV13/V14/V20` 等（即梦生图各版本）、`Text2ImgXLSft`/`Img2ImgXLSft`、`Img2ImgInpainting`/`Img2ImgOutpainting`（智能扩图/交互编辑）、`FaceFusionMovieSubmitTask`/`GetResult`（数字人视频）等。参数以 `ve cv20240606 <Action> -h` 为准，`req_key` 多为必填。
-
-### 即梦图片生成（已验证 ✅ 2026-08-21）
+### 即梦 AI 图片生成（已验证 ✅ 2026-08-21）
 
 即梦文生图走视觉智能「即梦AI-图片生成」服务，**不在 ve 内置元数据里**，需 `--force` 强制调用：
 接口地址 `https://visual.volcengineapi.com`，`Service=cv`，`Region=cn-north-1`，`Version=2022-08-31`。
@@ -142,6 +98,33 @@ req_key 对照（已开通服务）：
 - `force_single=true` 强制单图（省积分/更快）；组图按张数计费，最多 15-输入图数 张。
 - 提交返回 `code=10000` 才有 `task_id`；查询结果 `status`：`in_queue` → `done`/`fail`。
 
+### 视觉智能 cv20240606（即梦旧版 / 其他视觉能力）
+
+```bash
+# 智能扩图（outpainting）
+ve cv20240606 Img2ImgOutpainting --req_key high_aes_general_v21.1 \
+  --custom_prompt "..." --image_urls '["https://..."]'
+
+# 交互编辑 inpainting
+ve cv20240606 Img2ImgInpainting --req_key high_aes_general_v21.1 --custom_prompt "..." --image_urls '["..."]'
+
+# 文生图（XLSft 轻量版）
+ve cv20240606 Text2ImgXLSft --req_key <req_key> --prompt "一只猫" --width 1024 --height 1024
+
+# 图生图（XLSft）
+ve cv20240606 Img2ImgXLSft --req_key <req_key> --prompt "改风格" --image_urls '["..."]'
+
+# 换脸 / 风格化 / 数字人
+ve cv20240606 FaceSwap --req_key <req_key> --image_urls '["..."]'
+ve cv20240606 AIGCStylizeImage --req_key <req_key> --image_urls '["..."]'
+
+# 视频类异步任务（submit + get result 两步）
+ve cv20240606 FaceFusionMovieSubmitTask --req_key <req_key> --image_urls '["..."]'
+ve cv20240606 FaceFusionMovieGetResult --req_key <req_key> --task_id <id>
+```
+
+cv20240606 主要 Action：`AIGCStylizeImage`（风格化）、`FaceSwap`/`FaceSwapAI`（换脸）、`HairStyle`、`HighAesGeneralV13/V14/V20` 等（即梦生图各版本）、`Text2ImgXLSft`/`Img2ImgXLSft`、`Img2ImgInpainting`/`Img2ImgOutpainting`（智能扩图/交互编辑）、`FaceFusionMovieSubmitTask`/`GetResult`（数字人视频）等。参数以 `ve cv20240606 <Action> -h` 为准，`req_key` 多为必填。
+
 ### 大模型（火山方舟 ark）
 
 ```bash
@@ -156,10 +139,13 @@ ve ark -h                       # 火山方舟相关服务（豆包等大模型�
 
 ## 注意事项
 
-- CLI 文档：什么是 CLI https://www.volcengine.com/docs/83927/1176799 ；安装 https://www.volcengine.com/docs/83927/1184025 ；源码 https://github.com/volcengine/volcengine-cli
 - 调用前先 `ve <service> <action> -h` 确认必填参数与取值范围；正式请求前可用小金额验证，避免误扣费。
 - **官方接口文档反爬，抓不到正文时**：用火山官方 `volcengine-knowledge-search` skill 的脚本直接取全文（无需鉴权）：`python3 scripts/volcengine_docs.py fetch "<docs链接>"`（脚本在 `volcengine-skills` 仓库 `skills/core/volcengine-knowledge-search/scripts/volcengine_docs.py`）。`search` 子命令做语义检索。
 - 生成类任务多为异步：提交返回 task_id 后，用对应的 `*GetResult` Action 轮询到完成。
 - 未配置凭证时先 `ve configure set`；多环境用 `--profile` 隔离。
 - 更新 CLI：`ve upgrade`。
 - 自动补全：`ve completion bash/zsh`（写入对应 rc 文件）；彩色输出：`ve enable-color` / `ve disable-color`。
+
+## 参考文档
+
+- CLI 文档：什么是 CLI https://www.volcengine.com/docs/83927/1176799 ；安装 https://www.volcengine.com/docs/83927/1184025 ；源码 https://github.com/volcengine/volcengine-cli
