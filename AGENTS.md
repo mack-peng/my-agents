@@ -21,6 +21,7 @@ No build, test, or lint at the root level.
 - **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/` (lark-doc, lark-drive, lark-markdown, lark-shared, lark-sheets, lark-wiki). **禁止加载系统级 skill 文件（`~/.agents/skills/lark-*`）**：大多数飞书操作直接从 `feishu-agent/AGENTS.md` 的快捷命令抄写执行，仅在复杂操作（XML block、公式、权限管理等）时才读取 agent 自带的 skill 文件。
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
+- **`cssprobe-agent/`** — runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser. Produces structured reports with DEFINITE/INDEFINITE/UNVERIFIABLE confidence levels.
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 
 ## Skills

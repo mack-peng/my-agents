@@ -1,8 +1,6 @@
 # CSS Forensics — DOM Shape Cognition
 
-When a CSS layout issue cannot be diagnosed from static code alone (flex fix failed, height chain suspicious, only appears in real rendering), use browser forensics to get the **real DOM structure + computed values**, then cross-validate with cssgraph static analysis.
-
-> **Build source**: `scripts/dom-report.js` is a build product from `/Users/mack/Open-projects/dom-report/`. Edit the TypeScript sources there, then `npm run build` to regenerate.
+When a CSS layout issue cannot be diagnosed from static code alone (flex fix failed, height chain suspicious, only appears in real rendering), use `cssprobe-cli` to get the **real DOM structure + computed values**, then cross-validate with cssgraph static analysis.
 
 ## When to use
 
@@ -13,30 +11,58 @@ When a CSS layout issue cannot be diagnosed from static code alone (flex fix fai
 - Same CSS fix behaves inconsistently across scenarios (zoom, browser differences)
 - Need to understand the full layout shape of a component tree (display, flex, position, sizing)
 
-## Two-step usage
+## Prerequisites
 
-1. Open the target page (real environment or test reproduction), set config:
+- `cssprobe-cli` installed globally: `npm install -g cssprobe-cli`
+- Chromium browser installed: `npx playwright install chromium`
 
-```bash
-playwright-cli -s=<session> open <url> --headed
-playwright-cli -s=<session> eval "() => { window.__DOM_REPORT_CFG = { ROOT_SELECTOR: '.site-version-history-dialog-wrapper', ZOOM_DIAGNOSIS: true }; return 'ok'; }"
-```
+## Usage
 
-2. Run the script:
+### Basic inspection
 
 ```bash
-playwright-cli -s=<session> run-code --filename scripts/dom-report.js
+# Auto-detect root element
+cssprobe-cli inspect https://example.com
+
+# With explicit selector
+cssprobe-cli inspect https://example.com ".modal-body"
+
+# JSON output (for programmatic consumption)
+cssprobe-cli inspect https://example.com ".modal-body" --json
 ```
 
-## Config parameters
+### Login-protected pages
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `ROOT_SELECTOR` | `.site-version-history-dialog-wrapper` | Problem root node (dialog / scroll container) |
-| `UP_TO` | `html` | Ancestor chain stop tag (e.g. `body`) |
-| `DOWN_DEPTH` | `6` | Downward tree depth |
-| `ZOOM_DIAGNOSIS` | `false` | Test at 1x/0.5x and report diffs |
-| `MAX_NODES` | `60` | Node count cap to prevent context explosion |
+```bash
+# Import cookies from browser export (Netscape format)
+cssprobe-cli state-import cookies.txt --out ~/.cssprobe-cli/states/mysite.json
+
+# Interactive login
+cssprobe-cli login https://mysite.com
+
+# Inspect with state
+cssprobe-cli inspect https://mysite.com/page ".target" --state ~/.cssprobe-cli/states/mysite.json
+```
+
+### Options
+
+```bash
+cssprobe-cli inspect <url> [selector] [options]
+
+Arguments:
+  <url>                       URL, file:// path, or local HTML file
+  [selector]                  CSS selector for root (auto-detected if omitted)
+
+Options:
+  --json                      Output structured JSON
+  --headed                    Show browser window
+  --browser <engine>          chromium|firefox|webkit (default chromium)
+  --zoom                      Run 1x/0.5x viewport diagnosis
+  --depth <n>                 DOM tree depth (default 6)
+  --max-nodes <n>             Node count cap (default 60)
+  --up-to <tag>               Ancestor stop tag (default html)
+  --state <file>              Load saved state (cookies + localStorage)
+```
 
 ## Output interpretation
 
@@ -67,7 +93,19 @@ Each node shows:
   - `CB:...`: containing block modifier
 - Repeated structures aggregated as `×N` (1 representative + count)
 
-### 3. Shape analysis (6 dimensions)
+### 3. Findings with confidence levels
+
+Each finding carries a confidence level:
+
+| Level | Meaning |
+|-------|---------|
+| **DEFINITE** | Based on computed values (facts from getComputedStyle) or accessible declared values |
+| **INDEFINITE** | Declared value uses `%` — resolves at runtime |
+| **UNVERIFIABLE** | Declared value missing or from blocked cross-origin stylesheet |
+
+The report header shows: `confidence: DEFINITE 8 | INDEFINITE 0 | UNVERIFIABLE 1`
+
+### 4. Shape analysis (6 dimensions)
 
 **Shape chain**: Role + strategy summary for each ancestor level.
 
@@ -87,12 +125,6 @@ Each node shows:
 - `scroll container exists but no height anchor above → overflow:auto never triggers`
 - `all ancestors are content-sized → height depends entirely on content`
 
-### Zoom diagnosis
-
-0.5x viewport re-test compares rect.bottom:
-- **No diff**: layout is viewport-independent (well-anchored or content-adaptive)
-- **Diff and 0.5x no longer overflows**: content-sized (auto) box overflows viewport → anchor issue
-
 ## Symptom → Assumption mapping
 
 | Symptom (report flag) | Assumption | Fix direction |
@@ -108,7 +140,7 @@ Each node shows:
 
 ## Integration with cssgraph_diagnose
 
-After running dom-report.js, pass the ancestor chain to cssgraph for static analysis:
+After running cssprobe-cli, pass the ancestor chain to cssgraph for static analysis:
 
 ```bash
 cssgraph diagnose ".version-history" "div.editor-root" "div.s-kit-modal" "div.s-kit-modal-body" "div.version-history"
@@ -119,14 +151,14 @@ cssgraph_diagnose provides:
 - File:line locations for each rule
 - Pattern detection from CSS rules alone (no runtime needed)
 
-**When dom-report.js and cssgraph conflict**: trust dom-report.js (runtime truth) and record in the ticket.
+**When cssprobe-cli and cssgraph conflict**: trust cssprobe-cli (runtime truth) and record in the ticket.
 
 ## Verification checklist
 
 - Report is self-consistent: anchor check and overflow findings should corroborate each other
-- After fix, re-run this script — scroll container should show `✔scrollable` and chain should have a definite anchor
-- Real editor verification: open version history dialog in striking.ly editor, run script, confirm report matches test page conclusions
-- If cssgraph_diagnose shows UNVERIFIABLE levels, dom-report.js is the ground truth
+- After fix, re-run cssprobe-cli — scroll container should show `✔scrollable` and chain should have a definite anchor
+- Real editor verification: open version history dialog in striking.ly editor, run cssprobe-cli, confirm report matches test page conclusions
+- If cssgraph_diagnose shows UNVERIFIABLE levels, cssprobe-cli is the ground truth
 
 ## Test matrix (dom-report-test.html, local http server)
 
@@ -142,9 +174,5 @@ cssgraph_diagnose provides:
 
 - Requires an interactive browser session (login state)
 - `file://` protocol: some computed values unreliable — use local http server for test pages
-- playwright-cli sandbox: no `process/require/setTimeout` — all logic must be inside `page.evaluate`, use `page.waitForTimeout` for delays
-- Config must be passed via `window.__DOM_REPORT_CFG` (cannot reference script-external variables in evaluate)
-- `page.viewportSize()` occasionally returns null (headed session) → `resize` first
-- Multi-scenario same-page testing: document flow stacking causes fixed element rect offsets — trust scroll/clientHeight relationship, ignore test page layout artifacts
-- Declaration pairing only scans same-origin stylesheets (cross-origin sheet cssRules inaccessible); inline style merged with priority
+- Cross-origin stylesheet blocking: declared values from blocked sheets are marked UNVERIFIABLE
 - Static cssgraph analysis cannot know real DOM structure / transform hijacking / runtime resolution — UNVERIFIABLE is the fallback confidence

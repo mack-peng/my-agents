@@ -132,7 +132,7 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 - [ ] 如果工单涉及代码修改 → `.codegraph/` 存在 → 否则提示用户：`codegraph init -i`
 - [ ] 如果工单涉及样式修改 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
-- [ ] 如果工单涉及布局/滚动/定位 → `browser-agent/scripts/dom-report.js` 存在（DOM Reality Report 取证脚本）
+- [ ] 如果工单涉及布局/滚动/定位 → `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
 
 ### Phase 2 调研策略
 
@@ -141,9 +141,9 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 ### Phase 2b: CSS 布局取证（仅布局/滚动类工单，Phase 2 判断后触发）
 
 Phase 2 步骤 2 判断为布局/滚动类问题时：
-1. DOM Reality Report 拿运行时数据（dom-report.js）
+1. cssprobe-cli 拿运行时数据（`cssprobe-cli inspect <url> <selector> --json`）
 2. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
-3. 对比两者，以 dom-report 为准，cssgraph 补充文件定位
+3. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
 4. 浏览器注入验证修复方案
 
 详见 `workflows/phase2b-css-forensics.md`。

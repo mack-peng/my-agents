@@ -19,33 +19,44 @@
 - Phase 2 步骤 1（获取上下文）已完成
 - 有可复现的页面 URL（livesite 或编辑器）
 - 有登录态（无登录态时标注 UNVERIFIABLE，禁止断言根因）
+- `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
 
 ## 流程
 
-### 1. DOM Reality Report（运行时真相）
+### 1. cssprobe-cli 运行时取证
 
-**Use browser-agent**。命令在 `browser-agent/` 目录执行（session `-s=ticket-agent`）：
+使用 `cssprobe-cli` 获取真实浏览器渲染数据：
 
 ```bash
-# 1. 打开复现页面（livesite 或编辑器；无登录态时请求用户提供 cookie / 登录）
-playwright-cli -s=ticket-agent goto "<复现 URL>"
+# 基本检查（自动检测根元素）
+cssprobe-cli inspect "<复现 URL>"
 
-# 2. 设置报告配置（ROOT_SELECTOR 指向问题根节点，如对话框 / 滚动容器）
-playwright-cli -s=ticket-agent eval "() => { window.__DOM_REPORT_CFG = { ROOT_SELECTOR: '.xxx', ZOOM_DIAGNOSIS: false }; return 'ok'; }"
+# 指定根元素
+cssprobe-cli inspect "<复现 URL>" ".目标选择器"
 
-# 3. 运行取证脚本（构建产物，源码在 /Users/mack/Open-projects/dom-report/）
-playwright-cli -s=ticket-agent run-code --filename scripts/dom-report.js
+# JSON 输出（用于程序化分析）
+cssprobe-cli inspect "<复现 URL>" ".目标选择器" --json
+
+# 需要登录态时
+cssprobe-cli inspect "<复现 URL>" ".目标选择器" --state ~/.cssprobe-cli/states/<site>.json --json
 ```
 
-**提取关键数据**：
+**提取关键数据**（从 JSON 输出的 `findings` 数组）：
+- `id`: finding 类型（anchor-missing, scrollable, overflow-clipped 等）
+- `confidence`: DEFINITE / INDEFINITE / UNVERIFIABLE
+- `message`: 人类可读描述
+- `evidence`: computed/declared 值证据
+- `location`: 涉及的 DOM 元素
+
+**提取关键数据**（从 JSON 输出的 `snapshot.ancestors`）：
 - 祖先链中每个节点的 className（用于步骤 2）
-- scrollHeight vs clientHeight（判断是否可滚动）
-- overflow flags（标记溢出节点）
-- bottom 位置（判断元素是否在可视区外）
+- `metrics.scrollHeight` vs `metrics.clientHeight`（判断是否可滚动）
+- `flags.scrollable`（标记可滚动节点）
+- `flags.overflowsParent`（标记溢出节点）
 
 ### 2. cssgraph_diagnose（静态规则）
 
-从步骤 1 的 dom-report 输出中提取祖先链 className，构造完整后代选择器：
+从步骤 1 的 cssprobe-cli 输出中提取祖先链 className，构造完整后代选择器：
 
 ```bash
 cd $BOBKAT_PATH
@@ -63,14 +74,14 @@ cssgraph diagnose ".目标class" \
 
 ### 3. 对比分析
 
-| dom-report | cssgraph | 结论 |
+| cssprobe-cli | cssgraph | 结论 |
 |---|---|---|
-| 无锚点 | 有锚点(DEFINITE) | 以 cssgraph 的文件定位为准，以 dom-report 的实际尺寸为准 |
-| 可滚动 | UNVERIFIABLE | 以 dom-report 为准 |
+| 无锚点 | 有锚点(DEFINITE) | 以 cssgraph 的文件定位为准，以 cssprobe-cli 的实际尺寸为准 |
+| 可滚动 | UNVERIFIABLE | 以 cssprobe-cli 为准 |
 | 不可滚动 | DEFINITE锚点 | 检查 CB 劫持或 overflow 裁切 |
 | 无锚点 | 无锚点 | 确认无锚点，需要修复 |
 
-**冲突规则**：dom-report 与 cssgraph 冲突时，**以 dom-report（运行时）为准**，cssgraph 补充文件定位。
+**冲突规则**：cssprobe-cli 与 cssgraph 冲突时，**以 cssprobe-cli（运行时）为准**，cssgraph 补充文件定位。
 
 ### 4. 浏览器注入验证
 
@@ -128,11 +139,12 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 ```
 ## Phase 2b: CSS 布局取证
 
-### DOM Reality Report
+### cssprobe-cli 报告
 - 根节点: .xxx
 - 可滚动: ✔/⚠
 - scrollHeight: Xpx, clientHeight: Ypx
 - 溢出节点: ...
+- 置信度: DEFINITE N | INDEFINITE N | UNVERIFIABLE N
 
 ### cssgraph_diagnose
 - 锚点: 有/无 (DEFINITE/UNVERIFIABLE)
@@ -141,7 +153,7 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 
 ### 对比结论
 - 冲突: 是/否
-- 以 dom-report/cssgraph 为准
+- 以 cssprobe-cli/cssgraph 为准
 
 ### 修复方案
 - 修改文件: ...
@@ -173,5 +185,5 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 
 - Phase 2b 完成后停止，不得自动回到 Phase 2
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
-- dom-report 与 cssgraph 冲突时，以 dom-report 为准
+- cssprobe-cli 与 cssgraph 冲突时，以 cssprobe-cli 为准
 - 无登录态时根因标注 UNVERIFIABLE，禁止断言
