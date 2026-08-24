@@ -59,9 +59,27 @@ code-agent 负责 git 提交和推送：
 ### 6. 归档（飞书模式）
 
 通过 feishu-agent 更新 Develop 任务文档：
-- 追加 `## Phase 3: Code` 章节
-- 记录分支名 + commit hash + 修改统计
-- 追加 `✅ Phase 3 Sign-off`
+
+**更新任务上下文**（补充开发分支信息）：
+- 使用 `str_replace` 更新 `**开发分支**: （待 Phase 3 补充）` 为实际分支名
+
+**追加 Phase 3 章节**：
+```markdown
+## Phase 3: Code
+- **开发分支**: {分支名}
+- **Commit 记录**:
+  - `{hash}` {message}
+  - `{hash}` {message}
+- **修改文件**: {n} files, +{x}/-{y}
+- **验证**: typecheck ✅ lint ✅
+
+## Phase 3 TODO
+- [x] code-agent 实现代码修改
+- [x] typecheck + lint 通过
+✅ Phase 3 Sign-off: 已确认
+```
+
+**注意**：Commit 记录应包含所有 commit（包括后续修复 commit），便于追溯代码变更历史。
 
 ## Sign-off 条件
 

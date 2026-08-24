@@ -73,7 +73,45 @@ morph-agent 执行：
 - 展示验证结果
 - 如有失败项，记录阻塞原因并讨论
 - 用户确认后 sign-off
-- 飞书文档追加 `✅ Phase 4 Sign-off`（含 Build ID + Deploy ID + 验证结果）
+- 飞书文档追加 `✅ Phase 4 Sign-off`（含验证结果）
+
+### 6. 归档（飞书模式）
+
+通过 feishu-agent 更新 Develop 任务文档：
+
+**更新任务上下文**（补充测试分支信息）：
+- 使用 `str_replace` 更新 `**测试分支**: （待 Phase 4 补充）` 为实际分支名
+
+**追加 Phase 4 章节**：
+
+首次构建部署：
+```markdown
+## Phase 4: Verify
+
+### 第 1 轮
+- **测试地址**: {url}
+- **测试结果**: ✅/❌
+
+## Phase 4 TODO
+- [x] 创建测试分支并 cherry-pick
+- [x] morph-cli 构建
+- [x] morph-cli 部署
+- [x] 线上验证
+✅ Phase 4 Sign-off: 已确认
+```
+
+如发现问题需要修复，追加修复记录：
+```markdown
+### 修复记录
+1. {问题描述} — {修复方案}
+2. {问题描述} — {修复方案}
+
+### 第 {n} 轮（最终）
+- **测试地址**: {url}
+- **测试结果**: ✅ 全部通过
+```
+
+**注意**：每轮修复后，将新的 commit 记录追加到 Phase 3 的 Commit 记录中，保持代码变更历史完整。
 
 ## Sign-off 条件
 

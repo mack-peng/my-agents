@@ -32,7 +32,41 @@ lark-cli wiki +node-create --space-id <FEISHU_DEVELOP_WIKI_ID> --title "<需求�
 
 返回 `obj_token` 和 `node_token`，后续 Phase 通过 feishu-agent 追加内容。
 
-### 5. 输出 Phase 0 摘要
+### 5. 飞书模式：写入任务上下文
+
+创建文档后，立即写入任务上下文信息（便于跨机器续接）：
+
+```bash
+lark-cli docs +update --api-version v2 --doc "<obj_token>" --command append --doc-format markdown --content $'# {需求标题}
+
+## 任务上下文
+- **仓库**: {仓库地址}
+- **开发分支**: {分支名}
+- **测试分支**: {分支名}
+- **Spec 文件**: {相对路径}
+- **飞书 Spec**: {链接}
+'
+```
+
+**注意**：
+- 仓库地址从 `git remote -v` 获取
+- 分支名在 Phase 3 创建开发分支后补充
+- 测试分支名在 Phase 4 创建测试分支后补充
+- Spec 文件路径在 Phase 1 生成 Spec 后补充
+- 飞书 Spec 链接在 Phase 1 上传 Spec 后补充
+
+初始文档可只写入仓库地址，其他字段留空待后续 Phase 补充：
+
+```markdown
+## 任务上下文
+- **仓库**: {仓库地址}
+- **开发分支**: （待 Phase 3 补充）
+- **测试分支**: （待 Phase 4 补充）
+- **Spec 文件**: （待 Phase 1 补充）
+- **飞书 Spec**: （待 Phase 1 补充）
+```
+
+### 6. 输出 Phase 0 摘要
 
 ```
 Phase 0 Pre-flight 完成

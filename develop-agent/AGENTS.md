@@ -210,44 +210,65 @@
 飞书文档使用 Markdown 格式，每 Phase 追加一个 `## Phase N` 章节：
 
 ```markdown
-# [需求标题]
+# {需求标题}
+
+## 任务上下文
+- **仓库**: {仓库地址}
+- **开发分支**: {分支名}
+- **测试分支**: {分支名}
+- **Spec 文件**: {相对路径}
+- **飞书 Spec**: {链接}
 
 ## Phase 1: Design
 - **需求描述**: ...
-- **Spec 地址**: design-agent/output/xxx.spec.md
+- **Spec 地址**: ...
 - **Spec 飞书链接**: ...
 
 ## Phase 1 TODO
-- [x] design-agent 输出 Spec
-- [x] 逐项确认需求。结果：14 项全部确认
+- [x] ...
 ✅ Phase 1 Sign-off: 已确认
 
-## Phase 2: Code Design（已跳过）
-> 用户确认跳过，需求直接进入代码阶段
-
 ## Phase 3: Code
-- **修改文件**: 16 files, +186/-63
-- **Commit**: 3d96e00 fix(seo): ...
+- **开发分支**: {分支名}
+- **Commit 记录**:
+  - `{hash}` {message}
+  - `{hash}` {message}
+- **修改文件**: {n} files, +{x}/-{y}
 - **验证**: typecheck ✅ lint ✅
 
 ## Phase 3 TODO
-- [x] code-agent 实现代码修改
-- [x] typecheck + lint 通过
+- [x] ...
 ✅ Phase 3 Sign-off: 已确认
 
 ## Phase 4: Verify
-- **Build ID**: 2F6A8B616D
-- **Deploy ID**: D66268B3B
-- **验证结果**: 18 项检查全部通过
 
+### 第 {n} 轮
+- **测试地址**: {url}
+- **测试结果**: ✅/❌
+
+### 修复记录（如有）
+1. {问题描述}
+2. {问题描述}
+
+## Phase 4 TODO
+- [x] ...
 ✅ Phase 4 Sign-off: 已确认
 
 ## Phase 5: Release
-- **PR**: #46 feat(discover): ...
+- **PR**: #{number} {title}
 - **状态**: merged
-- **Spec 归档**: https://ucniizx1ebgh.feishu.cn/wiki/...
 
+## Phase 5 TODO
+- [x] ...
 ✅ Phase 5 Sign-off: 已完成
+
+## 续接指南
+如需从此文档续接任务：
+1. clone 仓库: `git clone {仓库地址}`
+2. checkout 开发分支: `git checkout {分支名}`
+3. checkout 测试分支: `git checkout {分支名}`
+4. 构建: `morph-cli build {项目名} {分支名}`
+5. 部署: `morph-cli deploy {项目名} {buildId}`
 ```
 
 ## Sign-off 协议
