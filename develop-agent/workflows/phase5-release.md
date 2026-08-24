@@ -57,17 +57,6 @@ gitee-agent 执行：
 ✅ Phase 5 Sign-off: 已完成
 ```
 
-**追加续接指南**（便于跨机器续接）：
-```markdown
-## 续接指南
-如需从此文档续接任务：
-1. clone 仓库: `git clone {仓库地址}`
-2. checkout 开发分支: `git checkout {分支名}`
-3. checkout 测试分支: `git checkout {分支名}`
-4. 构建: `morph-cli build {项目名} {分支名}`
-5. 部署: `morph-cli deploy {项目名} {buildId}`
-```
-
 > Spec 和 Code Design 已在 Phase 1/2 上传到各自知识库，Phase 5 不重复上传。
 
 ### 6. 输出流程摘要

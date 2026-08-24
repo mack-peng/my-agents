@@ -213,11 +213,12 @@
 # {需求标题}
 
 ## 任务上下文
+跨机器续接所需信息，Phase 0 创建飞书文档后写入，各 Phase 补充完整。
 - **仓库**: {仓库地址}
-- **开发分支**: {分支名}
-- **测试分支**: {分支名}
-- **Spec 文件**: {相对路径}
-- **飞书 Spec**: {链接}
+- **开发分支**: {分支名}（Phase 3 补充）
+- **测试分支**: {分支名}（Phase 4 补充）
+- **Spec 文件**: {相对路径}（Phase 1 补充）
+- **飞书 Spec**: {链接}（Phase 1 补充）
 
 ## Phase 1: Design
 - **需求描述**: ...
@@ -261,14 +262,6 @@
 ## Phase 5 TODO
 - [x] ...
 ✅ Phase 5 Sign-off: 已完成
-
-## 续接指南
-如需从此文档续接任务：
-1. clone 仓库: `git clone {仓库地址}`
-2. checkout 开发分支: `git checkout {分支名}`
-3. checkout 测试分支: `git checkout {分支名}`
-4. 构建: `morph-cli build {项目名} {分支名}`
-5. 部署: `morph-cli deploy {项目名} {buildId}`
 ```
 
 ## Sign-off 协议
