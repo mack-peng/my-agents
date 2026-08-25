@@ -146,6 +146,12 @@ Phase 2 步骤 2 判断为布局/滚动类问题时：
 3. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
 4. 浏览器注入验证修复方案
 
+**cssprobe-cli 新功能**：
+- `--layout`：ASCII 布局图，可视化元素位置和尺寸
+- `--brief`：精简输出，Tree Sketch + 仅 warning/error
+- `--wait`：等待用户操作后采集（需要点击按钮等场景）
+- `interactive`：交互模式，检查同一页面多个区域
+
 详见 `workflows/phase2b-css-forensics.md`。
 
 ### Phase 3: 代码编写原则

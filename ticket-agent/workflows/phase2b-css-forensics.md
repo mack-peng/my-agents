@@ -39,7 +39,29 @@ cssprobe-cli inspect "<复现 URL>" ".目标选择器" --json
 
 # 需要登录态时
 cssprobe-cli inspect "<复现 URL>" ".目标选择器" --state ~/.cssprobe-cli/states/<site>.json --json
+
+# 布局图（ASCII box 可视化，适合复杂嵌套结构）
+cssprobe-cli inspect "<复现 URL>" ".目标选择器" --layout
+
+# 精简输出（Tree Sketch + 仅 warning/error）
+cssprobe-cli inspect "<复现 URL>" ".目标选择器" --brief
+
+# 等待用户操作后采集（需要点击按钮打开 dialog 等场景）
+cssprobe-cli inspect "<复现 URL>" ".目标选择器" --state ~/.cssprobe-cli/states/<site>.json --wait
+
+# 交互模式（检查同一页面多个区域）
+cssprobe-cli interactive "<复现 URL>" --state ~/.cssprobe-cli/states/<site>.json
+# 运行时命令：tree .area-A, layout .area-B, sketch .area-C, findings .area-D
 ```
+
+**新增功能说明**：
+
+| 功能 | 命令 | 用途 |
+|------|------|------|
+| `--layout` | 布局图 | ASCII box 可视化元素位置和尺寸，适合复杂嵌套结构分析 |
+| `--brief` | 精简输出 | Tree Sketch + 仅 warning/error findings，快速定位问题 |
+| `--wait` | 等待操作 | 需要用户交互（点击、打开 dialog）后再采集 |
+| `interactive` | 交互模式 | 检查同一页面多个区域，支持 tree/layout/sketch/findings 命令 |
 
 **提取关键数据**（从 JSON 输出的 `findings` 数组）：
 - `id`: finding 类型（anchor-missing, scrollable, overflow-clipped 等）
