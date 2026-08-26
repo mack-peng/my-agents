@@ -140,12 +140,16 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 ### Phase 2b: CSS 布局取证（仅布局/滚动类工单，Phase 2 判断后触发）
 
-Phase 2 步骤 2 判断为布局/滚动类问题时：
-1. **use cssprobe-agent** 进行运行时取证（cssprobe-agent 引导用户完成检查）
-2. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
-3. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
-4. **高度链锚点分析**：追溯链条，确认锚点位置（vh/px 为锚点，%/auto/flex 不是）
-5. 浏览器注入验证修复方案（使用 `cssprobe-cli inject-css` / `cssprobe-cli eval`，不使用 playwright-cli）
+Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时取证：
+1. **阅读 `cssprobe-agent/AGENTS.md`**，了解 cssprobe-agent 的角色和对话流程
+2. **按 cssprobe-agent 流程引导用户完成运行时取证**（交互式，不用 task 工具）
+   - cssprobe-cli 运行时取证是 CSS 布局类工单的**必须步骤**，不可跳过
+   - 无登录态时标注 UNVERIFIABLE，禁止仅凭静态分析断言根因
+   - **运行时取证完成后必须等待用户 sign-off**，确认结果准确后再继续
+3. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
+4. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
+5. **高度链锚点分析**：追溯链条，确认锚点位置（vh/px 为锚点，%/auto/flex 不是）
+6. 浏览器注入验证修复方案（使用 `cssprobe-cli inject-css` / `cssprobe-cli eval`，不使用 playwright-cli）
 
 详见 `workflows/phase2b-css-forensics.md`。
 

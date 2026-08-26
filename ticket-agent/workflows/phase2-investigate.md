@@ -62,7 +62,7 @@
 - flex 布局子项撑破 / 溢出容器
 - 用户描述 "无法滚动" / "显示不全" / "被截断" / "看不到底部"
 
-**布局类工单** → 进入 Phase 2b（详见 `workflows/phase2b-css-forensics.md`）。Phase 2b 完成 sign-off 后回到步骤 4（分析根因）。
+**布局类工单** → **必须**进入 Phase 2b（详见 `workflows/phase2b-css-forensics.md`）。Phase 2b 包含 cssprobe-agent 运行时取证（必须步骤），完成后回到步骤 4（分析根因）。
 
 **非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。
 

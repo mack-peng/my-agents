@@ -20,19 +20,44 @@
 - 有可复现的页面 URL（livesite 或编辑器）
 - 有登录态（无登录态时标注 UNVERIFIABLE，禁止断言根因）
 - `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
+- cssprobe-cli 运行时取证是**必须步骤**，不可跳过。无登录态时标注 UNVERIFIABLE，禁止仅凭静态分析断言根因
 
 ## 流程
 
-### 1. cssprobe-agent 运行时取证
+### 1. cssprobe-agent 运行时取证（必须）
 
-**use cssprobe-agent**，告诉它：
-- 页面 URL：[复现 URL]
-- 检查目标：[问题描述，如"滚动不工作""弹窗显示不全"]
-- 元素 selector：[目标选择器]
+**首先阅读 `cssprobe-agent/AGENTS.md`**，了解 cssprobe-agent 的角色、诊断能力和对话流程。然后**按 cssprobe-agent 的流程引导用户完成运行时取证**。
 
-cssprobe-agent 会：
-1. 引导用户完成检查（处理登录、弹窗等场景）
-2. 返回 Markdown 格式的检查结果
+**交互步骤**（必须按顺序执行，每步等待用户确认）：
+
+1. **告知用户诊断目标**：
+   - 页面 URL：[复现 URL]
+   - 检查目标：[问题描述，如"滚动不工作""弹窗显示不全"]
+   - 目标元素 selector：[目标选择器]
+
+2. **打开页面**（如需登录，引导用户完成）：
+   ```bash
+   cssprobe-cli open <url> --state <state-file> --headed
+   ```
+   等待用户确认页面已加载。
+
+3. **引导用户操作**（如打开弹窗、点击按钮等）：
+   > "请在浏览器中打开版本历史对话框，完成后告诉我。"
+
+4. **执行检查**：
+   ```bash
+   cssprobe-cli inspect <selector>
+   cssprobe-cli findings <selector>
+   cssprobe-cli layout <selector>
+   ```
+
+5. **呈现结果给用户**，用通俗中文解读。
+
+6. **运行时取证 Sign-off**（必须）：
+   > **"cssprobe-cli 运行时取证完成。请确认以下结果是否准确：**
+   > - [列出关键发现]
+   > - [列出 scrollHeight vs clientHeight]
+   > **回复 OK 继续，或指出问题重新检查。"**
 
 **从返回结果中提取关键数据**：
 
