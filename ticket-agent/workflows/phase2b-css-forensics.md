@@ -23,62 +23,37 @@
 
 ## 流程
 
-### 1. cssprobe-cli 运行时取证
+### 1. cssprobe-agent 运行时取证
 
-使用 `cssprobe-cli` 获取真实浏览器渲染数据：
+**use cssprobe-agent**，告诉它：
+- 页面 URL：[复现 URL]
+- 检查目标：[问题描述，如"滚动不工作""弹窗显示不全"]
+- 元素 selector：[目标选择器]
 
-```bash
-# 基本检查（自动检测根元素）
-cssprobe-cli inspect "<复现 URL>"
+cssprobe-agent 会：
+1. 引导用户完成检查（处理登录、弹窗等场景）
+2. 返回 Markdown 格式的检查结果
 
-# 指定根元素
-cssprobe-cli inspect "<复现 URL>" ".目标选择器"
+**从返回结果中提取关键数据**：
 
-# JSON 输出（用于程序化分析）
-cssprobe-cli inspect "<复现 URL>" ".目标选择器" --json
+从**祖先链**提取：
+- 每个节点的 className（用于步骤 2 cssgraph_diagnose）
+- 元素尺寸和位置信息
 
-# 需要登录态时
-cssprobe-cli inspect "<复现 URL>" ".目标选择器" --state ~/.cssprobe-cli/states/<site>.json --json
-
-# 布局图（ASCII box 可视化，适合复杂嵌套结构）
-cssprobe-cli inspect "<复现 URL>" ".目标选择器" --layout
-
-# 精简输出（Tree Sketch + 仅 warning/error）
-cssprobe-cli inspect "<复现 URL>" ".目标选择器" --brief
-
-# 等待用户操作后采集（需要点击按钮打开 dialog 等场景）
-cssprobe-cli inspect "<复现 URL>" ".目标选择器" --state ~/.cssprobe-cli/states/<site>.json --wait
-
-# 交互模式（检查同一页面多个区域）
-cssprobe-cli interactive "<复现 URL>" --state ~/.cssprobe-cli/states/<site>.json
-# 运行时命令：tree .area-A, layout .area-B, sketch .area-C, findings .area-D
-```
-
-**新增功能说明**：
-
-| 功能 | 命令 | 用途 |
-|------|------|------|
-| `--layout` | 布局图 | ASCII box 可视化元素位置和尺寸，适合复杂嵌套结构分析 |
-| `--brief` | 精简输出 | Tree Sketch + 仅 warning/error findings，快速定位问题 |
-| `--wait` | 等待操作 | 需要用户交互（点击、打开 dialog）后再采集 |
-| `interactive` | 交互模式 | 检查同一页面多个区域，支持 tree/layout/sketch/findings 命令 |
-
-**提取关键数据**（从 JSON 输出的 `findings` 数组）：
-- `id`: finding 类型（anchor-missing, scrollable, overflow-clipped 等）
+从 **Findings** 提取：
+- `id`: finding 类型（如 overflow-clipped, scrollable 等）
 - `confidence`: DEFINITE / INDEFINITE / UNVERIFIABLE
-- `message`: 人类可读描述
-- `evidence`: computed/declared 值证据
+- `message`: 问题描述
+- `evidence`: computed 值证据（scrollHeight、clientHeight 等）
 - `location`: 涉及的 DOM 元素
 
-**提取关键数据**（从 JSON 输出的 `snapshot.ancestors`）：
-- 祖先链中每个节点的 className（用于步骤 2）
-- `metrics.scrollHeight` vs `metrics.clientHeight`（判断是否可滚动）
-- `flags.scrollable`（标记可滚动节点）
-- `flags.overflowsParent`（标记溢出节点）
+从**布局图**提取：
+- 元素嵌套结构和尺寸
+- 溢出标记（⚠）
 
 ### 2. cssgraph_diagnose（静态规则）
 
-从步骤 1 的 cssprobe-cli 输出中提取祖先链 className，构造完整后代选择器：
+从步骤 1 的 cssprobe-agent 返回结果中提取祖先链 className，构造完整后代选择器：
 
 ```bash
 cd $BOBKAT_PATH

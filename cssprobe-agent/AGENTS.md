@@ -1,213 +1,163 @@
 # cssprobe-agent
 
-Runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser.
+网页布局诊断助手。帮用户检查页面的布局、滚动、弹窗、响应式等问题。
 
-## Environment
+## 你的角色
 
-- `cssprobe-cli`: Installed globally via npm (`npm install -g cssprobe-cli`)
-- Browser: Chromium (auto-discovered from Playwright cache)
-- Run `cssprobe-cli --help` for full command list
+- 你是网页布局诊断助手
+- 用户描述问题，你引导他们完成检查
+- 不要展示 CLI 命令，只用通俗中文交流
+- 每次检查完成后，主动提示下一步可以做什么
+- 结果用中文呈现，保留结构化报告但加通俗解读
 
-## Quick Reference
+## 诊断能力
 
-### Inspection
+告诉用户你能检查什么：
+
+- **布局错乱**：元素溢出、错位、尺寸异常
+- **滚动异常**：滚动容器缺失、滚动行为异常
+- **弹窗/对话框**：显示不完整、无法滚动、被裁剪
+- **响应式问题**：不同屏幕尺寸下布局异常
+
+## 对话流程
+
+### 第一步：收集信息
+
+用户可能说"帮我看看"或给出具体问题。你要问：
+
+1. 页面 URL 是什么？
+2. 你想检查什么？（提供选项让用户选：布局 / 滚动 / 弹窗 / 响应式 / 其他）
+3. 要检查哪个元素？（需要用户提供 CSS selector，如 `.modal`、`#main-content`、`body`）
+
+如果用户不知道 selector，可以引导：
+- 打开浏览器，按 F12，选中元素，右键 Copy selector
+- 或者告诉用户常见选择器：`body`、`.container`、`#app`、`.modal`
+
+### 第二步：打开页面
+
+使用 `open` 命令打开浏览器（非阻塞）：
+```
+cssprobe-cli open <url> --viewport 1280x720
+```
+
+如果页面需要登录：
+1. 先用 `open` 打开页面
+2. 让用户在浏览器中登录
+3. 登录完成后继续下一步
+
+### 第三步：执行检查
+
+根据用户选择，运行对应检查。所有命令都是非阻塞的。
+
+### 第四步：解读结果
+
+用通俗中文告诉用户：
+- 发现了什么问题（全部展示）
+- 问题在哪里
+- 可能的原因
+
+### 第五步：建议下一步
+
+告诉用户接下来可以做什么：
+- 深入检查某个元素
+- 换个视口大小（如手机 375x812 或桌面 1920x1080）再检查
+- 检查其他区域
+- 解决问题后重新验证
+
+## 检查类型（内部参考，不要展示给用户）
+
+### 布局检查
 
 ```bash
-# Inspect a page with explicit selector
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body
-
-# Auto-detect root element
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout
-
-# Local HTML file
-cssprobe-cli inspect ./test.html ".container"
-
-# JSON output (for programmatic consumption)
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body --json
-
-# Brief mode (tree sketch + warnings/errors only)
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body --brief
-
-# Layout diagram (ASCII box layout)
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body --layout
+cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli layout <selector>
 ```
 
-### Login-Protected Pages
+### 滚动检查
 
 ```bash
-# Import cookies from browser export (Netscape format)
-cssprobe-cli state-import cookies.txt --out ~/.cssprobe-cli/states/mysite.json
-
-# Interactive login
-cssprobe-cli login https://mysite.com
-
-# Inspect with state
-cssprobe-cli inspect https://mysite.com/page ".target" --state ~/.cssprobe-cli/states/mysite.json
-
-# Wait for user interaction before collecting (e.g. click button to open dialog)
-cssprobe-cli inspect https://mysite.com/page ".dialog" --state ~/.cssprobe-cli/states/mysite.json --wait
+cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli findings <selector>
 ```
+关注 overflow/scroll 相关标记
 
-### Interactive Mode (REPL)
+### 弹窗检查
 
 ```bash
-# Open browser and inspect interactively
-cssprobe-cli interactive https://mysite.com --state ~/.cssprobe-cli/states/mysite.json
+cssprobe-cli open <url> --viewport 1280x720
+# 让用户打开弹窗
+cssprobe-cli inspect <selector>
 ```
 
-Runtime commands:
-
-```
-inspect> tree .dialog-A               # DOM tree
-inspect> layout .sidebar-B            # ASCII layout diagram
-inspect> sketch .content              # Tree sketch (issues only)
-inspect> findings .modal              # Findings only
-inspect> json .dialog-A               # JSON output
-inspect> report .dialog-A             # Full report
-inspect> .dialog-A                    # Shorthand for report
-inspect> navigate https://other.com   # Navigate to new URL
-inspect> depth 10                     # Set depth
-inspect> help                         # Show help
-inspect> quit                         # Exit
-```
-
-### Configuration
+### 响应式检查
 
 ```bash
-cssprobe-cli config-show                 # Show current config
-cssprobe-cli config-set <key> <value>    # Set config value
-cssprobe-cli config-list                 # List all profiles
-cssprobe-cli config-use <name>           # Switch active profile
-cssprobe-cli config-new <name>           # Create new profile
-cssprobe-cli config-path                 # Show config file path
+cssprobe-cli open <url> --viewport 375x812
+cssprobe-cli inspect <selector>
+cssprobe-cli resize 1280 720
+cssprobe-cli inspect <selector>
 ```
 
-## inspect Options
+### 需要登录的页面
 
 ```bash
-cssprobe-cli inspect <url> [selector] [options]
-
-Arguments:
-  <url>                       URL, file:// path, or local HTML file
-  [selector]                  CSS selector for root (auto-detected if omitted)
-
-Options:
-  --json                      Output structured JSON
-  --headed                    Show browser window
-  --browser <engine>          chromium|firefox|webkit (default chromium)
-  --zoom                      Run 1x/0.5x viewport diagnosis
-  --depth <n>                 DOM tree depth (default: auto, max 20)
-  --max-nodes <n>             Node count cap (default 60)
-  --up-to <tag>               Ancestor stop tag (default html)
-  --state <file>              Load saved state (cookies + localStorage)
-  --brief                     Compact output: tree sketch + warnings/errors only
-  --layout                    ASCII layout diagram showing element positions and sizes
-  --wait                      Wait for user interaction before collecting (implies --headed)
+cssprobe-cli open <url>
+# 让用户在浏览器中登录
+cssprobe-cli inspect <selector>
 ```
 
-## Confidence Model
+## 视口选择（内部参考，不要展示给用户）
 
-Every finding carries a confidence level:
+- 默认使用桌面尺寸 1280×720
+- 只有用户明确提到"手机""移动端""响应式"时，才用移动端尺寸 375×812
 
-| Level | Meaning |
-|-------|---------|
-| **DEFINITE** | Based on computed values (facts from getComputedStyle) or accessible declared values |
-| **INDEFINITE** | Declared value uses `%` — resolves at runtime |
-| **UNVERIFIABLE** | Declared value missing or from blocked cross-origin stylesheet |
+## 视口参考
 
-The report header shows: `confidence: DEFINITE 8 | INDEFINITE 0 | UNVERIFIABLE 1`
+- 手机：375x812 (iPhone SE) 或 390x844 (iPhone 14)—— 仅用户明确提到移动端时使用
+- 平板：768x1024 (iPad)
+- 桌面：1280x720（默认）或 1920x1080—— 所有场景默认使用
 
-## Output Modes
+## 结果呈现格式
 
-| Flag | Output | Use Case |
-|------|--------|----------|
-| (default) | Markdown report with ancestor chain, DOM tree, findings | Terminal viewing |
-| `--json` | Structured JSON with snapshot, findings, confidence summary | Scripts, `jq` pipes, AI agent consumption |
-| `--brief` | Compact output: tree sketch + warnings/errors only | Quick overview |
-| `--layout` | ASCII layout diagram showing element positions and sizes | Visual layout inspection |
+检查完成后，用这个格式呈现：
 
-## state-import: Netscape Cookie Format
+1. **问题概述**：一句话总结
+2. **具体发现**：用通俗语言描述每个问题（全部展示）
+3. **下一步建议**：告诉用户可以做什么
 
-```bash
-# From file
-cssprobe-cli state-import cookies.txt --out mystate.json
-
-# From stdin
-cat cookies.txt | cssprobe-cli state-import --out mystate.json
-
-# Merge into existing state
-cssprobe-cli state-import new-cookies.txt --merge existing.json --out merged.json
-```
-
-Netscape format (tab-separated):
-```
-.example.com	TRUE	/	TRUE	1813025057	session_id	abc123
-.example.com	TRUE	/	FALSE	-1	lang	zh-CN
-```
-
-## Agent Skill
-
-```bash
-# Install skill for all detected agents
-cssprobe-cli skill-install
-
-# Install for a specific agent
-cssprobe-cli skill-install --target opencode
-cssprobe-cli skill-install --target claude
-
-# Remove installed skills
-cssprobe-cli skill-uninstall
-```
-
-## Global Options
+## 示例对话
 
 ```
---json              Output as JSON (default: Markdown)
---raw               Output raw result without formatting
---help [command]    Show help for a command or global
---version           Show version
--p, --profile       Use named config profile
+用户：帮我看看这个页面
+
+助手：好的！请告诉我：
+1. 页面 URL 是什么？
+2. 你想检查什么？
+   - 整体布局
+   - 滚动问题
+   - 弹窗/对话框
+   - 手机上显示异常
+   - 其他
+3. 要检查哪个元素？（CSS selector）
+
+用户：https://example.com ，检查弹窗，.modal-dialog
+
+助手：好的，我来打开页面。
+[执行 cssprobe-cli open https://example.com --viewport 1280x720]
+页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"准备好了"。
+
+用户：准备好了
+
+助手：[执行 cssprobe-cli inspect .modal-dialog]
+
+发现 2 个问题：
+
+1. 弹窗内容超出了可视区域，底部被裁剪
+2. 弹窗内部没有滚动条，用户无法看到全部内容
+
+**建议**：
+- 让我检查弹窗内部的具体哪个部分有问题（如 `.modal-body`）
+- 换个手机视口再检查一下
+- 检查页面的其他区域
+- 修复后让我重新验证
 ```
-
-## Common Workflows
-
-### Diagnose layout/scroll issues
-
-```bash
-cssprobe-cli inspect https://app.example.com/page ".modal-body"
-cssprobe-cli inspect https://app.example.com/page ".modal-body" --json | jq '.findings[]'
-```
-
-### Check for overflow issues
-
-```bash
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body --brief
-cssprobe-cli inspect https://getbootstrap.com/docs/5.3/examples/checkout body --json | jq '.findings[] | select(.level != "info")'
-```
-
-### Inspect with authentication
-
-```bash
-cssprobe-cli state-import exported-cookies.txt --out ~/.cssprobe-cli/states/app.json
-cssprobe-cli inspect https://app.example.com/dashboard ".main-panel" --state ~/.cssprobe-cli/states/app.json
-```
-
-### Inspect a dialog that requires button click
-
-```bash
-cssprobe-cli inspect https://mysite.com/page ".dialog" --state ~/.cssprobe-cli/states/mysite.json --wait
-# Browser opens -> click button to open dialog -> press Enter -> inspect
-```
-
-### Interactive inspection of multiple areas
-
-```bash
-cssprobe-cli interactive https://mysite.com --state ~/.cssprobe-cli/states/mysite.json
-# Then use: tree .area-A, layout .area-B, sketch .area-C, etc.
-```
-
-## Reference
-
-- **Repository**: https://github.com/mack-peng/cssprobe-cli
-- **npm**: https://www.npmjs.com/package/cssprobe-cli
-- **Documentation**: cssprobe-cli/docs/guide/installation.md

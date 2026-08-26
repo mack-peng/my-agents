@@ -141,16 +141,10 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 ### Phase 2b: CSS 布局取证（仅布局/滚动类工单，Phase 2 判断后触发）
 
 Phase 2 步骤 2 判断为布局/滚动类问题时：
-1. cssprobe-cli 拿运行时数据（`cssprobe-cli inspect <url> <selector> --json`）
+1. **use cssprobe-agent** 进行运行时取证（cssprobe-agent 引导用户完成检查）
 2. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
 3. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
 4. 浏览器注入验证修复方案
-
-**cssprobe-cli 新功能**：
-- `--layout`：ASCII 布局图，可视化元素位置和尺寸
-- `--brief`：精简输出，Tree Sketch + 仅 warning/error
-- `--wait`：等待用户操作后采集（需要点击按钮等场景）
-- `interactive`：交互模式，检查同一页面多个区域
 
 详见 `workflows/phase2b-css-forensics.md`。
 
