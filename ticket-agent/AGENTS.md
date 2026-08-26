@@ -2,7 +2,7 @@
 
 端到端工单处理 agent。五阶段流程，每阶段需人工 sign-off。
 使用飞书文档作为跨机器状态持久化。
-**本 agent 是协调器，具体操作委托给 zendesk-agent / browser-agent / feishu-agent / gitlab-agent。**
+**本 agent 是协调器，具体操作委托给 zendesk-agent / cssprobe-agent / feishu-agent / gitlab-agent。**
 
 ## 工程原则
 
@@ -314,13 +314,12 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 ## 注意事项
 
-- 本 agent 不直接使用 playwright-cli / glab / zcli-ticket 命令
+- 本 agent 不直接使用 glab / zcli-ticket 命令
 - 需要工单数据 → `use zendesk-agent`
-- 需要浏览器操作（Phase 2 livesite 复现）→ `use browser-agent`，命令在 `browser-agent/` 目录下执行（状态文件在此）
-- **所有 playwright-cli 命令必须使用 `-s=ticket-agent`**（独立浏览器 session）
+- 需要浏览器操作（Phase 2 livesite 复现）→ `use cssprobe-agent`，按 cssprobe-agent 流程交互式完成诊断
 - 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
 - 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - **飞书模式**：需要飞书操作 → `use feishu-agent`。跨机器时提供飞书文档 URL 即可续接
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
-- **CSS 布局取证**：cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli
+- **CSS 布局取证**：委托 cssprobe-agent 交互式完成运行时取证，cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli

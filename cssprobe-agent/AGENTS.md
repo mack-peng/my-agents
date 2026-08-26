@@ -150,9 +150,9 @@ cssprobe-cli inspect <selector>
 
 助手：好的，我来打开页面。
 [执行 cssprobe-cli open https://example.com --viewport 1280x720]
-页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"准备好了"。
+页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"OK"。
 
-用户：准备好了
+用户：OK
 
 助手：[执行 cssprobe-cli inspect .modal-dialog]
 

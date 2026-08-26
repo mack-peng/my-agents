@@ -68,14 +68,12 @@
 
 ### 3. 打开 Livesite（如有）
 
-**Use browser-agent**。如果工单提供了 livesite URL，打开并测试。
+**Use cssprobe-agent**。如果工单提供了 livesite URL，按 cssprobe-agent 流程交互式完成诊断：
 
-所有 Playwright 命令使用独立 session `-s=ticket-agent`：
-
-1. `playwright-cli -s=ticket-agent tab-new "<livesite URL>"`
-2. `playwright-cli -s=ticket-agent snapshot` — 确认页面结构
-3. `playwright-cli -s=ticket-agent console` — 检查控制台错误
-4. 根据复现步骤操作，验证问题
+1. 告知用户诊断目标（URL、检查内容、目标 selector）
+2. cssprobe-agent 引导用户打开页面、完成登录、执行复现步骤
+3. cssprobe-agent 执行检查并用通俗中文解读结果
+4. 等待用户确认诊断结果
 
 ### 4. 代码调研 — 搜索策略（必须遵守）
 
