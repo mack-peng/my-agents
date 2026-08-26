@@ -144,7 +144,8 @@ Phase 2 步骤 2 判断为布局/滚动类问题时：
 1. **use cssprobe-agent** 进行运行时取证（cssprobe-agent 引导用户完成检查）
 2. cssgraph_diagnose 做静态分析（声明值来源、文件定位）
 3. 对比两者，以 cssprobe-cli 为准，cssgraph 补充文件定位
-4. 浏览器注入验证修复方案
+4. **高度链锚点分析**：追溯链条，确认锚点位置（vh/px 为锚点，%/auto/flex 不是）
+5. 浏览器注入验证修复方案（使用 `cssprobe-cli inject-css` / `cssprobe-cli eval`，不使用 playwright-cli）
 
 详见 `workflows/phase2b-css-forensics.md`。
 
@@ -318,3 +319,4 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - **飞书模式**：需要飞书操作 → `use feishu-agent`。跨机器时提供飞书文档 URL 即可续接
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
+- **CSS 布局取证**：cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli

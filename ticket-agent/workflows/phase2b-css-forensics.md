@@ -82,53 +82,78 @@ cssgraph diagnose ".目标class" \
 
 ### 4. 浏览器注入验证
 
-根据对比结论构造修复 CSS，注入浏览器验证：
+根据对比结论构造修复 CSS，注入浏览器验证。**使用 cssprobe-cli，不使用 playwright-cli**。
 
-1. 构造修复 CSS，通过 `eval` 注入 `<style>` 标签：
+1. 构造修复 CSS，通过 `inject-css` 注入：
 ```bash
-playwright-cli -s=ticket-agent eval "() => {
-  const style = document.createElement('style');
-  style.id = 'test-fix';
-  style.textContent = \`修复 CSS\`;
-  document.head.appendChild(style);
-  return 'injected';
-}"
+cssprobe-cli inject-css "修复 CSS"
 ```
 
 2. 程序化验证（以滚动问题为例）：
 ```bash
-playwright-cli -s=ticket-agent eval "() => {
+cssprobe-cli eval "(() => {
   const el = document.querySelector('.滚动容器');
   return JSON.stringify({
     clientHeight: el.clientHeight,
     scrollHeight: el.scrollHeight,
     scrollable: el.scrollHeight > el.clientHeight + 1
   });
-}"
+})()"
 ```
 
 3. **等待用户人工验证**：提示用户在浏览器中手动操作（滚动、点击等），确认修复生效。程序化验证通过不等于视觉正确。
 
 4. 验证通过后移除测试样式：
 ```bash
-playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')?.remove(); return 'removed'; }"
+cssprobe-cli eval "(() => { document.getElementById('cssprobe-injected-style')?.remove(); return 'removed'; })()"
 ```
 
 **反模式**：
 - ❌ 不等待用户验证就进入 Phase 3
 - ❌ 忘记移除测试样式
+- ❌ 使用 playwright-cli 注入 CSS（应使用 cssprobe-cli inject-css / eval）
+
+### 4.5 高度链锚点分析
+
+**在提出修复方案前，必须先追溯高度链，确认锚点位置。** 从问题元素向上追溯到根节点，标记每一级的 height 声明值和解析方式：
+
+```
+问题元素 (.version-history)
+  ↑ overflow-y: auto，但需要父级有约束高度
+父级 (.version-container)
+  ↑ height: 100%，依赖父级
+祖父级 (.site-version-history-panel)
+  ↑ height: 100%，依赖父级
+...一直追溯到链条顶端
+```
+
+**锚点判断规则**：
+
+| height 声明 | 是否锚点 | 原因 |
+|---|---|---|
+| `100vh` / `vh` 单位 | ✔ 锚点 | 视口相对，不依赖父级 |
+| `px` 固定值 | ✔ 锚点 | 绝对值，不依赖父级 |
+| `100%` | ❌ 不是锚点 | 依赖父级高度，链式塌陷 |
+| `auto` / 无声明 | ❌ 不是锚点 | 由内容决定 |
+| `flex: 1` | ❌ 不是锚点 | 分配空间，但需要容器有约束高度 |
+| `min-height: 0` | ❌ 不是锚点 | 允许收缩，但需要容器有约束高度 |
+
+**核心规则**：
+- 链条中有锚点 → 可以用 flex/min-height 等布局技巧分配空间
+- 链条中无锚点 → **必须在某一级提供锚点**（vh 或 px），否则任何布局技巧都无效
+- 修复方案必须在**链条上游**提供锚点，而不是在下游用 flex/min-height
 
 ### 5. 根因结论
 
-综合步骤 1~4 的数据，输出根因结论：
+综合步骤 1~4.5 的数据，输出根因结论：
 
 | 报告标记 | 假设 | 修复方向 |
 |---|---|---|
 | 滚动容器 `clientHeight=0` + 溢出 | 锚点问题：高度链全 auto/% → 塌陷 | 链条某级确定高度（`height:100vh`） |
-| 滚动容器内容尺寸（scrollHeight==clientHeight） | 锚点问题：内容撑开代替受限高度 | 同上，或 flex 中加 `min-height:0` |
+| 滚动容器内容尺寸（scrollHeight==clientHeight） | 锚点问题：内容撑开代替受限高度 | 链条某级确定高度（`height:100vh`） |
 | 有溢出但 `overflow=hidden` 裁切 | 锚点问题或父级 overflow 误设 | 检查裁切点是否应滚 |
 | 链中有 `CB:transform` + fixed 根节点 | **containing block 劫持**：% 高度相对 transform 祖先 | 视口单位（vh）或去掉 transform |
-| flex 子项撑破容器 | 约束问题：`min-height:auto` 默认值 | 子项 `min-height:0` |
+| flex 子项撑破容器 | 约束问题：`min-height:auto` 默认值 | 子项 `min-height:0`（需链条有锚点） |
 | 仅有 `max-height` 无 `height` | 上限 ≠ 锚点，% 子级解析 auto | 给明确 height |
 
 ### 6. 输出总结
@@ -184,3 +209,33 @@ playwright-cli -s=ticket-agent eval "() => { document.getElementById('test-fix')
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
 - cssprobe-cli 与 cssgraph 冲突时，以 cssprobe-cli 为准
 - 无登录态时根因标注 UNVERIFIABLE，禁止断言
+
+## 反模式
+
+### ❌ 无锚点时用 flex/min-height 修复高度问题
+
+`flex: 1` 和 `min-height: 0` 是**空间分配技巧**，不是**锚点**。它们需要父级有约束高度才能生效。
+
+错误示例：
+```css
+/* 父级链全是 height: 100%，无锚点 */
+.container { height: 100%; }
+.child { height: 100%; }
+.scroll-area { flex: 1; min-height: 0; } /* ❌ 无效，容器无约束高度 */
+```
+
+正确示例：
+```css
+/* 在链条某级提供锚点 */
+.container { height: 100vh; } /* ✔ 视口锚点 */
+.child { height: 100%; }      /* 解析为 100vh */
+.scroll-area { overflow-y: auto; } /* 有约束高度，滚动生效 */
+```
+
+### ❌ 使用 playwright-cli 注入 CSS
+
+ticket-agent 不直接使用 playwright-cli。CSS 注入使用 `cssprobe-cli inject-css`，验证使用 `cssprobe-cli eval`。
+
+### ❌ 不做高度链锚点分析就提出修复方案
+
+必须先追溯高度链（Step 4.5），确认锚点位置，再提出修复方案。跳过锚点分析容易提出无效方案。
