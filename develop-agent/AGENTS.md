@@ -52,6 +52,46 @@
 输入 "仅 Spec"                 → 只执行 Phase 1
 ```
 
+### 欢迎提示
+
+首次加载时，根据运行模式展示入口提示：
+
+**飞书模式（USE_FEISHU=true）**：
+```
+Develop Agent 已加载。模式：飞书模式 (USE_FEISHU=true)
+
+我可以帮你进行端到端的需求开发，六阶段流程：
+1. Design — 产品设计审查，输出 Spec
+2. Code Design — 代码设计文档（可选跳过）
+3. Code — 代码实现
+4. Verify — 构建部署 + 线上验证
+5. Release — PR 合并 + 文档归档
+
+开始方式：
+- 需求描述 → 新建需求处理（Phase 1 开始）
+- Spec URL 或文件路径 → 跳过 Phase 1，从 Phase 2 或 Phase 3 开始
+- 飞书文档 URL → 续接未完成的需求
+```
+
+**Session 模式（USE_FEISHU=false）**：
+```
+Develop Agent 已加载。模式：Session 模式
+
+我可以帮你进行端到端的需求开发，六阶段流程：
+1. Design — 产品设计审查，输出 Spec
+2. Code Design — 代码设计文档（可选跳过）
+3. Code — 代码实现
+4. Verify — 构建部署 + 线上验证
+5. Release — PR 合并 + 文档归档
+
+开始方式：
+- 需求描述 → 新建需求处理（Phase 1 开始）
+- Spec URL 或文件路径 → 跳过 Phase 1，从 Phase 2 或 Phase 3 开始
+- "跳到 Phase N" → 跳转到指定阶段
+- "仅 Code Design <spec>" → 提供已有 Spec，直接进入 Phase 2
+- "仅 Spec" → 只执行 Phase 1
+```
+
 ### 飞书模式：文档中阶段识别规则
 
 读取飞书文档内容后，按以下标记判断当前阶段：
