@@ -83,7 +83,7 @@
 
 > **调研策略**：
 > - 关键词/符号：[列出要搜索的关键词]
-> - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_explore]
+> - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_diagnose / cssgraph_explore]
 > - 取证手段：[运行时取证/验证方式，如注入 scrollTo 监听抓调用栈、route abort 修改加载时序、dom-report 等]
 > - 预期范围：[预估涉及的文件范围]
 
@@ -97,7 +97,8 @@
 | **maxFiles=8** | explore 的 maxFiles 默认 8，避免上下文爆炸 |
 | **禁止全量 grep** | 不执行无路径限制的 grep |
 | **先 search 再 explore** | 不确定符号名时，先用 `codegraph_search` 定位，再用 `codegraph_explore` 展开 |
-| **样式问题用 cssgraph** | 样式相关 bug 使用 `cssgraph_explore` 追溯 className → CSS 规则 → 组件引用 |
+| **布局/滚动问题用 cssgraph_diagnose** | 使用完整 CSS 选择器（如 `.wrapper .modal-body`），分析高度链锚点和 overflow 裁切 |
+| **样式覆盖/引用问题用 cssgraph_explore** | 追溯 className → CSS 规则 → 组件引用 |
 | **不重复验证 codegraph 结果** | codegraph 结果来自 AST 解析，不要用 grep 重新确认 |
 
 #### 4.3 分层递进路径
@@ -109,9 +110,11 @@
    ↓ 涉及调用链时
 3. codegraph_callers(symbol) / codegraph_callees(symbol)
    ↓ 样式问题时
-4. cssgraph_explore(query="className") → cssgraph_callers(className)
-   ↓ 样式被覆盖 / specificity 冲突时
-5. cssgraph_cascade(className) → 按 specificity 排序列出所有定义
+4. cssgraph_diagnose(className=".target", chain=[".wrapper .parent1", ".wrapper .parent2 .target"])
+   ↓ 需要样式覆盖/引用信息时
+5. cssgraph_explore(query="className") → cssgraph_callers(className)
+   ↓ specificity 冲突时
+6. cssgraph_cascade(className) → 按 specificity 排序列出所有定义
 ```
 
 ### 5. 分析根因
@@ -130,7 +133,7 @@
 
 ### 调研策略
 - 搜索关键词: ...
-- 搜索方式: codegraph_explore / cssgraph_explore
+- 搜索方式: codegraph_explore / cssgraph_diagnose / cssgraph_explore
 
 ### 相关文件
 | 文件 | 说明 |
