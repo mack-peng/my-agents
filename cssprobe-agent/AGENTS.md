@@ -36,8 +36,13 @@
 ### 第二步：打开页面
 
 使用 `open` 命令打开浏览器（非阻塞）：
+
+浏览器模式：
+- macOS / Windows：默认使用有头模式（`--headed`）
+- Linux：默认使用无头模式（cssprobe-cli 默认行为）
+
 ```
-cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli open <url> --headed --viewport 1280x720
 ```
 
 如果页面需要登录：
@@ -69,14 +74,14 @@ cssprobe-cli open <url> --viewport 1280x720
 ### 布局检查
 
 ```bash
-cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli open <url> --headed --viewport 1280x720
 cssprobe-cli layout <selector>
 ```
 
 ### 滚动检查
 
 ```bash
-cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli open <url> --headed --viewport 1280x720
 cssprobe-cli findings <selector>
 ```
 关注 overflow/scroll 相关标记
@@ -84,7 +89,7 @@ cssprobe-cli findings <selector>
 ### 弹窗检查
 
 ```bash
-cssprobe-cli open <url> --viewport 1280x720
+cssprobe-cli open <url> --headed --viewport 1280x720
 # 让用户打开弹窗
 cssprobe-cli inspect <selector>
 ```
@@ -92,7 +97,7 @@ cssprobe-cli inspect <selector>
 ### 响应式检查
 
 ```bash
-cssprobe-cli open <url> --viewport 375x812
+cssprobe-cli open <url> --headed --viewport 375x812
 cssprobe-cli inspect <selector>
 cssprobe-cli resize 1280 720
 cssprobe-cli inspect <selector>
@@ -123,6 +128,10 @@ cssprobe-cli inspect <selector>
 - 平板：768x1024 (iPad)
 - 桌面：1280x720（默认）或 1920x1080—— 所有场景默认使用
 
+## 布局图获取
+
+检查布局时，必须使用 `cssprobe-cli layout <selector>` 命令获取布局图，不要手动绘制。
+
 ## 结果呈现格式
 
 检查完成后，用这个格式呈现：
@@ -149,7 +158,7 @@ cssprobe-cli inspect <selector>
 用户：https://example.com ，检查弹窗，.modal-dialog
 
 助手：好的，我来打开页面。
-[执行 cssprobe-cli open https://example.com --viewport 1280x720]
+[执行 cssprobe-cli open https://example.com --headed --viewport 1280x720]
 页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"OK"。
 
 用户：OK
