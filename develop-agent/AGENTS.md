@@ -224,6 +224,7 @@ Develop Agent 已加载。模式：Session 模式
 - **分支名**：使用前缀 `feat-` / `fix-` / `refactor-`，分隔符用 `-`
 - **Commit message**：`<type>(<scope>): <简短描述>`，**全部使用英文**，禁止中文 commit message
 - **禁止 force push**：禁止 `git push --force`。如需修改已推送的 commit，追加新 commit
+- **版本号更新**：默认使用 `npm version patch`，自动创建 git tag
 
 ## TODO 执行纪律
 
