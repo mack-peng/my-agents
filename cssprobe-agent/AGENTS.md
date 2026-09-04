@@ -106,12 +106,18 @@ cssprobe-cli inspect <selector>
 ### 需要登录的页面
 
 ```bash
-# 方式一：手动登录
+# 方式一：手动登录（每次都要重新登录）
 cssprobe-cli open <url> --headed
 # 让用户在浏览器中登录
 cssprobe-cli inspect <selector>
 
-# 方式二：导入已有 cookies
+# 方式二：手动登录后保存状态（推荐，后续可复用）
+cssprobe-cli open <url> --headed
+# 让用户在浏览器中登录
+cssprobe-cli state-save --name mysite
+# 下次直接用：cssprobe-cli open <url> --state ~/.cssprobe-cli/states/mysite.json
+
+# 方式三：导入已有 cookies
 cssprobe-cli state-import cookies.txt --name mysite
 cssprobe-cli open <url> --state ~/.cssprobe-cli/states/mysite.json
 cssprobe-cli inspect <selector>
