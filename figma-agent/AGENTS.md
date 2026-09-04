@@ -81,6 +81,7 @@ node --version
 - **读路径**：`figma-developer-mcp`（Framelink MCP CLI）— 用 `npx figma-developer-mcp ...` 免装，文档见 `references/Framelink-MCP-Figma-Use-Doc.md`
 - **写路径**：figwright MCP（`@figwright/mcp`）— 需 Figma Desktop + 插件 + opencode MCP 配置（按需引导，见 workflows）
 - **图片解析**：由 opencode 当前会话模型完成（需支持图片输入）；不支持的模型退化到 image-to-slice（路线B）
+- **SVG 处理**：优先用现成库（`rsvg-convert` 渲染、`lxml`/`svgpathtools` 解析），避免手写 SVG 解析代码；figwright 导入大 SVG 需用户手动 Place，详见 `workflows/image-to-figma.md` 路线 C
 - 写路径需要 Figma Desktop（已装）。若本机未装，在引导时给出下载指引。
 
 ## Workflow 索引

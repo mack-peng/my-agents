@@ -50,3 +50,6 @@
 - 修改前先 `get_selection` / `get_design_context`，不要凭空猜测图层名。
 - 参考 skill：`figma-codegen`（选择→代码）、`figma-build`（描述/代码→Figma 设计）。
 - 需要把当前设计转成结构化描述给 AI 写代码时，改走 `workflows/figma-to-desc.md`。
+- **SVG 源导入后的图层纪律**：SVG Place 进来的层中，`IMAGE` fill / `Clip path group` / `Group` 是图形层，不可当作色块删；删任何层前先 `get_node` 核对完整 children 列表。
+- **SVG 处理工具习惯**：处理 .svg 时优先用现成库（`rsvg-convert` 渲染、`lxml`/`svgpathtools` 解析），不要自己写 Python SVG 解析；大 SVG 导入 Figma 需用户手动 Place（figwright `import_svg` 装不下）。
+- 文字改色用 `set_fills`（`set_text_properties` 不支持 fills）；SVG 文字 path 转文本时 PingFang SC Bold 可能加载失败，用 Semibold 顶替。
