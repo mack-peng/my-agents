@@ -41,9 +41,9 @@
    - URL 含 `&` 必须加引号。
    - 输出较大时保存到文件（推荐）：
      ```bash
-     zsh -c 'source ~/.zshrc 2>/dev/null; npx -y figma-developer-mcp fetch "<figma-url>" --format=tree' > figma-agent/output/<name>.tree.yaml
+     zsh -c 'source ~/.zshrc 2>/dev/null; npx -y figma-developer-mcp fetch "<figma-url>" --format=tree' > output/<name>.tree.yaml
      ```
-3. 产物规范：`figma-agent/output/` 下存 `<name>.tree.yaml`（或 json），文件名用语义化英文。
+3. 产物规范：仓库根 `output/` 下存 `<name>.tree.yaml`（或 json），文件名用语义化英文。
 4. 把产物交给 code-agent / design-agent 生成对应项目的前端代码；如需让模型复用项目真实组件，可改用官方 Figma MCP 的 Code Connect（见 references/Figma-Agent-Tools.md）。
 
 ## 快捷命令速查

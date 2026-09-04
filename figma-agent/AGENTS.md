@@ -49,6 +49,13 @@ node --version
 
 按此输出填入展示模板的预检行，如：`Figma Desktop ✅ ｜ FIGMA_API_KEY ✅ ｜ figwright MCP ❌（1 和 3 需要）｜ Node ✅`。
 
+## 资源输入输出
+
+- 输入资源（用户提供的图片/截图、参考文件）→ 仓库根 `input/`（gitignored）
+- 输出产物（tree.yaml、结构化描述、跨工具协作文件）→ 仓库根 `output/`（gitignored）
+- 文件名用语义化英文；agent 可自由读写这两个目录
+- 注意：输入/输出目录相对仓库根（`/Users/mack/Agents`），不是 agent 子目录
+
 ## 核心原则（重要）
 
 - **按需懒引导**：启动/读取本 agent 不触发任何安装。只有用户实际使用某条 workflow 时，才实时检测该 workflow 的前置依赖。
