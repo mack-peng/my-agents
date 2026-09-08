@@ -56,6 +56,13 @@ No build, test, or lint at the root level.
 - Agents have clear boundaries: dify-builder-agent executes modifications; design-agent only reviews and outputs specs, never implements.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
 
+## JSON 处理约定
+
+- CLI 的 `--json` 输出（如 `firecrawl search --json`）**统一用 `jq` 解析**，禁止手写 python 内联脚本。
+- 大输出先用 `-o <文件>` 落盘，再 `jq` 读取，避免 stdout 被 shell/agent 环境截断。
+- 常用：清点 `jq -r '.data.web[] | "\(.title) | \(.url)"' <file>`；按字段提取 `jq -r '...' <file>`。
+- `jq` 缺失时 `brew install jq`。
+
 ## Git commit conventions
 
 - Commit message 一律使用英文，格式 `<type>(<scope>): <简短描述>`，禁止中文 commit message。

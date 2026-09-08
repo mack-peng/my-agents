@@ -14,7 +14,7 @@
 ### Firecrawl 模式（`USE_FIRECRAWL=true`）
 
 #### Step 1: 搜索+抓取
-委托 firecrawl-agent：read `firecrawl-agent/AGENTS.md`，按「Search（网页搜索）」快捷命令一条完成搜索 + 抓取全文（带 `--scrape --scrape-formats markdown`，`--limit 5`，`--json`）。正文为空的条目用 webfetch 兜底抓取。
+委托 firecrawl-agent：read `firecrawl-agent/AGENTS.md`，按「Search（网页搜索）」快捷命令一条完成搜索 + 抓取全文（带 `--scrape --scrape-formats markdown`，`--limit 5`，`--json`）。**结果解析统一用 `jq`，禁止手写 python 脚本**（大输出用 `-o <文件>` 落盘再解析，如 `jq -r '.data.web[] | "\(.title) | \(.url) | md=\(.markdown // "" | length)"' <file>`）。正文为空的条目用 webfetch 兜底抓取。
 
 #### Step 2: 整理
 - LLM 根据返回的 markdown 正文直接回答
