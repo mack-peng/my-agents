@@ -134,6 +134,7 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 | 规则 | 说明 |
 |------|------|
+| **cssgraph 优先定位组件** | 工单提供了 className 时，先用 `cssgraph_explore` / `cssgraph_callers` 定位引用该 className 的组件文件，再用 codegraph 追踪逻辑。cssgraph 是 className → 组件文件的最短路径 |
 | **codegraph_explore 优先** | 一次性获得相关符号和源码，减少 round-trip |
 | **maxFiles=8** | explore 的 maxFiles 默认 8，避免上下文爆炸 |
 | **禁止全量 grep** | 不执行无路径限制的 grep |

@@ -136,6 +136,8 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 ### Phase 2 调研策略
 
+工单提供了 className 时，**优先使用 cssgraph**（`cssgraph_explore` / `cssgraph_callers`）定位组件代码文件，再用 codegraph 追踪逻辑。cssgraph 是 className → 组件文件的最短路径，避免盲目 grep。
+
 详见 `workflows/phase2-investigate.md`。
 
 调研遵循该文档的「项目 Heuristics」（提炼自 STRK 共享代码指南）：
