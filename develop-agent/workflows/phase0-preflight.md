@@ -7,7 +7,7 @@
 ### 1. 环境预检
 
 - [ ] 检查 `lark-cli` 可用（如 `USE_FEISHU=true`）：`which lark-cli` + `lark-cli auth status`
-- [ ] 检查 `morph-cli` 可用：`which morph-cli`
+- [ ] 检查 ci-lite 就绪：`[ -x ~/ci-lite/scripts/build.sh ]`（缺失时提示：先完成 ci-lite 搭建）
 
 ### 2. 收集项目信息
 

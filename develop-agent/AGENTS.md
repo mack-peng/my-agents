@@ -2,7 +2,7 @@
 
 端到端需求开发 agent。六阶段流程，每阶段需人工 sign-off。
 使用飞书文档作为跨机器状态持久化。
-**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / morph-agent / gitee-agent / feishu-agent。**
+**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / ci-lite（构建部署工作区）/ gitee-agent / feishu-agent。**
 
 ## 工程原则
 
@@ -127,7 +127,7 @@ Develop Agent 已加载。模式：Session 模式
 | 1 | Design | design-agent | 需求描述 + 目标页面 | Spec (.spec.md) |
 | 2 | Code Design | code-design-agent | Spec | Code Design 文档（可选跳过） |
 | 3 | Code | code-agent | Spec + Code Design | commit + push |
-| 4 | Verify | morph-agent | 分支名 | build + deploy + 线上验证 |
+| 4 | Verify | ci-lite | 分支名 | build + deploy + 线上验证 |
 | 5 | Release | gitee-agent + feishu-agent | 分支 | PR 合并 + 更新 Develop 文档 |
 
 每个 Phase 完成后：
@@ -193,14 +193,14 @@ Develop Agent 已加载。模式：Session 模式
 
 ### Phase 4: Verify
 
-委托 morph-agent 构建并部署到 preprod 环境。
+使用 ci-lite（`~/ci-lite`）构建并部署到 preprod 环境。
 
 流程：
 0. **确认切换到测试分支**（如 `test-preprod-*`），再从开发分支 cherry-pick commits
 1. 询问测试分支名称（不存在则新建），cherry-pick Phase 3 commits → push
    > 冲突时优先 `git checkout --theirs <file>` 接受开发分支版本，再 `git cherry-pick --continue`
-2. morph-agent 构建测试分支 → 等待 build ID
-3. morph-agent 部署到 preprod
+2. ci-lite `scripts/build.sh` 构建测试分支 → 获得 BUILD ID
+3. ci-lite `scripts/deploy.sh` 部署到 preprod → 获得 DEPLOY ID
 4. 协调器验证线上效果（fetch 页面、检查关键变更点）
 5. 自动验证（OG 图片 200、JSON-LD 正确、meta 标签存在等）
 6. 用户确认后 sign-off
@@ -325,11 +325,11 @@ Develop Agent 已加载。模式：Session 模式
 
 ## 注意事项
 
-- 本 agent 不直接使用 design-agent / code-agent / morph-agent / gitee-agent 的命令
+- 本 agent 不直接使用 design-agent / code-agent / gitee-agent 的命令
 - 需要产品审查或 Spec → `use design-agent`
 - 需要代码设计 → `use code-design-agent`
 - 需要代码实现 → `use code-agent`
-- 需要构建部署 → `use morph-agent`
+- 需要构建部署 → `use ci-lite`（加载 `~/ci-lite/AGENTS.md`，执行 scripts/）
 - 需要 PR 操作 → `use gitee-agent`；gitee-cli 命令在目标项目目录下执行
 - 需要飞书操作 → `use feishu-agent`
 - 协调器自身可执行简单 git 操作（分支创建、切换），不执行代码修改或提交
@@ -341,7 +341,7 @@ Develop Agent 已加载。模式：Session 模式
 
 | 方式 | 适用场景 |
 |------|---------|
-| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-agent / morph-agent / gitee-agent / feishu-agent）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
+| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
 | **`Task` 工具** | 仅用于轻量、独立、无需用户交互的子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
 
 **为什么不能用 Task 委托？**

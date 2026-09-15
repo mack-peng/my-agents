@@ -70,7 +70,7 @@ develop-agent 全流程完成
 | 1 Design | design-agent | Spec: {name}.spec.md |
 | 2 Code Design | code-design-agent | 跳过 / Code Design: {name}.md |
 | 3 Code | code-agent | {n} files, commit {hash} |
-| 4 Verify | morph-agent | Build {bid} → Deploy {did} |
+| 4 Verify | ci-lite | Build {bid} → Deploy {did} |
 | 5 Release | gitee-agent | PR #{num} → merged |
 ```
 

@@ -1,6 +1,6 @@
 # Phase 4: Verify
 
-委托 morph-agent 构建并部署到 preprod 环境，然后验证线上效果。
+使用 ci-lite（`~/ci-lite`）构建测试分支并部署到 preprod 环境，然后验证线上效果。
 
 ## 执行步骤
 
@@ -29,23 +29,29 @@ git push origin <test-branch>
 
 > 若测试分支已存在，先拉到最新，再 cherry-pick 增量 commits。
 
-### 3. 委托 morph-agent 构建
+### 3. 使用 ci-lite 构建
 
-**使用上下文切换模式（`use morph-agent build`），非 Task 工具委托。**
+**使用上下文切换模式：读取 `~/ci-lite/AGENTS.md` 作为操作指令。**
 
-morph-agent 执行：
-- 环境预检（Docker 磁盘、morph-cli 可用）
-- `morph-cli build <project> <test-branch>`（project 名从项目 AGENTS.md 或用户确认）
-- 返回 Build ID
+```bash
+cd ~/ci-lite
+./scripts/build.sh <project> <test-branch>
+```
 
-### 4. 委托 morph-agent 部署
+- project：`door-adminpro` / `official-website` / `door-applets-bg`（从项目 AGENTS.md 或用户确认）
+- 返回 BUILD ID（10 位大写 hex）
+- 构建日志：`{project}/output/{BUILDID}/build.log`
 
-**使用上下文切换模式（`use morph-agent deploy`），非 Task 工具委托。**
+### 4. 使用 ci-lite 部署
 
-morph-agent 执行：
-- `morph-cli deploy <project> <buildId>`
-- 返回 Deploy ID
-- 确认 PM2 重启成功
+```bash
+cd ~/ci-lite
+./scripts/deploy.sh <project> <BUILDID> preprod
+```
+
+- 返回 DEPLOY ID
+- 确认重启成功（official-website：`pm2 restart official-ssr`；door-applets-bg：重启脚本）
+- 生产通道未配置，仅支持 preprod
 
 ### 5. 线上验证
 
@@ -94,8 +100,8 @@ morph-agent 执行：
 
 ## Phase 4 TODO
 - [x] 创建测试分支并 cherry-pick
-- [x] morph-cli 构建
-- [x] morph-cli 部署
+- [x] ci-lite 构建（BUILD ID: {bid}）
+- [x] ci-lite 部署（DEPLOY ID: {did}）
 - [x] 线上验证
 ✅ Phase 4 Sign-off: 已确认
 ```

@@ -1,5 +1,8 @@
 # morph-agent — Dagger 构建/部署助手
 
+> ⚠️ **已存档**：本 agent 依赖的 Dagger 容器栈在 Mac mini（16GB）上因内存限制停用，
+> 构建部署已由 ci-lite（`~/ci-lite`）替代。本文件仅作历史参考，不再被 develop-agent 引用。
+
 你是 morph-agent，负责帮助用户通过 `morph-cli` 执行 Dagger 项目的构建和部署。
 
 用户意图短语 → 直接执行，无需确认：
