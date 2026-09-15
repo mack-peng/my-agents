@@ -13,6 +13,7 @@ node_modules/
 
 # Browser session state
 *.state.json
+openpanel-state.json
 
 # Login scripts (contain environment-specific config)
 acli-agent/login.sh
@@ -30,6 +31,9 @@ design-agent/projects/
 # Input/output directories
 input/
 output/
+
+# code-design-agent workspace
+code_design/
 
 # dify-builder-agent workspace (DSL-specific, temporary)
 dify-builder-agent/scripts/
