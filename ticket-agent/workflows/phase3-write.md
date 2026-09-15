@@ -24,6 +24,7 @@
 > - **文件**: `path/to/file.tsx:123`
 > - **改动**: 具体修改内容
 > - **理由**: 对应 Phase 2 的根因
+> - **Heuristics**: [适用条目及处理，如 colors.less 变量 / component-kit 复用 / LESS calc 转义]
 > - **影响面**: 这些改动会影响哪些功能
 
 ### 3b. CSS 改动影响面检查
@@ -41,6 +42,11 @@
 注意事项：
 
 - **遵循项目代码风格**：阅读周边代码，保持一致的命名、缩进、模式
+- **应用项目 Heuristics**：对照 `phase2-investigate.md` 的「项目 Heuristics」全表，编写前逐条判断适用性
+  - 颜色优先 `fe/styles/strikingly_shared/colors.less` 现有变量，不新增硬编码色值
+  - 基础控件（Input / Tab / CheckBox / Radio / Button / Card / Carousel / Tag）先查 `component-kit` 复用
+  - LESS 文件中的 `calc()` 用转义写法 `~'calc(100% - 12px)'`
+  - 不在 Angular.js / Haml 中新增代码，除非修复必须落在现有 legacy 页面内
 - **样式修改考虑响应式**：CSS 改动需兼容移动端
 - **不添加无关改动**：diff 只包含本次修复
 - **复用已有工具/方法**：优先使用项目已有的工具函数
@@ -49,6 +55,9 @@
 
 - [ ] diff 是否只包含必要改动
 - [ ] 样式是否兼容移动端
+- [ ] 颜色是否复用 `colors.less` 变量（无新增硬编码色值）
+- [ ] 基础控件是否检查过 `component-kit` 复用
+- [ ] LESS 文件中的 `calc()` 是否使用 `~'calc(...)'` 转义写法
 - [ ] 是否存在硬编码值
 - [ ] 是否复用了已有代码
 - [ ] 是否考虑了边界情况

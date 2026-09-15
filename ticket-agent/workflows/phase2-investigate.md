@@ -19,6 +19,8 @@
 
 按 `[~]` → `[x]` 规则实时更新。Phase 2 sign-off 前确认 `[ ]` 和 `[~]` 已全部清零。
 
+Phase 2 TODO 至少包含：陈述调研策略并获确认 / 项目 heuristics 适用性判断 / 符号定位 / 根因分析。
+
 ## 差异对比策略
 
 ### 当工单描述 "X 正常，Y 异常" 时
@@ -41,6 +43,44 @@
 | Owner vs Collaborator | `current_user.sites` vs `current_user.page_collaborators` 作用域 |
 | 不同站点 | API 参数中的 `site_id` 过滤逻辑 |
 | 不同计划/套餐 | `ConfStore` / rollout flag 的 gon 配置值 |
+
+## 项目 Heuristics（strk-code-guidelines）
+
+以下经验规则提炼自 STRK 共享代码指南（strk-code-guidelines，源：agent-rnd-skills），是**高概率提示，不是硬规则**：
+
+- **判定优先**：每条先对照工单现状、现有代码、repo 惯例和工程 tradeoff 判断是否适用
+- 适用 → 纳入调研结论和影响面分析
+- 不适用 → 在 Phase 2 输出的 `Heuristics` 一行说明理由，禁止机械套用
+
+### 代码定位（bobcat）
+
+bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**不要因名称、路径或表面结构相似就盲选目标实现。**
+
+确认"当前在用路径"的手段（按优先级）：
+
+1. **技术栈演进**：Rails Haml + Knockout → Haml + Angular → React；缺少反证时，更新技术栈中的实现更可能是在用路径
+2. **git 信息**：相关代码块、文件或路由的最近修改时间、作者、commit message、关联 MR
+3. **可达性**：路由、入口、feature flag、埋点、API 调用、store/state 连接、模板引用、构建入口
+4. **业务归属**：多个候选服务于不同业务模块时，先识别本工单的模块归属，再决定复用、扩展或新增位置
+
+**仍无法确认 → 在 Phase 2 输出中列为不确定点并询问用户，不得随意选一个相似位置作为事实依据。**
+
+### 领域提示
+
+| 领域 | 提示 |
+|------|------|
+| 颜色 | 优先查 `fe/styles/strikingly_shared/colors.less` 现有变量；新增十六进制色值按现有命名风格加语义化变量；`rgb()` / `rgba()` 可直接用 |
+| 基础控件 | Input / Tab / CheckBox / Radio / Button / Card / Carousel / Tag 优先复用 `component-kit`；视觉差异在其上做 CSS 调整而非新增替代组件；复用候选必须看实际实现和调用上下文，禁止凭名称/签名判断 |
+| LESS `calc()` | 使用转义写法 `~'calc(100% - 12px)'` |
+| 新增前端代码 | 避免引入 Angular.js / Haml（legacy surface），除非修复必须落在现有 legacy 页面内 |
+| 监控 | 未知或意外错误接入监控路径（如 Bugsnag），避免泄漏敏感数据 |
+| 兼容性 | 除非工单明确排除 mobile，按 375x667 基线检查布局、点击、表单、弹窗和 loading/error/empty；涉及 WMP / 微信时检查体积限制 |
+| 前端性能 | 单个 expensive UI 区域 >100 child nodes 检查 re-render / 虚拟化；1 分钟内重复同类请求检查缓存、节流或去重 |
+| 依赖体积 | 新增前端依赖 >10KB gzipped 需说明收益、替代方案与 bundle 影响 |
+| 后端 IO | 避免 `select *`；join >3 表检查索引或拆查；批量写入用 batch；第三方只读数据非实时则考虑本地 copy/cache；复杂度 >O(n*n) 或内存 >O(n) 需说明数据规模依据 |
+| 文件上传 | 参考 S3 presigned URL 模式：后端鉴权 + 生成授权 + 业务元数据，客户端直传对象存储，上传流不经后端 |
+
+> 常见例外（不适用时按同一口径记录理由）：现有页面已用另一套局部组件体系、mockup 明确要求特殊视觉、数据规模有明确上限、强实时一致性是产品要求、现有路径改造收益明显更高。
 
 ## 流程
 
@@ -84,6 +124,7 @@
 > **调研策略**：
 > - 关键词/符号：[列出要搜索的关键词]
 > - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_diagnose / cssgraph_explore]
+> - Heuristics：[对照「项目 Heuristics」列出拟参考的条目，如 bobcat 代码定位 / component-kit 复用 / 后端 IO]
 > - 取证手段：[运行时取证/验证方式，如注入 scrollTo 监听抓调用栈、route abort 修改加载时序、dom-report 等]
 > - 预期范围：[预估涉及的文件范围]
 
@@ -123,6 +164,7 @@
 
 - **问题链路**：从触发点到出问题的完整路径
 - **根因定位**：具体文件、代码段、逻辑
+- **Heuristics 适用性**：对照「项目 Heuristics」判断适用条目是否改变根因或影响面结论；不适用的条目一句话说明理由
 - **影响范围**：哪些组件/页面/流程受影响
 - **CSS 布局类**：根因必须与取证结论一致（锚点问题 / 约束问题 / containing block 劫持），不一致时说明原因
 
@@ -134,6 +176,7 @@
 ### 调研策略
 - 搜索关键词: ...
 - 搜索方式: codegraph_explore / cssgraph_diagnose / cssgraph_explore
+- Heuristics: 适用条目及结论（不适用时给简短理由）
 
 ### 相关文件
 | 文件 | 说明 |

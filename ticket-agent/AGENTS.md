@@ -138,6 +138,10 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 详见 `workflows/phase2-investigate.md`。
 
+调研遵循该文档的「项目 Heuristics」（提炼自 STRK 共享代码指南）：
+- **代码定位**：bobcat 存在多个相似 legacy 实现时，用技术栈演进 / git 信息 / 可达性验证"在用路径"，无法确认时提出不确定点而非假设
+- **领域提示**：颜色、组件复用、监控、兼容性、前端性能、依赖体积、后端 IO、文件上传等领域按适用性判断，不适用时一句话记录理由
+
 ### Phase 2b: CSS 布局取证（仅布局/滚动类工单，Phase 2 判断后触发）
 
 Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时取证：
@@ -156,6 +160,7 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 ### Phase 3: 代码编写原则
 
 - **复用优先**：先检查现有 helper、component、hook、service 是否可以复用。评估复用候选时必须检查实际实现和调用上下文，禁止仅凭名称或签名判断。
+- **项目 Heuristics**：颜色优先 `colors.less` 变量、基础控件优先 `component-kit`、LESS `calc()` 用 `~'calc(...)'` 转义、不新增 Angular/Haml legacy 代码——详见 `workflows/phase3-write.md`
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。
 - **不写注释**：用自描述的命名和结构表达意图。
@@ -275,6 +280,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 ## Phase 2 TODO
 - [x] 陈述调研策略并获得确认
+- [x] 判断项目 heuristics 适用性。结果：...
 - [x] codegraph_explore 定位符号。结果：...
 - [x] 分析根因。结果：...
 ✅ Phase 2 Sign-off: 已确认
