@@ -12,12 +12,13 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - **优先复用**。可合理复用现有 helper、component、module、service、hook、store、API、测试工具或扩展点时优先复用。评估复用候选时必须检查候选的实际实现、关键调用方、依赖假设和副作用，禁止仅凭相似名称、签名或表面用途判断。
 - **可验证的结果**。非平凡任务先定预期结果，运行 typecheck、lint 等验证，不能验证时记录确切阻塞原因。
 
-## Context 隔离
+## 执行方式（硬性）
 
-- 若当前 runtime 提供可调用的 sub-agent 工具，Feature 分支默认由 root agent 派发 Coordinator sub-agent 做轻量索引和分派，root agent 只读 compact `TASK_STATE.md` / `implementation-index.md` 文件做调度。
-- Sub-agent 单层：所有 sub-agent 由 root agent 派发，sub-agent 之间不允许互相派发。
-- Fallback 模式仅当 sub-agent 工具不可用/不可调用、或用户明确禁止时使用；fallback 下每次只允许完成一个 phase，完成后停止并向用户汇报 checkpoint。
-- 禁止在一个长上下文 pass 中连续完成所有调研 + 实现 + 验证。
+- **单 pass 线性执行**：在同一上下文内，按 Code Design 的**变更组顺序**依次完成 调研 → 实现 → 验证。
+- **禁止派发子 agent**：不使用 Task 拆实现任务，不设 Coordinator / Worker / Reviewer 角色。
+- **顺序**：BE 先行（契约 / 配置 / DB / 接口）→ FE 跟上（依赖 BE 契约）；同一项目内按变更组 C1、C2… 顺序推进。
+- **每个变更组完成即验证**（typecheck / lint / `mvn test`），并把进度落盘（开发分支 + 变更组编号 + 完成状态 + 实际改动），供跨 session 续接。
+- 上下文接近上限时：先落盘进度与已完成变更，再从落盘处续接——用落盘续接代替多 agent。
 
 ---
 
@@ -58,13 +59,13 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 
 ### Phase 1: 理解输入
 
-从 Code Design 文档中提取并创建 Todo list：
+从 Code Design 文档中提取并建立变更组清单（按文档里的 C1、C2… 编号）：
 
-1. **Tech Changes 表格** — 组件/样式/数据/Hook 的变更清单
-2. **组件树** → 确定执行顺序（先叶子后容器，先依赖后消费者）
-3. **数据流和 API 契约** → 需要对接的接口
+1. **变更组清单** — 每组的目标文件、改动类型（UI/CSS/Data/接口 — Controller/Service/Mapper/配置/迁移）
+2. **每组的三件套** — Filename（[新增]/[修改]/[删除]）+ 上下文片段（`// ++++` 插入点）+ Tech changes 说明
+3. **接口契约与配置/迁移** — 需要对接的字段表、需要新增的配置项、需要执行的数据库迁移
 
-### Phase 2: 调研（编辑前必须完成）
+### Phase 2: 调研（每个变更组编辑前完成）
 
 #### 修改代码
 
@@ -103,16 +104,18 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 
 ### Phase 4: 验证
 
+- 变更组级：每完成一组立即跑（类型检查 / lint / 相关单测）
+- 交付级：全部完成后跑一次完整验证
 - 类型检查（如 `tsc --noEmit`）
 - Lint 检查（如 `eslint src/ --fix`）
 - 修完所有 error 后再交付
 
 ### Hard Stop
 
-- Phase 0 完成后停止自身深度调研（在 sub-agent 模式下由 Coordinator 继续分派）
-- Phase 2 调研完成后停止，开始编码前确认调研结论
-- Phase 4 验证完成后停止，不自动推进非代码 follow-up
-- 如果 context compression 已开始或即将开始，先写入短交接 note 再停止
+- Phase 0 完成：确认 `.codegraph/`（涉及样式再确认 `.cssgraph/`）后直接进入，不做全局深度调研
+- 每个变更组：调研 → 实现 → 验证，逐组循环；不得跳过验证
+- 全部变更组完成后：跑一次完整验证（typecheck / lint / 测试）后停止，不自动推进非代码 follow-up
+- 如果 context compression 已开始或即将开始，先落盘进度（分支 + 变更组状态 + commit）再停止
 
 ---
 

@@ -114,10 +114,10 @@ Develop Agent 已加载。模式：Session 模式
 
 ## Context 隔离
 
-- 本 agent 是协调器，不直接执行深度操作。每个 Phase 委托给对应子 agent，完成后不保留子 agent 的完整上下文。
-- **飞书模式**：跨 Phase 共享状态仅通过飞书文档传递。禁止在协调器上下文中跨 Phase 积累代码片段、diff、日志或子 agent 输出。
-- **Session 模式**：跨 Phase 共享状态通过对话中的 Markdown 摘要传递。每个 Phase 开始前从对话上下文中提取上一 Phase 的结论。
-- 每个 Phase 完成后停止协调器深度分析，等待用户 sign-off。
+- 本 agent 是协调器：Phase 1（design-agent）与 Phase 4/5（ci-lite / gitee-agent / feishu-agent）采用「上下文切换」委托。
+- **Phase 2（Code Design）与 Phase 3（Code）为线性单上下文执行**：协调器本人依次加载 code-design-agent / code-agent 的 AGENTS.md 并执行其工作流，**禁止再派发子 agent**（不用 Task 拆 requirement / 不设 Worker、Reviewer、Assembler 角色）。
+- **飞书模式**：跨 Phase / 跨 session 的状态一律通过飞书文档传递（进度、变更组编号、sign-off 结论）。单次会话过长时先落盘，再从飞书文档续接。
+- 每个 Phase 完成后停止，等待用户 sign-off。
 
 ## 阶段流程
 
@@ -125,7 +125,7 @@ Develop Agent 已加载。模式：Session 模式
 |---|------|------|------|------|
 | 0 | Pre-flight | — | 用户需求 | 项目路径 + 环境就绪 |
 | 1 | Design | design-agent | 需求描述 + 目标页面 | Spec (.spec.md) |
-| 2 | Code Design | code-design-agent | Spec | Code Design 文档（可选跳过） |
+| 2 | Code Design | code-design-agent | Spec | FE + BE Code Design（可选跳过） |
 | 3 | Code | code-agent | Spec + Code Design | commit + push |
 | 4 | Verify | ci-lite | 分支名 | build + deploy + 线上验证 |
 | 5 | Release | gitee-agent + feishu-agent | 分支 | PR 合并 + 更新 Develop 文档 |
@@ -163,15 +163,14 @@ Develop Agent 已加载。模式：Session 模式
 
 ### Phase 2: Code Design
 
-委托 code-design-agent 将 Spec 转化为代码设计文档（可选跳过）。
+委托 code-design-agent 将 Spec 转化为 **FE / BE 两份** Code Design 文档（可选跳过）。
 
 流程：
-1. 将 Spec + 目标项目传递给 code-design-agent
-2. code-design-agent 分析代码结构，输出 Code Design 文档
-3. 文档含组件树、数据流、Tech Changes 表、Requirement 逐一设计
-4. 协调器向用户逐项确认设计方案
-5. 用户全部确认后 sign-off
-6. 飞书模式：上传 Code Design 到 `FEISHU_CODE_DESIGN_WIKI_ID` 知识库
+1. 协调器加载 code-design-agent 的 AGENTS.md，**在同一上下文内线性完成两份文档**（禁止派子 agent）
+2. 文档结构：问题点罗列 / 实现设计思路 / 重点问题伪代码（片段 ≤30 行，非实现）/ 前后端依赖与接口契约 / 第三方依赖（含外部事实核验）/ 新增配置 / 数据库迁移 / 兼容性 / Timeline / Self-checklist
+3. 上传 Code Design 知识库（FE / BE 两个独立节点），文档内给变更组编号 + 列「待确认项」
+4. **评论 sign-off**：用户在飞书文档逐条评论 → 协调器读取评论（`lark-cli drive file.comments list`）→ 修订 → sign-off
+5. 飞书模式：更新 Develop 文档，挂两份文档链接
 
 详见 `workflows/phase2-code-design.md`。
 
@@ -182,9 +181,11 @@ Develop Agent 已加载。模式：Session 模式
 流程：
 0. **确认当前在开发分支**（`git branch --show-current`），禁止在 `master` 或 `test-preprod-*` 上操作
 1. **协调器创建开发分支**（从 master 切出，命名：`feat-` / `fix-` 前缀）
-2. 将 Spec + Code Design + 目标项目传递给 code-agent
-3. code-agent 调研代码 → 实现修改 → 验证（typecheck + lint）
-4. code-agent 提交 commit 并 push 到命名远程分支
+2. 协调器加载 code-agent 的 AGENTS.md，**按 Code Design 的变更组顺序线性实现**（禁止派子 agent）：
+   - 顺序：BE 先行（契约 / 配置 / DB / 接口）→ FE 跟上（依赖 BE 契约）
+   - 每个变更组完成即：落盘 → 编译 / typecheck / 测试 → 在 Develop 文档打勾
+3. 全部完成后再跑一次完整验证（typecheck + lint / mvn test）
+4. 提交 commit 并 push 到命名远程分支
 5. **协调器确认当前在开发分支上**（`git branch --show-current` 非 test-preprod 或 master），再继续
 6. 协调器向用户展示 diff 摘要
 7. 用户确认后 sign-off
@@ -337,12 +338,17 @@ Develop Agent 已加载。模式：Session 模式
 
 ## Agent 委托机制
 
-**"use X-agent" 不等于 `Task` 工具委托。** develop-agent 作为协调器，对子 agent 采用 **上下文切换** 模式：
+**"use X-agent" 不等于 `Task` 工具委托。** develop-agent 作为协调器，对各专业 agent 采用 **上下文切换** 模式：
 
 | 方式 | 适用场景 |
 |------|---------|
-| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
-| **`Task` 工具** | 仅用于轻量、独立、无需用户交互的子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
+| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
+| **`Task` 工具** | 仅用于轻量、独立、无需用户交互的**只读检索**子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
+
+**Phase 2 / Phase 3 的额外约束（硬性）**：
+
+- 这两个 Phase **不做任何子 agent 分派**（包括不用 Task 拆 requirement、不设 Worker / Reviewer / Assembler）。
+- 协调器在同一上下文内线性执行；每个变更组完成即落盘 + 验证 + 更新飞书文档，供跨 session 续接。
 
 **为什么不能用 Task 委托？**
 - 子 agent 无 agent 上下文（不加载目标 AGENTS.md）

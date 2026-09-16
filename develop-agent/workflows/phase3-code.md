@@ -11,7 +11,9 @@
 - 所有已确认的 Requirement
 
 从 Phase 2 获取（如有）：
-- Code Design 文档路径（`code-design-agent/code_design/{name}.md`）
+- FE Code Design 路径（`code-design-agent/code_design/{fe-project}.code-design.md`）
+- BE Code Design 路径（`code-design-agent/code_design/{be-project}.code-design.md`）
+- 两份文档中的变更组编号（C1、C2…）与待确认项结论
 
 ### 2. 协调器创建开发分支
 
@@ -35,14 +37,19 @@ git checkout -b feat-{需求短名}
 - 已切换到开发分支，可直接修改
 - 本项目约定（从项目 AGENTS.md 获取）
 
-### 4. code-agent 工作流
+### 4. code-agent 工作流（线性，禁止派子 agent）
 
-code-agent 按自身 AGENTS.md 执行：
-1. Phase 0：检查 `.codegraph/` + `.cssgraph/`
-2. Phase 1：理解输入，建立 TODO
-3. Phase 2：调研代码结构、影响范围、学习现有风格
-4. Phase 3：编码 — 按 Requirement 逐文件修改
-5. Phase 4：验证 — `yarn check-types` + `yarn lint`
+code-agent 按自身 AGENTS.md 执行，且必须**在同一上下文内按变更组顺序线性推进**：
+
+1. Phase 0：检查 `.codegraph/` + `.cssgraph/`（如涉及样式）
+2. Phase 1：从 FE / BE Code Design 提取变更组清单（C1、C2…）
+3. **顺序：BE 先行（Controller → Service → Mapper/SQL → 配置 → DB 迁移）→ FE 跟上（UI → CSS → Data/Store → 接口调用）**
+4. 每个变更组：调研 → 实现 → 验证（typecheck / lint / `mvn test`）→ 在 Develop 文档打勾
+5. 全部完成后：跑一次完整验证
+
+约束：
+- **禁止用 Task 或任何方式把实现拆给子 agent**
+- 上下文接近上限时先落盘进度（分支 + 变更组状态），再从落盘处续接
 
 code-agent 负责 git 提交和推送：
 - commit message 格式：`<type>(<scope>): <简短描述>`
