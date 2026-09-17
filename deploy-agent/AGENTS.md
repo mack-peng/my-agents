@@ -1,11 +1,11 @@
-# morph-agent — Dagger 构建/部署助手（已停用）
+# deploy-agent — 构建/部署（ci-lite）
 
-> ⚠️ **已存档（2026-09-17 完整退役）**：本 agent 依赖的 Dagger 容器栈在 Mac mini（16GB）上因内存限制停用，
-> 构建部署已由 ci-lite（`~/ci-lite`）替代。ci-lite 现已覆盖全部四个项目——
-> `door-adminpro` / `official-website` / `door-applets-bg` / `door-applets`（小程序上传 2026-09-17 迁入），
-> morph-agent / morph-cli 不再有任何在用能力。本文件仅作历史参考，不再被 develop-agent 引用。
+> 本目录为构建/部署入口。原 Dagger 容器栈在 Mac mini（16GB）上因内存限制停用，
+> 构建部署统一由 ci-lite（`~/ci-lite`）执行，已覆盖全部四个项目——
+> `door-adminpro` / `official-website` / `door-applets-bg` / `door-applets`（小程序上传 2026-09-17 迁入）。
+> morph-cli 不再有任何在用能力，本文件只保留命令映射供追溯。
 
-## 能力替代对照（实际操作请读 `~/ci-lite/AGENTS.md`）
+## 命令映射（morph-cli → ci-lite，实际操作请读 `~/ci-lite/AGENTS.md`）
 
 | 旧（morph-cli） | 新（ci-lite） |
 |---|---|

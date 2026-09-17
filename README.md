@@ -25,7 +25,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [gitee-agent](./gitee-agent) | `gitee-cli` | Gitee 码云：repo、issue、PR、release、组织 |
 | [github-agent](./github-agent) | `gh` | GitHub：repo、issue、PR、Actions、release |
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
-| [morph-agent](./morph-agent) | ~~`morph-cli`~~ | ~~Dagger CI：项目构建、JAR 部署~~ 已停用（Dagger 栈停用；构建部署已由 [ci-lite](../ci-lite) `~/ci-lite` 替代） |
+| [deploy-agent](./deploy-agent) | [ci-lite](../ci-lite)（`~/ci-lite`） | 构建/部署：四项目 build/deploy/ps/status/clean 脚本（Dagger 栈已退役） |
 | [planka-agent](./planka-agent) | `planka-cli` | Planka 看板：project、board、card、member |
 
 ### 流水线串联

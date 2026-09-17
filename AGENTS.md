@@ -17,6 +17,7 @@ No build, test, or lint at the root level.
 
 - **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
 - **`develop-agent/`** — 六阶段需求开发协调器。委托 design-agent / code-design-agent / code-agent / ci-lite（`~/ci-lite` 构建部署工作区）/ gitee-agent / feishu-agent 串行执行，每阶段需人工 sign-off。支持飞书持久化（`USE_FEISHU=true`）或 Session 模式，通过 `.env` 配置。`.env` gitignored。
+- **`deploy-agent/`** — 构建/部署入口（Dagger 栈已退役）。不直接执行构建，统一走 ci-lite（`~/ci-lite`：读其 `AGENTS.md` 后执行 `scripts/`）；文档含 morph-cli → ci-lite 命令映射。
 - **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
 - **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/` (lark-doc, lark-drive, lark-markdown, lark-shared, lark-sheets, lark-wiki). **禁止加载系统级 skill 文件（`~/.agents/skills/lark-*`）**：大多数飞书操作直接从 `feishu-agent/AGENTS.md` 的快捷命令抄写执行，仅在复杂操作（XML block、公式、权限管理等）时才读取 agent 自带的 skill 文件。
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
