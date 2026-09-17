@@ -34,6 +34,7 @@ No build, test, or lint at the root level.
 
 - `references/` — tool usage docs and templates (Dagger, Dify, Opnform, Google-SEO, bobcat MR template). Shared reference material, not agent-specific.
 - `specs/` — reserved for spec-syncing workflows (e.g. strk-agent).
+- **飞书 reference 知识库**（space_id `7686073741683510471`）— 日常工作中提取的**可复用参考文档**归档处（例：开源项目推广 Playbook）。新产出可复用资料时优先归档到这里（`lark-cli wiki +node-create --space-id 7686073741683510471`）。
 
 ## Non-agent directories
 
