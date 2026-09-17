@@ -17,7 +17,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [code-agent](./code-agent) | OpenCode 原生 | Feature 开发：按 Spec + Code Design 实现代码 |
 | [code-design-agent](./code-design-agent) | OpenCode 原生 | 前端代码设计：从产品 Spec 产出 FE Code Design 文档 |
 | [design-agent](./design-agent) | OpenCode 原生 | 产品设计审查：UI/UX、转化、品牌，输出 Spec |
-| [develop-agent](./develop-agent) | OpenCode 原生 | 需求开发协调器：串联 design → code-design → code → morph → gitee 全流程 |
+| [develop-agent](./develop-agent) | OpenCode 原生 | 需求开发协调器：串联 design → code-design → code → ci-lite（构建部署）→ gitee 全流程 |
 | [dify-agent](./dify-agent) | `dify-cli` | Dify AI 平台：聊天/补全、知识库、工作流 |
 | [doc-agent](./doc-agent) | `officecli` | Office 文档：创建/编辑 .docx/.xlsx/.pptx |
 | [feishu-agent](./feishu-agent) | `lark-cli` | 飞书：云文档、知识库、云空间、表格、Markdown（6 个 skill） |
@@ -25,7 +25,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [gitee-agent](./gitee-agent) | `gitee-cli` | Gitee 码云：repo、issue、PR、release、组织 |
 | [github-agent](./github-agent) | `gh` | GitHub：repo、issue、PR、Actions、release |
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
-| [morph-agent](./morph-agent) | `morph-cli` | Dagger CI：项目构建、JAR 部署 |
+| [morph-agent](./morph-agent) | ~~`morph-cli`~~ | ~~Dagger CI：项目构建、JAR 部署~~ 已停用（Dagger 栈停用；构建部署已由 [ci-lite](../ci-lite) `~/ci-lite` 替代） |
 | [planka-agent](./planka-agent) | `planka-cli` | Planka 看板：project、board、card、member |
 
 ### 流水线串联
@@ -45,7 +45,7 @@ design-agent → code-design-agent → code-agent
 
 ```
 需求 → Phase 1 Design → Phase 2 Code Design → Phase 3 Code → Phase 4 Verify → Phase 5 Release
-        design-agent      code-design-agent       code-agent       morph-agent       gitee-agent
+        design-agent      code-design-agent       code-agent       ci-lite           gitee-agent
 ```
 
 每个 Phase 后人工 sign-off 确认，支持飞书文档跨 session 续接。
@@ -69,7 +69,7 @@ my-agents/
   AGENTS.md             # 本文档
   <agent-name>/
     AGENTS.md           # agent 参考文档（18 个目录）
-    AGENT.md            # 少数 agent 使用单数形式（dify-agent/、morph-agent/）
+    AGENT.md            # 少数 agent 使用单数形式（dify-agent/）
     skills/             # 技能定义（仅在 feishu-agent 内部）
 ```
 
