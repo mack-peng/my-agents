@@ -38,7 +38,7 @@ cd ~/ci-lite
 ./scripts/build.sh <project> <test-branch>
 ```
 
-- project：`door-adminpro` / `official-website` / `door-applets-bg`（从项目 AGENTS.md 或用户确认）
+- project：`door-adminpro` / `official-website` / `door-applets-bg` / `door-applets`（从项目 AGENTS.md 或用户确认）
 - 返回 BUILD ID（10 位大写 hex）
 - 构建日志：`{project}/output/{BUILDID}/build.log`
 
@@ -46,12 +46,17 @@ cd ~/ci-lite
 
 ```bash
 cd ~/ci-lite
-./scripts/deploy.sh <project> <BUILDID> preprod
+./scripts/deploy.sh <project> <BUILDID> preprod [version]
 ```
 
 - 返回 DEPLOY ID
 - 确认重启成功（official-website：`pm2 restart official-ssr`；door-applets-bg：重启脚本）
 - 生产通道未配置，仅支持 preprod
+
+**小程序（door-applets）**：deploy 即上传微信平台（robot 2），不是服务器部署。
+- 版本号缺省自动生成 `vYY.MM.MMDTNN`（如 `v26.09.17T01`）；日志见 `{project}/output/{BUILDID}/upload.log`
+- 上传后在微信公众平台「版本管理 → 开发版本」手动「选为体验版」
+- 小程序无法由协调器自动验证，验收依赖真机复测
 
 ### 5. 线上验证
 
