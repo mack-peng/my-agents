@@ -22,6 +22,59 @@
 
 禁止在未判明模式前开始深度评审。
 
+## OpenCodeReview (ocr) 集成
+
+优先使用 [alibaba/open-code-review](https://github.com/alibaba/open-code-review) 作为确定性评审引擎（安装后 CLI 为 `ocr`）。它负责精确文件选择、智能文件打包、规则匹配（NPE、线程安全、XSS、SQL 注入等多语言规则集）和行级评论定位；本 agent 负责 Spec/Code Design 一致性、跨 batch 整合与人工 sign-off 判断。两者是 确定性工程 × Agent 混合架构的分工关系。
+
+### 本工作台模式：委派模式（默认）
+
+**不在本工作台配置 LLM，不暴露 LLM 配置。** 评审推理由宿主 agent（启动工作台的 opencode/codex 等）完成，OCR 只做确定性工程（文件选择 + 规则解析）。因此默认只使用委派模式命令，禁止调用 `ocr review` / `ocr scan`（它们需要 OCR 侧配置 LLM 端点）。
+
+委派模式核心命令：
+
+```bash
+ocr delegate preview [--from <ref> --to <ref>] [--commit <hash>] [--exclude <pattern>] --format json
+ocr delegate rule <path1> <path2> ... --format json   # 规则按内容分组，避免重复
+```
+
+`delegate preview` 输出 mode（workspace/range/commit）、ref 元数据与 reviewable 文件清单（含排除原因），据此构造 git diff（`git diff <from>..<to>` / `git show <commit>`）；untracked 新文件直接 Read 全文。规则按路径分批获取：`ocr delegate rule <path1> <path2> ... --format json`，同规则文件自动归组，避免重复。可作为 Diff 评审 Phase 1 建立评审索引的输入。
+
+输出用 shell 重定向落盘 + `jq` 解析（见仓库 JSON 约定）：`ocr delegate preview --format json > <file>.json`。注意 ocr delegate 只支持 `-f/--format`，**不支持 `-o`/`--output`**（`--output` 仅存在于 `ocr review` 等 OCR 管理模式命令）。`ocr delegate` 在 git repo 当前目录工作，跨目录用 `--repo <path>` 覆盖。
+
+### 安装检查（未安装时引导）
+
+前置条件：**Git >= 2.41**（`git --version` 检查，低于则 `brew install git` 升级）；Node.js/npm。检查命令：`which ocr`，无输出则执行：
+
+```bash
+npm install -g @alibaba-group/open-code-review   # 安装后 ocr 全局可用
+ocr --version                                     # 验证安装
+```
+
+### LLM 配置（仅当走 OCR 管理评审时）
+
+默认不走此路径（见上）。仅当用户明确选择 OCR 管理评审（配置 OCR 侧 LLM 端点）时才执行，仅首次需要：
+
+```bash
+ocr config provider   # 选择内置 provider 或添加自定义
+ocr config model      # 为当前 provider 选模型
+ocr llm test          # 验证连通性
+```
+
+对应的评审命令（需 LLM 端点）：`ocr review`（workspace）/ `ocr review --from main --to feature`（分支对比）/ `ocr review --commit <hash>`（单 commit）/ `ocr scan --path <dir>`（全文件扫描）/ `ocr session list` + `ocr review --resume <session-id>`（续跑）/ `ocr review --format json --output result.json`（结构化结果）。
+
+### OpenCode 原生插件（可选）
+
+官方提供 OpenCode 插件，注册 `ocr_review` / `ocr_health` 工具与 `/ocr-review`、`/ocr-health` 命令：
+
+```bash
+mkdir -p ~/.config/opencode/plugins
+curl -fsSL https://raw.githubusercontent.com/alibaba/open-code-review/main/plugins/open-code-review/opencode/open-code-review.ts \
+  -o ~/.config/opencode/plugins/open-code-review.ts
+cd ~/.config/opencode && npm init -y 2>/dev/null; npm i @opencode-ai/plugin   # OpenCode 1.x；2.x 另加 @opencode/plugin@beta，以上游 README 为准
+```
+
+安装后重启 opencode。插件评审使用 `--audience agent` + JSON 输出，30 分钟超时、10 MiB 输出上限。
+
 ## 输入格式与 Diff 获取
 
 你可以直接用自然语言告诉 agent 要评审什么，agent 自动解析并获取 diff：
@@ -77,6 +130,7 @@
 
 进入目标项目后，**先执行以下检查**：
 
+- [ ] 检查 `ocr` 是否安装：`which ocr` → 未安装则按上文"安装检查"引导安装
 - [ ] 如果评审涉及代码结构分析 → `.codegraph/` 存在 → 否则提示用户：`codegraph init -i`
 - [ ] 如果评审涉及样式变更 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
 - [ ] 已读取目标项目的 `AGENTS.md`（如果有）
@@ -86,7 +140,7 @@
 
 在开始深度评审前，先建立轻量级路由索引：
 
-1. 获取变更概览：变更文件列表、文件数、行数统计
+1. 获取变更概览：变更文件列表、文件数、行数统计（可先用 `ocr delegate preview` 生成 reviewable 文件清单与 ref 元数据，作为分组依据）
 2. 按模块/功能分组变更文件，识别评审 batch
 3. 如果有 Spec / Code Design，先读 routing 深度（标题、Requirement 编号、关键设计决策），不读全部正文
 4. 创建 `<review-output>/review-index.md`：记录 MR/PR 元信息、batch 分组、Requirement 映射、评审状态
@@ -171,6 +225,13 @@ Guideline check 使用以下状态标记：
 ---
 
 ## 代码分析工具箱
+
+### 确定性评审（委派模式，默认）
+
+| 场景 | 命令 |
+|---|---|
+| 获取文件选择 + 评审规则，评审推理交给宿主 agent | `ocr delegate preview` / `ocr delegate rule <path...>` |
+| 获取 diff | `git diff <from>..<to>` / `git show <commit>`；untracked 文件直接 Read |
 
 ### 代码结构
 
