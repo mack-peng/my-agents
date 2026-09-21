@@ -1,12 +1,12 @@
 # zendesk-agent
 
-Zendesk 工单管理 agent — 基于 `zcli-ticket` CLI 封装（建议 ≥ 0.1.4），用于查看、搜索、创建和操作 Zendesk 工单、用户、组织、群组等资源。
+Zendesk 工单管理 agent — 基于 `zcli-ticket` CLI 封装（建议 ≥ 0.1.5），用于查看、搜索、创建和操作 Zendesk 工单、用户、组织、群组等资源。
 
 ## 安装
 
 ```bash
 npm install -g zcli-ticket
-zcli-ticket --version    # 建议 >= 0.1.4（OAuth 自动刷新自 0.1.4 起支持）
+zcli-ticket --version    # 建议 >= 0.1.5（0.1.4 起支持 OAuth 自动刷新；0.1.5 起刷新取 2 天 token）
 ```
 
 要求 Node >= 18，CLI 安装后通过 `zcli-ticket` 命令调用。
@@ -59,7 +59,7 @@ zcli-ticket config-show    # 查看当前配置（secret/token 掩码，OAuth �
 - 收到 HTTP 401 → 刷新一次并重试一次（仅一次）
 - 新 token / 过期时间 / 实际 scope 原子写回 `~/.zendeskrc`
 - 前提：OAuth client 必须是 **confidential**（Admin Center → APIs → OAuth clients → Client kind），public client 会报 `unauthorized_client`
-- `client_credentials` 不返回 refresh_token，过期只能重换；`oauth-login` 可指定 `--expires-in`（范围 300–172800，默认 172800），**自动刷新路径不带 `expires_in`，取服务端默认有效期**（2026-04-30 后创建的 client 默认 1800s），整个过程对用户透明
+- `client_credentials` 不返回 refresh_token，过期只能重换；`oauth-login` 与自动刷新默认都取上限 172800s（2 天），`--expires-in` 可调（范围 300–172800），整个过程对用户透明
 - 同一 profile 存在多种凭据时默认 OAuth 优先；可用 `config-set mode <模式>` 或 `--mode` 显式钉住
 - 常见错误：`invalid_client`（id/secret 不符，secret 只在创建时展示一次）｜`unauthorized_client`（client 非 confidential）｜`invalid_scope`（请求 scope 超出 client 允许范围）
 
@@ -99,7 +99,7 @@ zcli-ticket -p <profile名> config-show
 | profile | 实例 | 认证 | scope |
 |---------|------|------|-------|
 | `default` | strikingly.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read` |
-| `sxl` | sxl.zendesk.com | OAuth 静态 token（不自动刷新） | `tickets:read` |
+| `sxl` | sxl.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read` |
 
 ⚠️ 两个 profile 目前都只有工单只读权限：`/users`、`/organizations`、`/views` 等接口会返回 `403 missing required scopes`。确需这些接口时，先扩 scope（client 允许 scope + `oauth-scope`）再 `oauth-login`。
 
