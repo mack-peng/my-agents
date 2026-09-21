@@ -1,44 +1,67 @@
 # zendesk-agent
 
-Zendesk 工单管理 agent — 基于 `zcli-ticket` CLI 封装，用于查看、搜索、创建和操作 Zendesk 工单、用户、组织、群组等资源。
+Zendesk 工单管理 agent — 基于 `zcli-ticket` CLI 封装（建议 ≥ 0.1.4），用于查看、搜索、创建和操作 Zendesk 工单、用户、组织、群组等资源。
 
 ## 安装
 
 ```bash
 npm install -g zcli-ticket
-nodenv rehash
+zcli-ticket --version    # 建议 >= 0.1.4（OAuth 自动刷新自 0.1.4 起支持）
 ```
 
 要求 Node >= 18，CLI 安装后通过 `zcli-ticket` 命令调用。
 
 ## 认证配置
 
-三种认证模式，推荐 API Token：
+三种认证模式（OAuth 有两种凭据形态）。**API Token 最省事；OAuth 才有 scope 限制，配置 client 凭据后还能自动刷新**：
 
 | 模式 | 配置项 | 说明 |
 |------|--------|------|
-| API Token | `token` | `{email}/token:{token}` base64（推荐） |
+| API Token | `token` | `{email}/token:{token}` base64；无 scope 概念，权限=该用户角色 |
 | Basic Auth | `password` | `{email}:{password}` base64 |
-| OAuth | `oauth-token` | `Bearer {token}` |
+| OAuth（静态） | `oauth-token` | `Bearer {token}`；不自动刷新，过期即 401 |
+| OAuth（client 凭据） | `oauth-client-id` + `oauth-client-secret`（+ `oauth-scope`） | 自动换 token 并自动刷新，**要求 confidential client** |
 
 ```bash
+# API Token
 zcli-ticket config-set subdomain <子域名>
 zcli-ticket config-set email <邮箱>
 zcli-ticket config-set token <API token>
-zcli-ticket config-show    # 查看当前配置（token 掩码显示）
+
+# OAuth client 凭据（自动刷新）
+zcli-ticket config-set oauth-client-id <client-id>
+zcli-ticket config-set oauth-client-secret <client-secret>
+zcli-ticket config-set oauth-scope "tickets:read"   # 可选，不设则由服务端决定
+zcli-ticket oauth-login                             # 立即换取并落盘 token + 过期时间
+
+zcli-ticket config-show    # 查看当前配置（secret/token 掩码，OAuth 显示剩余有效期）
 ```
 
-配置存储在 `~/.zendeskrc`，可通过 `--subdomain` / `--email` / `--token` 临时覆盖。
+配置存储在 `~/.zendeskrc`（写回时强制 `0600`）。已知配置键会做 kebab→camel 归一化（`config-set oauth-token` 实际存为 `oauthToken`）。
 
-配置优先级：CLI flags > 环境变量 > 配置文件
+配置优先级：**CLI flags > 配置文件**。凭据没有环境变量；`ZENDESK_PROFILE` 仅用于按进程选择 profile（等价 `-p`）。
 
-| CLI 参数 | 环境变量 |
-|----------|----------|
-| `-s, --subdomain` | `ZENDESK_SUBDOMAIN` |
-| `-e, --email` | `ZENDESK_EMAIL` |
-| `--token` | `ZENDESK_TOKEN` |
-| `--password` | `ZENDESK_PASSWORD` |
-| `--oauth-token` | `ZENDESK_OAUTH_TOKEN` |
+| CLI 参数 | 说明 |
+|----------|------|
+| `-s, --subdomain` | Zendesk 子域名（或完整域名） |
+| `-e, --email` | Zendesk agent 邮箱 |
+| `--token` | API token |
+| `--password` | Basic auth 密码 |
+| `--oauth-token` | 静态 OAuth access token |
+| `--oauth-client-id` / `--oauth-client-secret` | OAuth client 凭据（启用自动刷新） |
+| `--oauth-scope` | 空格分隔的 scope |
+| `--mode` | 强制认证模式：`api-token` / `basic` / `oauth` |
+| `--verbose` | 将每次 token 刷新日志打到 stderr |
+
+### OAuth 自动刷新（client_credentials）
+
+- 请求前惰性检查：token 缺失或剩余有效期 ≤ 60s → 用 client 凭据调 `POST {subdomain}/oauth/tokens` 换新
+- 收到 HTTP 401 → 刷新一次并重试一次（仅一次）
+- 新 token / 过期时间 / 实际 scope 原子写回 `~/.zendeskrc`
+- 前提：OAuth client 必须是 **confidential**（Admin Center → APIs → OAuth clients → Client kind），public client 会报 `unauthorized_client`
+- `client_credentials` 不返回 refresh_token，过期只能重换；`oauth-login` 可指定 `--expires-in`（范围 300–172800，默认 172800），**自动刷新路径不带 `expires_in`，取服务端默认有效期**（2026-04-30 后创建的 client 默认 1800s），整个过程对用户透明
+- 同一 profile 存在多种凭据时默认 OAuth 优先；可用 `config-set mode <模式>` 或 `--mode` 显式钉住
+- 常见错误：`invalid_client`（id/secret 不符，secret 只在创建时展示一次）｜`unauthorized_client`（client 非 confidential）｜`invalid_scope`（请求 scope 超出 client 允许范围）
 
 ## 多 Profile 管理
 
@@ -53,10 +76,15 @@ zcli-ticket -p <profile名> config-set subdomain <子域名>
 zcli-ticket -p <profile名> config-set email <邮箱>
 zcli-ticket -p <profile名> config-set token <token>
 
+# OAuth 自动刷新（可选，client 凭据）
+zcli-ticket -p <profile名> config-set oauth-client-id <client-id>
+zcli-ticket -p <profile名> config-set oauth-client-secret <client-secret>
+zcli-ticket -p <profile名> oauth-login
+
 # 持久切换默认 profile
 zcli-ticket config-use <profile名>
 
-# 临时使用指定 profile
+# 临时使用指定 profile（或按进程：ZENDESK_PROFILE=<profile名> zcli-ticket ...）
 zcli-ticket -p <profile名> <command>
 
 # 查看所有 profile
@@ -66,6 +94,15 @@ zcli-ticket config-list
 zcli-ticket -p <profile名> config-show
 ```
 
+### 本工作区 profile 现状
+
+| profile | 实例 | 认证 | scope |
+|---------|------|------|-------|
+| `default` | strikingly.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read` |
+| `sxl` | sxl.zendesk.com | OAuth 静态 token（不自动刷新） | `tickets:read` |
+
+⚠️ 两个 profile 目前都只有工单只读权限：`/users`、`/organizations`、`/views` 等接口会返回 `403 missing required scopes`。确需这些接口时，先扩 scope（client 允许 scope + `oauth-scope`）再 `oauth-login`。
+
 ## 输出模式
 
 | 标志 | 输出 | 适用场景 |
@@ -73,6 +110,8 @@ zcli-ticket -p <profile名> config-show
 | 默认 | 人类可读表格 / 格式化 JSON | 终端查看 |
 | `--json` | 机器可读 JSON | 脚本、管道、AI agent 消费 |
 | `--raw` | 原始数据 | 其他工具直接消费 |
+
+`--verbose` 会把 OAuth token 刷新日志打到 stderr，不污染 `--json` 结果。
 
 ```bash
 zcli-ticket ticket-list --status open          # 默认输出
@@ -233,6 +272,20 @@ zcli-ticket incremental-users <unix_timestamp>
 zcli-ticket incremental-orgs <unix_timestamp>
 ```
 
+### 配置与技能
+
+```bash
+zcli-ticket config-show                    # 查看当前配置（掩码，含 OAuth 剩余有效期）
+zcli-ticket config-set <key> <value>       # 设置配置项
+zcli-ticket config-path                    # 显示配置文件路径
+zcli-ticket config-list                    # 列出所有 profile
+zcli-ticket config-use <name>              # 切换默认 profile
+zcli-ticket config-new <name>              # 新建 profile
+zcli-ticket oauth-login [--scope <s>] [--expires-in <秒>]   # 用 client 凭据换 token
+zcli-ticket skill-install [--target opencode|claude|all] [--path <dir>]
+zcli-ticket skill-uninstall
+```
+
 ## 常见操作模式
 
 ### 按状态查看工单
@@ -271,6 +324,12 @@ zcli-ticket user-search --email "john@example.com"
 zcli-ticket ticket-update <id> --comment "已在处理"
 zcli-ticket ticket-update <id> --private-comment "需要升级"
 ```
+
+## 常见陷阱
+
+- **不加过滤的 `ticket-list` 会翻页拉全量**，大实例上很慢（几十秒起）→ 用 `--status` 过滤，或改用 `search "<query>"`
+- **scope 不足**：`{"isError":true,"error":"You are missing the following required scopes: ..."}` → 扩 scope 后重新 `oauth-login`
+- **401**：静态 `oauth-token` 过期且无 client 凭据 → 重新换 token；配置了 client 凭据则会自动刷新
 
 ## Agent 使用约定
 
