@@ -6,6 +6,7 @@ This directory is configured for browser automation using `playwright-cli` and P
 
 - `playwright-cli`: Installed globally via npm
 - Default browser: Chromium (use `--browser=firefox` or `--browser=webkit` to switch)
+- **默认有头模式**：`open` / `attach` 一律显式加 `--headed`，只有用户明确要求无头时才省略
 - **本机未安装 Chrome**：`open` 不带 `--browser` 时可能尝试 Chrome 而报错，必须显式 `--browser=chromium`
 - Run `playwright-cli --help` for full command list
 
