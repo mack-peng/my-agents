@@ -99,6 +99,7 @@ zcli-ticket -p <profile> ticket-show <id>
 | 4b | bobcat 依赖更新 | `workflows/phase4-bobcat-update.md` | 用户通知后才执行：直接在测试分支上更新 package.json 指向测试 tag |
 | 5 | 提交 Component-kit MR | `workflows/phase5-mr-component-kit.md` | component-kit MR 链接（`fix-component-kit-*` → develop） |
 | 5b | 生产 tag + Bobcat MR | `workflows/phase5-mr-component-kit.md` | 用户通知后才执行（review 通过后）：component-kit 生产 tag + bobcat MR |
+| 6 | 工单回复 | `workflows/phase6-reply.md` | 用户指示后执行：Zendesk 内部备注（RESOLUTION NOTE） |
 
 ### 修改仅在 bobcat 时
 
@@ -109,6 +110,9 @@ zcli-ticket -p <profile> ticket-show <id>
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（bobcat） | `workflows/phase4-commit.md` | 分支 + commit |
 | 5 | 提交 MR | `workflows/phase5-mr-bobcat.md` | MR 链接 |
+| 6 | 工单回复 | `workflows/phase6-reply.md` | 用户指示后执行：Zendesk 内部备注（RESOLUTION NOTE） |
+
+Phase 6 对两类流程通用：无代码变更的工单（自定义代码 / 支持类问题）在根因确认、用户侧验证恢复后可直接执行。
 
 每个 Phase 完成后：
 1. 输出总结给用户
@@ -133,6 +137,7 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 - [ ] 如果工单涉及代码修改 → `.codegraph/` 存在 → 否则提示用户：`codegraph init -i`
 - [ ] 如果工单涉及样式修改 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
 - [ ] 如果工单涉及布局/滚动/定位 → `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
+- [ ] 工单后续需要回复 → `zcli-ticket -p <profile> config-show` 的 `oauthScope` 含 `tickets:write` → 否则 `config-set oauth-scope "tickets:read tickets:write"` + `oauth-login`
 
 ### Phase 2 调研策略
 
@@ -311,6 +316,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 5. 如用户提出修改意见，回到当前 Phase 的对应步骤
 6. **component-kit 变更时**：Phase 4 sign-off 后停止，等待用户通知是否进入 Phase 4b（bobcat 依赖更新）。用户说"跳过"则直接进入 Phase 5
 7. **component-kit 变更时**：Phase 5 sign-off（MR review 通过）后停止，等待用户通知是否进入 Phase 5b（生产 tag + bobcat MR）。用户说"跳过"则直接结束
+8. **Phase 6（工单回复）**：仅在用户明确说"回复工单"后执行；发送内部备注前必须展示完整草稿并获得 sign-off；发送后不自动公开回复、不改 status
 
 ## Hard Stop
 
@@ -319,6 +325,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 如果 context compression 已开始或即将开始，先完成当前 TODO 项并等待 sign-off
 - Phase 5b sign-off 后任务结束，不得自动开启新工单
 - Phase 5b（生产 tag + bobcat MR）仅在用户明确要求时执行，不得在 Phase 5 完成后自动触发
+- 未经用户明确指示与 sign-off，不得写工单（内部备注 / 公开回复 / 字段变更）
 
 ## 注意事项
 
@@ -329,5 +336,6 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - **飞书模式**：需要飞书操作 → `use feishu-agent`。跨机器时提供飞书文档 URL 即可续接
+- 需要回复工单（写操作）→ `use zendesk-agent`；`comment-create` 默认公开，内部备注必须显式 `--private`；`Submitted by` 取 `zendesk-agent/.env` 的 `SUBMITTED_BY`
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
 - **CSS 布局取证**：委托 cssprobe-agent 交互式完成运行时取证，cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli
