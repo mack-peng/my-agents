@@ -213,7 +213,7 @@ Develop Agent 已加载。模式：Session 模式
 委托 gitee-agent 提交 PR 并合并，委托 feishu-agent 更新 Develop 任务文档。
 
 流程：
-1. gitee-agent 创建 PR（head: 开发分支 → base: master）
+1. gitee-agent 创建 PR（head: 开发分支 → base: master）：PR body 套用 `references/bobcat-mr-*-template.md`（FE/BE × Bugfix/Final-Review），由协调器依据 Phase 1-4 证据填充内容并勾选 Self-checklist（不留给提交者）
 2. 用户 review 通过后 gitee-agent approve + merge
 3. 飞书模式：feishu-agent 更新 Develop 任务文档（追加最终摘要）
 4. 输出完整流程摘要

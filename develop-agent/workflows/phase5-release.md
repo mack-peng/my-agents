@@ -16,6 +16,7 @@
 向用户确认：
 - 目标 base 分支（默认 master）
 - PR 标题和描述内容
+- **Reviewer**（参考 ticket-agent 规范：给出候选清单让用户选择；无实际人选时填 `not applicable`）
 
 ### 2. 委托 gitee-agent 创建 PR
 
@@ -26,7 +27,20 @@ use gitee-agent
 gitee-agent 执行：
 - 在目标项目目录下 `gitee-cli pr create`
 - head: 开发分支，base: 目标分支
-- PR body 含：变更摘要、验证状态、修改文件列表
+- **PR body 套用 Bobcat MR 模板**（`references/bobcat-mr-*-template.md`，Gitee 模板自动填充仅 Web 端生效，CLI 需手动传 body）：
+
+| MR 类型 | BE 仓库（如 door-applets-bg） | FE 仓库（如 door-adminpro / door-applets） |
+|---------|------------------------------|--------------------------------------------|
+| 功能/需求（走 Spec + Code Design） | `bobcat-mr-final-review-be-template.md` | `bobcat-mr-final-review-fe-template.md` |
+| Bug 修复 | `bobcat-mr-bugfix-be-template.md` | `bobcat-mr-bugfix-fe-template.md` |
+
+- 填充规则（对齐 `ticket-agent/workflows/phase5-mr-bobcat.md`，**由协调器生成，不留给提交者**）：
+  1. **严格保持模板结构不变**，各 section 的占位提示替换为实际内容
+  2. **Self-checklist 由协调器依据 Phase 1-4 证据逐项判定并勾选**（如：diff 自审、typecheck/lint/构建通过、preprod 验证、可回滚、无调试代码、原子 commit、conventional commits）；不适用项按模板自身的 `not applicable` 约定标注，不虚构勾选
+  3. 与 Code Design 存在差异时：先在 MR 评论中列出差异说明（满足「marked them out and added comments」），再勾选对应项
+  4. References 表：Code Design Doc 填飞书链接；Jira / Zendesk / TL / Reviewer 无实际值时填 `not applicable`
+  5. FE Bugfix 模板的 Problem Solving Process（Description / Reason / Solution / Scope Of Impact / Test Result）**用中文填写**，取自 Phase 1 Problem 与 Phase 3/4 结论
+  6. 描述写入临时文件（如 `/tmp/develop-mr-<repo>.md`），`gitee-cli pr create --body "$(cat ...)"`
 
 ### 3. 用户 Review
 
