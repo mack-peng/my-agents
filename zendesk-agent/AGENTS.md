@@ -98,10 +98,18 @@ zcli-ticket -p <profile名> config-show
 
 | profile | 实例 | 认证 | scope |
 |---------|------|------|-------|
-| `default` | strikingly.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read` |
+| `default` | strikingly.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read tickets:write` |
 | `sxl` | sxl.zendesk.com | OAuth client 凭据（自动刷新） | `tickets:read` |
 
-⚠️ 两个 profile 目前都只有工单只读权限：`/users`、`/organizations`、`/views` 等接口会返回 `403 missing required scopes`。确需这些接口时，先扩 scope（client 允许 scope + `oauth-scope`）再 `oauth-login`。
+⚠️ `default` 具备工单写权限（内部备注 / 公开回复 / 字段变更）。`sxl` 仍为只读：`/users`、`/organizations`、`/views` 等接口返回 `403 missing required scopes`；确需这些接口时，先扩 scope（client 允许 scope + `oauth-scope`）再 `oauth-login`。
+
+### 本工作区 `.env`
+
+`zendesk-agent/.env`（gitignored）保存回复工单用的个人配置：
+
+```
+SUBMITTED_BY=peng.he    # RESOLUTION NOTE 的 Submitted by 字段
+```
 
 ## 输出模式
 
@@ -329,12 +337,52 @@ zcli-ticket ticket-update <id> --private-comment "需要升级"
 
 - **不加过滤的 `ticket-list` 会翻页拉全量**，大实例上很慢（几十秒起）→ 用 `--status` 过滤，或改用 `search "<query>"`
 - **scope 不足**：`{"isError":true,"error":"You are missing the following required scopes: ..."}` → 扩 scope 后重新 `oauth-login`
+- **`comment-create` 默认公开**：不加 `--private` 会把内容直接发给客户 → 内部备注必须显式 `--private`
+- **`attachment-upload` 上传的不是文件**：0.1.6 命令定义缺 `upload: true`，落库为 63 字节 `application/json` → 用 curl 直传（见「工单回复」）
 - **401**：静态 `oauth-token` 过期且无 client 凭据 → 重新换 token；配置了 client 凭据则会自动刷新
 
 ## Agent 使用约定
 
 - 查看工单时，默认使用 `zcli-ticket --json ticket-thread <id>`，一次性获取工单详情 + 全部评论（包括内部备注），便于 AI 完整理解工单上下文。
 - 如仅需工单元信息（不含评论），用 `zcli-ticket --json ticket-show <id>`。
+- 回复工单默认使用**内部备注**（`--private`），公开回复需用户显式授权。
+
+### 工单回复（写操作）
+
+```bash
+# 内部备注（推荐）
+zcli-ticket -p <profile> comment-create <ticket-id> "$(cat /tmp/opencode/note.md)" --private
+
+# 公开回复客户（comment-create 默认 public，不加 --private 即对外可见）
+zcli-ticket -p <profile> comment-create <ticket-id> "<body>"
+
+# 附件：先上传换 token，再随评论提交
+zcli-ticket -p <profile> comment-create <ticket-id> "<body>" --private --upload-tokens <t1,t2>
+
+# 更新字段 / 状态
+zcli-ticket -p <profile> ticket-update <id> --status solved --private-comment "..."
+```
+
+**附件与内嵌图片（CLI 不支持 html_body）**：
+
+- ⚠️ `zcli-ticket 0.1.6` 的 `attachment-upload` 有 bug（命令定义缺 `upload: true`，把请求 JSON 当文件上传，落库为 63 字节 `application/json`）→ 用 curl：
+
+```bash
+# 上传（multipart），返回 token + content_url
+curl -s -X POST "https://<subdomain>.zendesk.com/api/v2/uploads?filename=<name>" \
+  -H "Authorization: Bearer <token>" -F "uploaded_data=@<file>;type=image/png"
+
+# 发送带内嵌图片的备注（html_body 引用 content_url + uploads token）
+jq -n --rawfile html note.html --arg t "<upload-token>" \
+  '{ticket:{comment:{html_body:$html, uploads:[$t], public:false}}}' > payload.json
+curl -s -X PUT "https://<subdomain>.zendesk.com/api/v2/tickets/<id>.json" \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d @payload.json
+```
+
+- 实测：html_body 引用 upload `content_url` 不会把附件置为 `inline: true`，图片在引用行渲染且同时出现在附件列表
+- 评论不可编辑/删除；更正已发备注 = 追加更正备注；redact（`comment-redact` 或 `PUT /api/v2/comment_redactions/{comment_id}`）永久删改内容且需权限，慎用
+- RESOLUTION NOTE 的 `Submitted by` 取 `zendesk-agent/.env` 的 `SUBMITTED_BY`
+- 写权限检查：`config-show` 的 `oauthScope` 需含 `tickets:write`；缺失时 `config-set oauth-scope "tickets:read tickets:write"` + `oauth-login`
 
 ## Agent 边界
 
