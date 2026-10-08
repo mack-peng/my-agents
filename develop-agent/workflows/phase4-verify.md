@@ -38,7 +38,7 @@ cd ~/ci-lite
 ./scripts/build.sh <project> <test-branch>
 ```
 
-- project：`door-adminpro` / `official-website` / `door-applets-bg` / `door-applets`（从项目 AGENTS.md 或用户确认）
+- project：`door-adminpro` / `official-website` / `humanbench-web` / `door-applets-bg` / `door-applets`（从项目 AGENTS.md 或用户确认）
 - 返回 BUILD ID（10 位大写 hex）
 - 构建日志：`{project}/output/{BUILDID}/build.log`
 
@@ -54,9 +54,13 @@ cd ~/ci-lite
 - 生产通道未配置，仅支持 preprod
 
 **小程序（door-applets）**：deploy 即上传微信平台（robot 2），不是服务器部署。
-- 版本号缺省自动生成 `vYY.MM.MMDTNN`（如 `v26.09.17T01`）；日志见 `{project}/output/{BUILDID}/upload.log`
+- 版本号缺省自动生成 `vYY.MM.DDTNN`（如 `v26.09.17T01`）；日志见 `{project}/output/{BUILDID}/upload.log`
 - 上传后在微信公众平台「版本管理 → 开发版本」手动「选为体验版」
 - 小程序无法由协调器自动验证，验收依赖真机复测
+
+**Web（humanbench-web）**：strategy `rsync-dir`，纯静态 dist 同步到站点目录（宝塔 Node/PM2 服务读磁盘即生效，无需重启）。
+- 构建期 env 见 `config/env/humanbench-web.env`（`VITE_*`，改后需重新构建）
+- 站点 nginx 反代（`/wx-api/` `/r/` `/og/`）不属于 ci-lite 产物，需在站点配置中维护
 
 ### 5. 线上验证
 

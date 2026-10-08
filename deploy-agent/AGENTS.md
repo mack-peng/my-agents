@@ -1,8 +1,9 @@
 # deploy-agent — 构建/部署（ci-lite）
 
 > 本目录为构建/部署入口。原 Dagger 容器栈在 Mac mini（16GB）上因内存限制停用，
-> 构建部署统一由 ci-lite（`~/ci-lite`）执行，已覆盖全部四个项目——
-> `door-adminpro` / `official-website` / `door-applets-bg` / `door-applets`（小程序上传 2026-09-17 迁入）。
+> 构建部署统一由 ci-lite（`~/ci-lite`）执行，已覆盖全部七个项目——
+> `door-adminpro` / `official-website` / `humanbench-web`（2026-09-30 迁入）/ `door-applets-bg` / `door-applets`（小程序上传 2026-09-17 迁入）
+> / `classpets-frontend` / `classpets-backend`（2026-09-30 迁入）。
 > morph-cli 不再有任何在用能力，本文件只保留命令映射供追溯。
 
 ## 命令映射（morph-cli → ci-lite，实际操作请读 `~/ci-lite/AGENTS.md`）
