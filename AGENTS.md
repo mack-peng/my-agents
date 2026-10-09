@@ -7,8 +7,8 @@ No build, test, or lint at the root level.
 
 ## Directory conventions
 
-- **22 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
-- All 23 documented agent directories on disk have a reference doc (`test-agent/` has none — effectively abandoned).
+- **29 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
+- All 30 agent directories on disk have a reference doc (29 × `AGENTS.md` + 1 × `AGENT.md`); the former `test-agent/` (undocumented) no longer exists.
 - Most agents are CLI-tool wrappers — the CLI is installed globally, not per-directory. Commands and auth are documented inside each agent's markdown.
 - No `package.json`, root workspace config, or shared dependency management.
 - **No `opencode.json`** anywhere in the repo.
@@ -23,6 +23,7 @@ No build, test, or lint at the root level.
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`cssprobe-agent/`** — runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser. Produces structured reports with DEFINITE/INDEFINITE/UNVERIFIABLE confidence levels.
+- **`seo-agent/`** — OpenCode-native SEO review & design agent. Five workflows: SEO audit / fix design (file-level change groups for code-agent) / page-purpose blueprint / AI-visibility sampling / keyword-intent research. **只出设计不改代码**；抓取委托 firecrawl-agent / browser-agent。Knowledge base in `seo-agent/references/`（含 `google-currency.md` 时效账本），skill 包移植自 yao-geo-skills（MIT，见 `seo-agent/.agents/skills/README.md`）。输出落 `seo-agent/output/`（gitignored）。
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 
 ## Skills

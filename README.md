@@ -27,6 +27,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
 | [deploy-agent](./deploy-agent) | [ci-lite](../ci-lite)（`~/ci-lite`） | 构建/部署：四项目 build/deploy/ps/status/clean 脚本（Dagger 栈已退役） |
 | [planka-agent](./planka-agent) | `planka-cli` | Planka 看板：project、board、card、member |
+| [seo-agent](./seo-agent) | OpenCode 原生 | SEO 审查与优化设计：站点/前端项目审查、修改设计、页面目的适配、AI 可见性监测、关键词意图调研 |
 
 ### 流水线串联
 
@@ -68,9 +69,9 @@ cd code-agent
 my-agents/
   AGENTS.md             # 本文档
   <agent-name>/
-    AGENTS.md           # agent 参考文档（18 个目录）
+    AGENTS.md           # agent 参考文档（30 个目录）
     AGENT.md            # 少数 agent 使用单数形式（dify-agent/）
-    skills/             # 技能定义（仅在 feishu-agent 内部）
+    skills/ 或 .agents/skills/  # 部分 agent 自带技能包（feishu-agent / strk-agent / seo-agent）
 ```
 
 ## 快速开始
