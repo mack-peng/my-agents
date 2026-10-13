@@ -42,6 +42,11 @@ gitee-agent 执行：
   5. FE Bugfix 模板的 Problem Solving Process（Description / Reason / Solution / Scope Of Impact / Test Result）**用中文填写**，取自 Phase 1 Problem 与 Phase 3/4 结论
   6. 描述写入临时文件（如 `/tmp/develop-mr-<repo>.md`），`gitee-cli pr create --body "$(cat ...)"`
 
+- 创建后 **PR 保鲜**（多流并行时 master 可能已在分支切出后前进，导致 PR 创建即 `mergeable=false`）：
+  - `git fetch origin && git merge origin/master` 入开发分支并 push（禁止 rebase / force push）
+  - 解冲突 golden path：注册类清单文件（如 `db.changelog-master.yaml`）**保留双方条目**并保持文件名排序；解完 `git diff --check` 确认无残留 marker；跑项目级快检（typecheck / 编译 / yaml 解析）
+  - `gitee-cli pr view <number> --json` 确认 `mergeable=true` 后再进入用户 review
+
 ### 3. 用户 Review
 
 - 协调器展示 PR URL
@@ -51,6 +56,7 @@ gitee-agent 执行：
 ### 4. 委托 gitee-agent 合并
 
 gitee-agent 执行：
+- 合并前复查 `mergeable=true`（review 期间 master 可能再次前进；不满足则回到第 2 步做 PR 保鲜）
 - `gitee-cli pr review <number> --action approve`
 - `gitee-cli pr merge <number>`
 

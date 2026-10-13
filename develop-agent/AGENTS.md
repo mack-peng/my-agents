@@ -197,8 +197,8 @@ Develop Agent 已加载。模式：Session 模式
 使用 ci-lite（`~/ci-lite`）构建并部署到 preprod 环境。
 
 流程：
-0. **确认切换到测试分支**（如 `test-preprod-*`），再从开发分支 cherry-pick commits
-1. 询问测试分支名称（不存在则新建），cherry-pick Phase 3 commits → push
+0. **确定测试分支**：默认沿用**上次部署的分支** —— `cd ~/ci-lite && ./scripts/status.sh <project>` 取最近一条部署记录的 BRANCH（无部署记录时按新建处理）
+1. 测试分支已存在 → 拉到最新后 cherry-pick Phase 3 commits；**需新建分支时，必须先向用户确认分支名**，再从 master 切出。完成后 push
    > 冲突时优先 `git checkout --theirs <file>` 接受开发分支版本，再 `git cherry-pick --continue`
 2. ci-lite `scripts/build.sh` 构建测试分支 → 获得 BUILD ID
 3. ci-lite `scripts/deploy.sh` 部署到 preprod → 获得 DEPLOY ID
@@ -226,6 +226,11 @@ Develop Agent 已加载。模式：Session 模式
 - **Commit message**：`<type>(<scope>): <简短描述>`，**全部使用英文**，禁止中文 commit message
 - **禁止 force push**：禁止 `git push --force`。如需修改已推送的 commit，追加新 commit
 - **版本号更新**：默认使用 `npm version patch`，自动创建 git tag
+
+## 代码规范
+
+- **只在非常规情况下做注释**：代码靠命名与结构自描述；仅对非常规实现（非显而易见的设计决策、坑位规避）添加注释
+- **注释使用英文**
 
 ## TODO 执行纪律
 

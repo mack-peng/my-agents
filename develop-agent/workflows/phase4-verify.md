@@ -11,23 +11,35 @@
 - commit hash 列表
 - 修改范围摘要
 
-向用户确认：
-- 部署目标（preprod）
-- 测试分支名称（若不存在则新建）
+- 部署目标：preprod（固定，无需确认）
+- 测试分支：**默认沿用上次部署的分支**，无需询问；仅当需要新建分支时，先向用户确认分支名
 
-### 2. 创建测试分支并 cherry-pick
-
-**注意：不要直接在开发分支上构建。** 应从 master 创建专用测试分支，将开发分支的 commits cherry-pick 上去。
+**确定默认测试分支**：查询 ci-lite 部署记录，取最近一条的 BRANCH：
 
 ```bash
+cd ~/ci-lite && ./scripts/status.sh <project>
+# 输出按时间倒序，第一行的 BRANCH 即上次部署分支
+# 无部署记录 → 按新建处理，需用户确认分支名
+```
+
+### 2. cherry-pick 到测试分支
+
+**注意：不要直接在开发分支上构建。** 测试分支已存在是常态（默认沿用上次部署分支），拉到最新后 cherry-pick 增量 commits；仅当确认需要新建时，才从 master 创建：
+
+```bash
+# 复用（默认路径）
+git checkout <test-branch>
+git pull origin <test-branch>
+git cherry-pick <commit1> <commit2> ...   # Phase 3 的所有 commits
+git push origin <test-branch>
+
+# 新建（需用户确认分支名）
 git checkout master
 git pull origin master
 git checkout -b <test-branch>
-git cherry-pick <commit1> <commit2> ...   # Phase 3 的所有 commits
+git cherry-pick <commit1> <commit2> ...
 git push origin <test-branch>
 ```
-
-> 若测试分支已存在，先拉到最新，再 cherry-pick 增量 commits。
 
 ### 3. 使用 ci-lite 构建
 
