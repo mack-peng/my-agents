@@ -11,8 +11,8 @@
 - 所有已确认的 Requirement
 
 从 Phase 2 获取（如有）：
-- FE Code Design 路径（`code-design-agent/code_design/{fe-project}.code-design.md`）
-- BE Code Design 路径（`code-design-agent/code_design/{be-project}.code-design.md`）
+- FE Code Design 路径（`output/{fe-project}.code-design.md`）
+- BE Code Design 路径（`output/{be-project}.code-design.md`）
 - 两份文档中的变更组编号（C1、C2…）与待确认项结论
 
 ### 2. 协调器创建开发分支

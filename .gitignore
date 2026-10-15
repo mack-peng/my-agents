@@ -32,9 +32,6 @@ design-agent/projects/
 input/
 output/
 
-# code-design-agent workspace
-code_design/
-
 # dify-builder-agent workspace (DSL-specific, temporary)
 dify-builder-agent/scripts/
 

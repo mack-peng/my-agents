@@ -172,5 +172,5 @@ Tech changes: 用不超过 3 句话说明怎么改
 
 ## 命名规范
 
-- 本地文件：`code_design/{project-name}.code-design.md`（FE / BE 各一份，kebab-case）
+- 本地文件：`output/{project-name}.code-design.md`（FE / BE 各一份，kebab-case；相对工作台根目录 `~/Agents`）
 - 飞书节点标题：`{项目} — FE Code Design：{需求}` / `{项目} — BE Code Design：{需求}`

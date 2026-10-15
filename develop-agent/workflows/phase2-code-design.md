@@ -71,6 +71,6 @@
 
 ## 产出
 
-- `code-design-agent/code_design/{fe-project}.code-design.md`
-- `code-design-agent/code_design/{be-project}.code-design.md`
+- `output/{fe-project}.code-design.md`
+- `output/{be-project}.code-design.md`
 - 飞书模式：Code Design 知识库中的两个文档链接

@@ -15,7 +15,7 @@ No build, test, or lint at the root level.
 
 ## Agents that differ from the wrapper pattern
 
-- **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency.
+- **`design-agent/`**, **`code-agent/`**, **`code-design-agent/`** — OpenCode-native agents with no external CLI dependency. code-design-agent 产出的 Code Design 文档落 `output/`（与 design-agent 的 `design-agent/output/` 区分）。
 - **`develop-agent/`** — 六阶段需求开发协调器。委托 design-agent / code-design-agent / code-agent / ci-lite（`~/ci-lite` 构建部署工作区）/ gitee-agent / feishu-agent 串行执行，每阶段需人工 sign-off。支持飞书持久化（`USE_FEISHU=true`）或 Session 模式，通过 `.env` 配置。`.env` gitignored。
 - **`deploy-agent/`** — 构建/部署入口（Dagger 栈已退役）。不直接执行构建，统一走 ci-lite（`~/ci-lite`：读其 `AGENTS.md` 后执行 `scripts/`）；文档含 morph-cli → ci-lite 命令映射。
 - **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
@@ -39,13 +39,12 @@ No build, test, or lint at the root level.
 
 ## Non-agent directories
 
-- `code_design/` — project workspace for code-design-agent on a specific project (agro-mall-c-end). Not an agent itself.
 - `tmp/` — temporary working scripts and test artifacts. Gitignored.
 
 ## Working assets (do not commit)
 
 - `input/` — inbound work files (DSL exports, user-provided YAML, reference data). Gitignored.
-- `output/` — outbound artifacts (generated DSL, specs in progress). Gitignored.
+- `output/` — outbound artifacts (generated DSL, specs in progress, code-design-agent 的 Code Design 文档). Gitignored.
 - `design-agent/output/` and `design-agent/projects/` — agent-scoped working directories. Gitignored.
 - These are local working assets, not source code. They should never be pushed to GitHub.
 - All agents read from and write to these directories freely.
