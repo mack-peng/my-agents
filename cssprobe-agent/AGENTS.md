@@ -45,6 +45,10 @@
 cssprobe-cli open <url> --headed --viewport 1280x720
 ```
 
+- 本地 HTML 文件也可以直接打开：`cssprobe-cli open ./page.html`
+- 打开后可用 `cssprobe-cli status` 查看会话状态
+- 全部检查结束后用 `cssprobe-cli close` 关闭会话
+
 如果页面需要登录：
 1. 先用 `open` 打开页面
 2. 让用户在浏览器中登录
@@ -53,6 +57,8 @@ cssprobe-cli open <url> --headed --viewport 1280x720
 ### 第三步：执行检查
 
 根据用户选择，运行对应检查。所有命令都是非阻塞的。
+
+需要打开弹窗、展开菜单等交互时，可以自己操作页面（`click` / `hover` / `type` / `wait-for`），不必每次都让用户手动操作。
 
 ### 第四步：解读结果
 
@@ -68,6 +74,7 @@ cssprobe-cli open <url> --headed --viewport 1280x720
 - 换个视口大小（如手机 375x812 或桌面 1920x1080）再检查
 - 检查其他区域
 - 解决问题后重新验证
+- 不再继续时，主动关闭浏览器会话（close）
 
 ## 检查类型（内部参考，不要展示给用户）
 
@@ -75,7 +82,10 @@ cssprobe-cli open <url> --headed --viewport 1280x720
 
 ```bash
 cssprobe-cli open <url> --headed --viewport 1280x720
-cssprobe-cli layout <selector>
+cssprobe-cli layout <selector>                     # ASCII 布局图
+cssprobe-cli tree <selector>                       # DOM 树结构
+cssprobe-cli inspect <selector>                    # 运行时 CSS（--brief 只看告警）
+cssprobe-cli screenshot --out /tmp/page.png        # 截图留证（--full-page 整页）
 ```
 
 ### 滚动检查
@@ -90,7 +100,10 @@ cssprobe-cli findings <selector>
 
 ```bash
 cssprobe-cli open <url> --headed --viewport 1280x720
-# 让用户打开弹窗
+# 优先自己打开弹窗（知道触发按钮的 selector 时）
+cssprobe-cli click <触发按钮的 selector>
+cssprobe-cli wait-for <弹窗的 selector>            # 等弹窗出现
+# 或让用户手动打开弹窗
 cssprobe-cli inspect <selector>
 ```
 
@@ -119,9 +132,41 @@ cssprobe-cli state-save --name mysite
 
 # 方式三：导入已有 cookies
 cssprobe-cli state-import cookies.txt --name mysite
+# 也支持 --out <路径> 指定输出、--merge <旧状态> 合并 cookie，或从 stdin 读取
 cssprobe-cli open <url> --state ~/.cssprobe-cli/states/mysite.json
 cssprobe-cli inspect <selector>
 ```
+
+### 修复验证（不改代码验证修复方案）
+
+```bash
+cssprobe-cli inject-css "<selector> { max-height: 80vh; overflow: auto; }"
+cssprobe-cli inspect <selector>
+```
+
+注入的 CSS 只在当前会话生效，用来确认修复方向是否有效；验证完可刷新页面还原。
+
+### 交互操作（打开弹窗/菜单、填写表单）
+
+```bash
+cssprobe-cli click <selector>              # 真实鼠标点击（支持自定义 React 组件）
+cssprobe-cli hover <selector>              # 悬停
+cssprobe-cli type <selector> "文本"         # 输入（--sequential 适合自定义编辑器）
+cssprobe-cli wait-for <selector>           # 等待元素出现（也支持 --js 谓词 / --network-idle）
+```
+
+### 进阶（必要时）
+
+```bash
+cssprobe-cli eval "<js 表达式>"             # 在页面上下文执行 JS
+cssprobe-cli playwright "page.xxx(...)"    # 执行 Playwright API
+cssprobe-cli run flow.js                   # 执行多步流程脚本
+```
+
+### 通用约定
+
+- 结构化解析统一加 `--json`，用 `jq` 处理，例如：`cssprobe-cli findings .modal --json | jq '.findings[]'`
+- 检查全部结束后 `cssprobe-cli close` 关闭会话；`close --all` 可清理所有会话
 
 ## 视口选择（内部参考，不要展示给用户）
 
@@ -165,7 +210,7 @@ cssprobe-cli inspect <selector>
 
 助手：好的，我来打开页面。
 [执行 cssprobe-cli open https://example.com --headed --viewport 1280x720]
-页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"OK"。
+页面已在浏览器中打开。请在浏览器中打开弹窗，然后告诉我"OK"。（如果知道弹窗触发按钮的选择器，我也可以自己点开）
 
 用户：OK
 
