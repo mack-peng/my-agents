@@ -11,6 +11,11 @@ GLab 是一个开源 GitLab CLI 工具，将 GitLab 带到终端中。
 - 向 GitLab Duo Chat 提问 Git 相关问题
 - 管理 GitLab Kubernetes agents
 
+### 工作约定
+
+- **评论语言默认中文**：通过本 agent 发布到 MR / Issue / 讨论的评论（`glab mr note`、`glab issue note` 等）默认使用中文，仅当用户明确要求其他语言时切换；技术标识（commit SHA、`file:path:line`、issue ID、代码标识符）保持原样。
+- **发布前确认**：向 MR / Issue 发布评论等写操作前先向用户确认（上游 workflow 已有门禁时遵守其门禁）。
+
 ### 安装
 
 ```bash
