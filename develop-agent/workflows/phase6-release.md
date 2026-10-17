@@ -1,4 +1,4 @@
-# Phase 5: Release
+# Phase 6: Release
 
 委托 gitee-agent 提交 PR 并合并，委托 feishu-agent 更新 Develop 任务文档。
 
@@ -12,6 +12,9 @@
 
 从 Phase 4 获取：
 - 验证结果（全部通过）
+
+从 Phase 5 获取：
+- review.md 结论（blocking 已清零；非阻塞项处理结论）
 
 向用户确认：
 - 目标 base 分支（默认 master）
@@ -36,7 +39,7 @@ gitee-agent 执行：
 
 - 填充规则（对齐 `ticket-agent/workflows/phase5-mr-bobcat.md`，**由协调器生成，不留给提交者**）：
   1. **严格保持模板结构不变**，各 section 的占位提示替换为实际内容
-  2. **Self-checklist 由协调器依据 Phase 1-4 证据逐项判定并勾选**（如：diff 自审、typecheck/lint/构建通过、preprod 验证、可回滚、无调试代码、原子 commit、conventional commits）；不适用项按模板自身的 `not applicable` 约定标注，不虚构勾选
+  2. **Self-checklist 由协调器依据 Phase 1-5 证据逐项判定并勾选**（如：diff 自审、typecheck/lint/构建通过、preprod 验证、可回滚、无调试代码、原子 commit、conventional commits）；不适用项按模板自身的 `not applicable` 约定标注，不虚构勾选
   3. 与 Code Design 存在差异时：先在 MR 评论中列出差异说明（满足「marked them out and added comments」），再勾选对应项
   4. References 表：Code Design Doc 填飞书链接；Jira / Zendesk / TL / Reviewer 无实际值时填 `not applicable`
   5. FE Bugfix 模板的 Problem Solving Process（Description / Reason / Solution / Scope Of Impact / Test Result）**用中文填写**，取自 Phase 1 Problem 与 Phase 3/4 结论
@@ -64,20 +67,20 @@ gitee-agent 执行：
 
 通过 feishu-agent 更新 Develop 任务文档：
 
-**追加 Phase 5 章节**：
+**追加 Phase 6 章节**：
 ```markdown
-## Phase 5: Release
+## Phase 6: Release
 - **PR**: #{number} {title}
 - **状态**: merged
 
-## Phase 5 TODO
+## Phase 6 TODO
 - [x] gitee-agent 创建 PR
 - [x] 用户 review 通过
 - [x] gitee-agent approve + merge
-✅ Phase 5 Sign-off: 已完成
+✅ Phase 6 Sign-off: 已完成
 ```
 
-> Spec 和 Code Design 已在 Phase 1/2 上传到各自知识库，Phase 5 不重复上传。
+> Spec 和 Code Design 已在 Phase 1/2 上传到各自知识库，Phase 6 不重复上传；评审报告（review.md）随任务产物留档，不单独上传。
 
 ### 6. 输出流程摘要
 
@@ -91,14 +94,15 @@ develop-agent 全流程完成
 | 2 Code Design | code-design-agent | 跳过 / Code Design: {name}.md |
 | 3 Code | code-agent | {n} files, commit {hash} |
 | 4 Verify | ci-lite | Build {bid} → Deploy {did} |
-| 5 Release | gitee-agent | PR #{num} → merged |
+| 5 Code Review | code-review-agent | review.md（{结论}） |
+| 6 Release | gitee-agent | PR #{num} → merged |
 ```
 
 ## Sign-off 条件
 
 - [ ] PR 已创建
 - [ ] PR 已 approve + merge
-- [ ] 飞书模式：Develop 文档已追加 Phase 5 章节（含最终摘要）
+- [ ] 飞书模式：Develop 文档已追加 Phase 6 章节（含最终摘要）
 - [ ] 完整流程摘要已输出
 
 ## 产出
