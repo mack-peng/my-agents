@@ -49,7 +49,7 @@
 
 进入目标项目后先执行：
 
-1. `which ocr` → 未安装按 `AGENTS.md` 的"安装检查"引导
+1. `which ocr` + `git --version`：未安装且 git ≥ 2.41 → 按 `AGENTS.md` 安装引导；git < 2.41 或无法安装 → 走 `git diff` 兜底（`git diff --stat -M` / `--numstat` 做文件选择），并在报告限制中记录
 2. 涉及代码结构分析 → `.codegraph/` 存在，否则提示 `codegraph init -i`
 3. 涉及样式变更 → `.cssgraph/` 存在（可选，否则提示 `cssgraph init`）
 4. 已读取目标项目 `AGENTS.md`
@@ -59,8 +59,8 @@
 
 ## Phase 1: 建立评审索引
 
-1. 获取变更概览：变更文件列表、文件数、行数（可先用 `ocr delegate preview` 生成 reviewable 清单与 ref 元数据作为分组依据）
-2. 按模块/功能分组，识别评审 batch；单 batch ≤ 6 checkpoint
+1. 获取变更概览：优先运行 `script/review-scope.sh`（在目标仓库执行；`--from A --to B` / `--commit` / 工作区模式）得到有效评审面 JSON 与 batch/fast 判定；ocr 可用时叠加 `ocr delegate preview` 的 reviewable 清单；两者都不可用时 `git diff --stat -M` + `--numstat` 对照口径手工计算
+2. 按模块/功能分组，识别评审 batch；单 batch ≤ 6 checkpoint。触发快通道（`AGENTS.md`：有效评审面 ≤ 8 且 ≤ 300 行且单一 guideline scope）时：跳过 `batch-plan.md`，`review-index.md` 标注 `mode: fast`，全部 checkpoint 由单 reviewer pass 完成，Phase 4 直接拼装 `review.md`；最小阅读集 = 本文件 + 方向 workflow + `templates/review-artifacts.md` 的卡片 / review.md 两节
 3. 需求合约先读 routing 深度（标题、Requirement 编号、关键决策），不整读全文
 4. 建 requirement routing map：每个 checkpoint 记 spec/工单源指针、Code Design 源指针、关联变更文件、guideline scope、目标 card 路径
 5. 一个 Requirement 映射大 diff 时，先按 repository / feature area / file group / symbol group / execution path 拆 checkpoint
@@ -85,7 +85,10 @@
 **纪律**：
 
 - 一轮一批：一个 pass 只做一个 batch（+ 前置里列出的 shared shard contract），落盘并更新 `TASK_STATE.md` 后才开下一 batch
+- **禁止并行评审**：同一时间只允许一个 batch reviewer 在跑；不并行派发多个 sub-agent（宿主载荷限制会导致派发失败，且验证命令互相争用环境）
+- Sub-agent 派发 prompt 自包含但控制体量（建议 ≤ 100 行）：给契约切片、diff 获取命令、关注点、卡片路径即可，细节让 reviewer 自行读文件；派发被载荷截断时逐条重发
 - 不因相关文件已打开就顺手继续另一 batch 的 checkpoint；靠 artifact 交接
+- 运行类验证（rspec / jest 等）每测试文件至多执行一次，跨批重复时只在一个批跑或合并到最终验证；无法运行 / 超时 → 记录 blocked，不阻塞卡片
 - card 达软上限（120 行）先删重复叙述，再拆分或移证据到 `evidence/<slug>.md`
 
 ---
@@ -114,6 +117,13 @@
 
 ---
 
+## 失败与增量规则
+
+- **reviewer 失败 / 取消**：用相同 batch 编号与卡片路径重派，卡片覆盖写；`TASK_STATE.md` 记录 attempt 次数与失败原因；不新增 batch 编号
+- **round 2+ 触发**：MR 出现新 commit、或既有 issue 被上游修复推送变化时启动增量轮：新建 `review-round-delta.md`，只检查「新增/变更文件 + registry 中 Open / Needs confirmation 的 issue」，不重放历史；issue 更新状态（Fixed / Obsolete）而非删除
+
+---
+
 ## Hard Stop
 
 - Phase 1 完成后停止自身深度分析（sub-agent 模式下由 coordinator 继续分派 batch reviewer）
@@ -130,7 +140,7 @@
 
 - diff 源与元信息已解析，或记录了阻塞原因
 - `review-index.md` 存在并记录输入、shard/card 映射、readiness，且不承载无界需求表
-- 宽评审触发时 `batch-plan.md` 存在，且深度评审遵循其 batch 边界
+- 宽评审触发时 `batch-plan.md` 存在，且深度评审遵循其 batch 边界；快通道（`mode: fast`）时可省略
 - `issue-registry.md` 存在，含汇总计数、blocking id、近期变化 id、shard/详情路径
 - 每个 in-scope checkpoint 有低上下文 card，或 index 记录阻塞理由
 - 无 card 依赖超过 3 个上游 card（除非用 shared shard contract）

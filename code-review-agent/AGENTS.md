@@ -20,8 +20,9 @@
 | **工单评审** | 用户提供工单链接（Zendesk / Jira）+ MR，要求评审变更 | `workflows/ticket-review.md` |
 | **项目评审** | 用户提供 Spec + Code Design + MR，要求逐条对照 | `workflows/project-review.md` |
 | **文件评审** | 用户指定文件路径，要求评审单文件/模块 | `workflows/file-review.md` |
+| **MR 评审（无工单 / 无 Spec）** | 仅提供 MR（内部任务 / 维护类 / CI 修复等），无工单与 Spec | `workflows/mr-review.md` |
 
-禁止在未判明方向前开始深度评审。两个方向在解析完输入后都进入共用流程 `workflows/review-phases.md`。
+禁止在未判明方向前开始深度评审。各方向在解析完输入后都进入共用流程 `workflows/review-phases.md`。
 
 ## 需求合约来源
 
@@ -34,6 +35,7 @@
 | Spec（飞书文档） | 委托 feishu-agent | 项目方向 |
 | Code Design（本地） | 直接 Read（`output/` 等） | 项目方向 |
 | Code Design（Confluence / 飞书） | 同 Spec 的 acli-agent / feishu-agent | 项目方向 |
+| MR 描述 + CI / 运行证据 | 委托 gitlab-agent / github-agent：`glab mr view` / `gh pr view`；job trace 取失败证据 | MR 方向（无工单 / 无 Spec） |
 
 **第一手委托**：需求合约直接委托第一手 agent——工单 → `zendesk-agent`（Zendesk）/ `acli-agent`（Jira），MR → `gitlab-agent`，PR → `github-agent`；不经 `ticket-agent` 等协调器中转。
 
@@ -49,7 +51,11 @@
 | 3 | Guideline Check | `guideline-checks/backend.md`、`frontend.md`、`project-heuristics.md` |
 | 4 | Final Contract & 机械拼装 | `final-review-contract.md`、`review.md` |
 
-**评审规模阈值**（任一触发即用分批评审 + 低上下文 artifact）：变更文件 > 8、变更行数 > 500、跨多个独立功能模块/Requirement、同时涉及前后端。明细见 `workflows/review-phases.md`。
+**有效评审面**：变更文件数扣除纯重命名（内容 100% 相同，R100）、纯拷贝、机器生成数据文件（VCR cassette / snapshot / fixture 快照）后的数量。规模阈值按有效评审面判断，不按原始文件数。**计算用 `script/review-scope.sh`**（在目标仓库执行；输出 JSON：有效文件数/行数/guideline scope/batch-fast 判定），不靠人工心算；JSON 摘要记入 `review-index.md`。
+
+**评审规模阈值**（任一触发即用分批评审 + 低上下文 artifact）：有效评审文件 > 8、代码变更行数 > 500、跨多个独立功能模块/Requirement、同时涉及前后端（多 guideline scope）。明细见 `workflows/review-phases.md`。
+
+**快通道**（全部满足时）：有效评审文件 ≤ 8 且代码变更行数 ≤ 300 且单一 guideline scope → 单 pass 完成全部 checkpoint，直接拼装 `review.md`；省略 `batch-plan.md` / `final-review-contract.md`。明细见 `workflows/review-phases.md`。
 
 ## 委托规则
 
@@ -72,21 +78,16 @@
 
 - 若 runtime 提供可调用的 sub-agent 工具，大面积 Diff 评审默认由 root agent 派发 sub-agent 分批审查。Root agent 只读 compact 索引与最终 contract，不读全部 diff。
 - Sub-agent 单层：所有 sub-agent 由 root agent 派发，sub-agent 之间不得互相派发。
+- **禁止并行评审**：同一时间只允许一个 batch reviewer 运行；该 batch 的 card 落盘并更新 `TASK_STATE.md` 后才能派发下一个。逐条派发为默认方式（多任务同发会超宿主载荷上限导致派发失败，且验证命令互相争用环境）。
 - Fallback 模式仅当 sub-agent 工具不可用/不可调用、或用户明确禁止时使用；fallback 下一次只完成一个 batch，完成后停止并汇报 checkpoint。
 - **禁止在一个长上下文 pass 中连续完成所有文件的深度评审 + 最终报告汇总。**
 - 量化上限（card 行数、依赖预算、batch 容量、shard 升级路径）见 `templates/review-artifacts.md` 的 Context Caps。
 
 ## Issue 分级与 Stance
 
-**Severity**
-
-- **P1**：生产 breakage、数据丢失、安全/隐私问题、迁移风险、需求阻塞级偏差
-- **P2**：功能性 bug、重要需求遗漏、脆弱集成、高风险行为缺少验证
-- **P3**：低风险可维护性、小 UI/文案偏差、次要测试缺口
-
-**Stance**：`[must]` 合并前必须处理｜`[recommend]` 强烈建议｜`[non-blocking]` 不阻塞。P1/P2 通常为 `[must]`。
-
-issue 的唯一权威存储在 `issue-registry.md`；状态含 `Open / Needs confirmation / Fixed / Obsolete`，重复评审更新状态而非删除。分级与状态定义见 `templates/review-artifacts.md`。
+- Severity：`P1` / `P2` / `P3`；Stance：`[must]` / `[recommend]` / `[non-blocking]`（P1/P2 通常为 `[must]`）
+- **完整定义与状态词表以 `templates/review-artifacts.md` 为唯一事实源**（本文件不重复定义，避免双处漂移）
+- issue 的唯一权威存储在 `issue-registry.md`；状态含 `Open / Needs confirmation / Fixed / Obsolete`，重复评审更新状态而非删除。
 
 ## 输出规范
 
@@ -120,10 +121,11 @@ issue 的唯一权威存储在 `issue-registry.md`；状态含 `Open / Needs con
 
 | 文件 | 何时读 |
 |------|--------|
-| `workflows/review-phases.md` | **两个方向解析完输入后必读**（Phase 0–4 + 完成标准） |
+| `workflows/review-phases.md` | **各方向解析完输入后必读**（Phase 0–4 + 完成标准） |
 | `workflows/ticket-review.md` | 工单方向入口 |
 | `workflows/project-review.md` | 项目方向入口 |
 | `workflows/file-review.md` | 文件评审 |
+| `workflows/mr-review.md` | MR 方向入口（无工单 / 无 Spec） |
 | `workflows/publish.md` | 用户要求发布评论到 PR/MR 时 |
 | `templates/review-artifacts.md` | 建/写任一 artifact 前（模板 + Context Caps + 状态词表） |
 | `references/backend-review-checklist.md` | 变更触及后端时（Phase 3） |
@@ -169,7 +171,11 @@ ocr delegate rule <path1> <path2> ... --format json   # 规则按内容分组，
 
 ### 安装检查（未安装时引导）
 
-前置条件：**Git >= 2.41**（`git --version` 检查，低于则 `brew install git` 升级）；Node.js/npm。检查命令：`which ocr`，无输出则执行：
+前置条件：**Git >= 2.41**（`git --version` 检查）；Node.js/npm。检查命令：`which ocr` 与 `git --version`：
+- 未安装且 git ≥ 2.41 → 执行下述安装命令
+- 未安装且 git < 2.41：macOS 可 `brew install git`，Linux 经系统包管理升级至 ≥ 2.41 后再安装；**无法升级（无包管理权限等）→ 不尝试安装**，直接走 `git diff` 兜底选文件，并在 `review.md`「限制与不确定性」记录 ocr 不可用原因
+
+安装命令：
 
 ```bash
 npm install -g @alibaba-group/open-code-review   # 安装后 ocr 全局可用

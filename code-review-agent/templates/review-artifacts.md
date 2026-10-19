@@ -43,6 +43,7 @@
 | batch 共享依赖面 | ≤ 1 个宽泛共享依赖 | — | 拆分为两个 batch 或先产出 shared shard contract |
 | review-index.md / issue-registry.md | 表格 ≤ 20 行 / ≤ 300 行 | — | 行移入 `index-shards/` / `issues/`，root 只留 shard 图、汇总计数、blocking id、readiness |
 | requirement cards 总量 | ≤ 12 个 card / ≤ 1200 行 | — | 分批收敛为 `index-shards` 或 requirement shard contract |
+| 快通道（有效评审面 ≤ 8、≤ 300 行、单一 guideline scope） | 单 card + 直出 `review.md` | — | 省略 `batch-plan.md` / `final-review-contract.md`；`review-index.md` 标 `mode: fast`；issue 在 registry 内联 |
 | final-review-contract.md | ≤ 300 行 | — | 按 repository / feature area / dependency / shared touchpoint 拆 |
 | 单 checkpoint 大 diff | 不承载大 diff | — | 先按 repository / feature area / file group / symbol group / execution path 拆分 |
 
@@ -63,10 +64,12 @@ compact 进度文件；不粘贴需求正文、完整 diff、长测试日志、�
 - Active batch: B1
 - Active checkpoint: `<batch-slug>` / None
 - Last completed batch: None
+- Attempts: B1=1, B2=0（reviewer 失败重派时递增）
 - Next artifact paths:
   - `review-index.md`
   - `batch-plan.md`
   - `requirement-cards/<batch-slug>.md`
+- Retro notes（收尾记录，可选）: 卡点 / 耗时归因 → 改进项
 ```
 
 ---
@@ -84,6 +87,8 @@ compact 进度文件；不粘贴需求正文、完整 diff、长测试日志、�
 - Spec / 工单:
 - Code Design:
 - Repo / branch / commit range:
+- Review mode: batch / fast（fast 时列出省略的 artifact）
+- Scope: `script/review-scope.sh` 输出 JSON 路径 / 摘要（有效文件数 / 行数 / guideline scope）
 
 ## Shard Map
 
