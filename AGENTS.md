@@ -7,8 +7,8 @@ No build, test, or lint at the root level.
 
 ## Directory conventions
 
-- **29 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
-- All 30 agent directories on disk have a reference doc (29 × `AGENTS.md` + 1 × `AGENT.md`); the former `test-agent/` (undocumented) no longer exists.
+- **30 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
+- All 31 agent directories on disk have a reference doc (30 × `AGENTS.md` + 1 × `AGENT.md`); the former `test-agent/` (undocumented) no longer exists.
 - Most agents are CLI-tool wrappers — the CLI is installed globally, not per-directory. Commands and auth are documented inside each agent's markdown.
 - No `package.json`, root workspace config, or shared dependency management.
 - **No `opencode.json`** anywhere in the repo.

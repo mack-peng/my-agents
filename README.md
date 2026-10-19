@@ -27,6 +27,7 @@ AI 工作台 — 常用工作工具封装为独立 agent 目录。人类拆任�
 | [gitlab-agent](./gitlab-agent) | `glab` | GitLab：repo、issue、MR、CI/CD、pipeline |
 | [deploy-agent](./deploy-agent) | [ci-lite](../ci-lite)（`~/ci-lite`） | 构建/部署：四项目 build/deploy/ps/status/clean 脚本（Dagger 栈已退役） |
 | [planka-agent](./planka-agent) | `planka-cli` | Planka 看板：project、board、card、member |
+| [openfilm-agent](./openfilm-agent) | `npx openfilm` | AI 视频：用网页做影片（film.html + window.film.frame(t)），Studio 人机共编、look 校验、render 导出 |
 | [seo-agent](./seo-agent) | OpenCode 原生 | SEO 审查与优化设计：站点/前端项目审查、修改设计、页面目的适配、AI 可见性监测、关键词意图调研 |
 
 ### 流水线串联
