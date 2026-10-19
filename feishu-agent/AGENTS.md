@@ -84,6 +84,7 @@ lark-cli auth status
 ## 已安装的 6 个 Skills
 
 > **⚠️ 快捷命令优先**：云文档、知识库、表格、Markdown、云空间等基础操作使用下方快捷命令，**禁止加载 skill 文件**。仅在需要复杂操作（如 drive 权限管理、wiki 成员管理、sheets 公式/筛选等）时才读取对应的 `SKILL.md` 和 `references/`。
+> **参数以 CLI 自带文档为准**（随 CLI 版本更新，权威；本文件快捷命令可能滞后）：`lark-cli skills read lark-doc/references/lark-doc-fetch.md`（fetch 全参数）、`lark-cli skills read lark-doc`（skill 总览）。
 
 Skills 位于 `feishu-agent/.agents/skills/` 内，仅在使用本 agent 时加载：
 
@@ -105,8 +106,10 @@ Skills 位于 `feishu-agent/.agents/skills/` 内，仅在使用本 agent 时加�
 lark-cli docs +create --api-version v2 --doc-format markdown --content $'# 标题\n\n内容...'
 lark-cli docs +create --api-version v2 --doc-format markdown --parent-token <space_id> --content $'# 标题\n\n...'
 
-# 读取文档
-lark-cli docs +fetch --api-version v2 --doc "<url或token>"
+# 读取文档（--doc-format markdown 直出 Markdown；默认 xml 为 DocxXML 结构）
+lark-cli docs +fetch --api-version v2 --doc "<url或token>" --doc-format markdown
+# 大文档先看结构（章节 + block id），再决定全文 / 局部读取
+lark-cli docs +fetch --api-version v2 --doc "<url或token>" --scope outline --max-depth 3
 
 # 追加内容
 lark-cli docs +update --api-version v2 --doc "<url或token>" --command append --doc-format markdown --content $'...'
