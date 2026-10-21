@@ -15,7 +15,7 @@
 
 ## Step 2 选片型
 
-先跑 `npx -y openfilm@latest skills` 拿最新清单，常用映射：
+先跑 `openfilm skills` 拿最新清单，常用映射：
 
 | 主题 | 推荐 skill |
 |---|---|
@@ -29,7 +29,7 @@
 | 口播小窗 / 讲解主持 | `presenter-pip` |
 | 拼贴 / 手账 / 杂志风 | `collage` |
 
-- 推荐 1–2 个并给一句理由；用户点名片型则直接 `npx -y openfilm@latest skill <name>`，**整篇读完照做**（技能文件夹只读，用到的文件复制进影片工程）
+- 推荐 1–2 个并给一句理由；用户点名片型则直接 `openfilm skill <name>`，**整篇读完照做**（技能文件夹只读，用到的文件复制进影片工程）
 - skill 是方法与质量红线（属于这个主题、用真实数字与品牌、保持可编辑），**不是现成模板**——设计仍要为这个主题现做
 
 ## Step 3 方案 sign-off（未确认不动手）
@@ -47,12 +47,12 @@
 
 按 AGENTS.md「标准工作流 · 做片」执行：
 
-1. `npx -y openfilm@latest open output/<film-name>` 建片（Studio 先在场）
+1. `openfilm open output/<film-name>` 建片（Studio 先在场）
 2. 写页面 + 编排 film.html（`frame(t)` 铁律；一镜一页）
 3. 影片目录内 `look` 循环校验，修到干净（同步勾 TODO）
 4. **第一版完成 → 展示接触表并等用户反馈**（"第一版完成，请确认（OK 继续 / 指出要改的）"），按反馈迭代，不自认为完成
 5. Studio 人机共编（保留 `overrides` 与 `locked` 轨道）
-6. 用户要文件才 `render`；否则 Studio 里预览/导出
+6. 用户要文件才导出：无字幕用 `render`；带字幕走 Studio 导出中心「烧录字幕」（`render` 不含字幕）；否则 Studio 里预览
 
 双版（横 + 竖）就建两个工程（如 `xxx` 与 `xxx-vertical`），页面同源改造、版面重排而非缩放。
 
@@ -62,6 +62,7 @@
 - 每个数字 / 事实的来源
 - 用户下一步能提供什么让片子更好（logo、真实截图、定稿文案）
 - 可改点：哪些文字 / 数字在页面里可直接改
+- 字幕：带字幕成片走 Studio 导出「烧录字幕」，交付前抽开头/中段/结尾 3 帧确认不压字；`render` 不含字幕
 
 ## 反模式
 

@@ -1,6 +1,6 @@
 # openfilm-agent
 
-OpenFilm 封装 — 把 coding agent 变成 video agent：用**网页**做影片（`film.html` + `window.film.frame(t)`），本地浏览器 Studio 人机共编，`look` 自动校验，`render` 导出 MP4。
+OpenFilm 封装 — 把 coding agent 变成 video agent：用**网页**做影片（`film.html` + `window.film.frame(t)`），本地浏览器 Studio 人机共编，`look` 自动校验，`render` 导出无字幕 MP4（带字幕走 Studio 烧录）。
 上游：<https://github.com/openfilm/openfilm>（MIT）· 站点：<https://openfilm.dev>
 
 ## 使用入口（重要）
@@ -26,8 +26,8 @@ openfilm-agent 能为你做什么
 **5. 从示例起步** — 导入官方示例当起点改造
 　示例："导入 one-prompt 示例"
 
-**6. 校验 / 导出** — look 全片校验（确定性 + 报错）或 render 出 MP4
-　示例："校验竖版那支并导出 MP4"
+**6. 校验 / 导出** — look 全片校验（确定性 + 报错）；无字幕 MP4 用 render，带字幕成片走 Studio 烧录导出
+　示例："校验竖版那支并导出带字幕 MP4"
 
 当前环境预检
 - Node ✅ ｜ ffmpeg/ffprobe ✅ ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中
@@ -46,7 +46,7 @@ pgrep -f "openfilm/studio/server/main.mjs" >/dev/null && echo "studio: running" 
 ```
 
 按输出填入模板预检行，如：`Node ✅ v24.1.0 ｜ ffmpeg ✅ 9.0.2 ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中`。
-- 展示用词（面向用户一律说人话，不用术语 / 报错腔）：**渲染引擎**（= 无头浏览器 / Playwright headless shell）｜**检查**（= look）｜**导出**（= render）｜**编辑台**（= Studio）；缺失项写"⏳ 首次使用时自动下载（约 90MB）"，不写命令报错原文。
+- 展示用词（面向用户一律说人话，不用术语 / 报错腔）：**渲染引擎**（= 无头浏览器 / Playwright headless shell）｜**检查**（= look）｜**导出**（= render；带字幕 = Studio 烧录）｜**编辑台**（= Studio）；缺失项写"⏳ 首次使用时自动下载（约 90MB）"，不写命令报错原文。
 
 ## 入口判断
 
@@ -70,12 +70,13 @@ git --version                     # Studio 版本保存需要（本机 ✅）
 - 桌面 app 兜底（自带 ffmpeg + 浏览器，免 CLI 依赖）：<https://openfilm.dev>
 - 不安装官方 skill（`npx skills add openfilm/openfilm` 只有 462B 指针，内容已在本文件）；内置片型技能随 CLI 动态读取，无需安装、不 vendor。
 
-## 入口与命令（`npx -y openfilm@latest <命令>`）
+## 入口与命令（`openfilm <命令>`）
 
+- 本机 `openfilm` 已通过 `npm link` 指向本地 fork `/Users/mack/Open-projects/openfilm/packages/openfilm`；**不要用 `npx openfilm@latest`**（会绕过本地百炼 provider）。链接丢失时重新执行 `cd /Users/mack/Open-projects/openfilm/packages/openfilm && npm link`。
 - `openfilm` — 完整手册（约千字）；**实现/改片前先跑一次**，细节以手册为准
 - `open [folder | url]` — 建/开影片；相对路径按 cwd 解析；GitHub 地址会被复制进 projects 库后打开
-- `look [what] [t | a-b]` — 校验：接触表 + 同一 t 两遍乱序绘制比对 + 页面报错/字体失败/缺失音频/被裁文本检查；`look 4.5` 单帧、`look 3-6` 区间、`look assets/a.mp4` 媒体文件
-- `render [a-b]` — 导出 MP4（`--4k` / `--blur` 运动模糊 / `--alpha` 透明）；**仅当用户明确要文件时**
+- `look [what] [t | a-b]` — 校验：接触表 + 同一 t 两遍乱序绘制比对 + 页面报错/字体失败/缺失音频/被裁文本检查（**不校验字幕**）；`look 4.5` 单帧、`look 3-6` 区间、`look assets/a.mp4` 媒体文件
+- `render [a-b]` — 导出 MP4（画面+混音；**不烧字幕**；`--4k` / `--blur` 运动模糊 / `--alpha` 透明）；带字幕成片走 Studio 导出中心「烧录字幕」；**仅当用户明确要文件时**
 - `get [what]` — 生成配音/音乐/音效/转写/图像/视频（需用户在 Studio → Settings → Providers 用自己的 key 连接服务商；视频 clip 贵，需用户在 Studio 确认）；单独运行可看哪些已连接
 - `skills` / `skill <name>` — 内置片型技能（collage、keynote、long-to-short、lyric-video、motion-graphics、presenter-pip、replicate、screen-demo、vintage-film、whiteboard）：打印后**整篇读完照做**；技能文件夹只读，用到的文件复制进影片工程
 - `openfilm <命令> --help` — 单命令选项
@@ -110,6 +111,12 @@ window.film = {
 
 **字幕**：媒体旁同名 `.vtt`（`vo/1.wav` → `vo/1.vtt`），Studio 据此生成影片字幕；**不要在页面里画字幕**。
 
+- VTT 是字幕源；`get asr` 只提供时间轴，文字必须以口播稿校正（专名、版本号、英文缩写常被听错）。
+- `openfilm look` 看不到字幕；字幕要在 Studio 预览或烧录导出后抽帧验收。
+- 当前 `openfilm render` 只出画面+混音，**不烧字幕**；带字幕成片用 Studio 导出中心勾选「烧录字幕」（自动化可用导出 API 的 `burnSubtitles: true`）。
+- 竖屏字幕默认在画面偏下（约 72% 高度，避开平台 UI）；若压住正文、下一章标题或结尾大字，在 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
+- 字幕位置/样式属于人（`.film/subtitles.json`），不要手改；交付前抽开头/中段/结尾 3 帧看是否压字。
+
 ## 人机协作规则（重要）
 
 - 人在 Studio 随时改片：**改 film.html 前先读**，只改意图内的部分
@@ -128,7 +135,7 @@ window.film = {
 
 **Hard Stop**（不做不请自来的动作）：
 
-- 不 `render`（仅用户明确要文件时）；不替用户做 `get` 媒体（需先配 key；视频 clip 需用户在 Studio 确认）
+- 不 `render`、不自动 Studio 导出/烧字幕（仅用户明确要文件时）；不替用户做 `get` 媒体（需先配 key；视频 clip 需用户在 Studio 确认）
 - 不自动跳过闸门；不把未确认的内部内容做进片子
 - 不动 `locked` 轨道与 `overrides`；不关用户的 Studio
 
@@ -141,19 +148,19 @@ window.film = {
 
 **做片**：
 
-1. 仓库根执行 `npx -y openfilm@latest open output/<film-name>` — 建片并先让 Studio 在场（用户在浏览器里实时看变化、可随时手动编辑）
-2. 写页面 + 编排 film.html（需要片型参考时 `npx -y openfilm@latest skill <name>`）
-3. 在影片目录内 `npx -y openfilm@latest look` 校验（确定性 + 报错），修 → look → 修，直到干净
-4. 用户只看效果 → 无需 render，Studio 里直接预览/导出；用户明确要文件 → `npx -y openfilm@latest render`
+1. 仓库根执行 `openfilm open output/<film-name>` — 建片并先让 Studio 在场（用户在浏览器里实时看变化、可随时手动编辑）
+2. 写页面 + 编排 film.html（需要片型参考时 `openfilm skill <name>`）
+3. 在影片目录内 `openfilm look` 校验（确定性 + 报错；不校验字幕层），修 → look → 修，直到干净
+4. 用户只看效果 → 无需导出，Studio 里直接预览；用户明确要文件 → 无字幕用 `openfilm render`，带字幕用 Studio 导出中心烧录（`render` 不含字幕）
 5. 需要生成的素材 → `get`（先引导用户在 Studio 配好服务商 key）
 
-**改片**：先读 film.html 与相关页面 → 只改意图内部分 → `look` 复验。
+**改片**：先读 film.html、相关页面与 VTT → 只改意图内部分 → `look` 复验。
 
 ## 输入输出
 
 - 影片工程（目录）→ 仓库根 `output/<film-name>/`（gitignored）；`open` 相对路径按 cwd 解析，从仓库根传 `output/<film-name>`，或 `cd output` 后 `open <film-name>`
 - 用户素材 → 仓库根 `input/`：图片 / logo（PNG·SVG）/ 视频（mp4·mov）/ 音频（mp3·wav）/ 文案·数据 / 字体（.ttf/.woff2）。**只把影片用到的拷贝进 `output/<片名>/assets/`**（Studio 媒体池可见、可编辑），其余不动；语义化英文命名；不重编码（裁只改 `#t=`、快慢只改 `speed`）
-- 示例片（可直接当起点）：`npx -y openfilm@latest open https://github.com/openfilm/examples/tree/main/one-prompt`
+- 示例片（可直接当起点）：`openfilm open https://github.com/openfilm/examples/tree/main/one-prompt`
 
 ## 注意事项
 
@@ -171,4 +178,4 @@ window.film = {
 | "改片" / 对已有影片定向修改（菜单 3） | `workflows/edit-film.md` |
 | "打开" / "续接"（菜单 4） | 本文件「入口与命令」直接执行 `open`，无需读 workflow |
 | "从示例起步"（菜单 5） | `open <github url>` 导入后，如需改造按 `workflows/edit-film.md` 流程 |
-| "校验" / "导出"（菜单 6） | 本文件「入口与命令」直接执行 `look` / `render` |
+| "校验" / "导出"（菜单 6） | 本文件「入口与命令」执行 `look`；无字幕 `render`，带字幕走 Studio 烧录导出 |

@@ -48,7 +48,7 @@
 
 ## Step 3 编排设计 → 闸门 2（必须用户确认）
 
-- **选片型**（读 `npx -y openfilm@latest skill <name>` 整篇照做）：
+- **选片型**（读 `openfilm skill <name>` 整篇照做）：
   - 信息类周刊 / 数据故事 → `motion-graphics`（首选）
   - 发布感 / 产品向 → `keynote`；讲解向 → `whiteboard`
 - **分镜表**：镜号 ｜ 时长 ｜ 画面内容 ｜ 动效意图 ｜ 文案（精确到字；文案只来自 Step 2 确认过的内容）
@@ -56,7 +56,7 @@
 
 ## Step 4 制作
 
-按 AGENTS.md「标准工作流 · 做片」：`open output/<film-name>` → 写页面 → `look` 循环 → Studio 人机共编 → 按需 `render`。
+按 AGENTS.md「标准工作流 · 做片」：`open output/<film-name>` → 写页面 → `look` 循环 → Studio 人机共编 → 按需 `render`（有旁白/字幕成片走 Studio 烧录导出，`render` 不含字幕）。
 
 **系列化（周刊复用）**：如果是周期性内容，首期按"可复用模板"做——
 - 每页的标题/数字/文案全部是独立 DOM 元素，集中放一个 `content.js`（或页面顶部常量区）
@@ -68,6 +68,7 @@
 - 内容选取与裁剪记录（可回溯：选了什么、删了什么）
 - 每个数字 / 引用标注原文出处（章节）
 - 系列化：下期最快复用路径
+- 字幕：有旁白时，带字幕成片走 Studio 导出「烧录字幕」；`render` 不含字幕
 - 可改点：哪些文案在 Studio / 文件里可直接改
 
 ## 红线
