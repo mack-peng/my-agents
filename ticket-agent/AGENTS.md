@@ -339,3 +339,4 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 需要回复工单（写操作）→ `use zendesk-agent`；`comment-create` 默认公开，内部备注必须显式 `--private`；`Submitted by` 取 `zendesk-agent/.env` 的 `SUBMITTED_BY`
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
 - **CSS 布局取证**：委托 cssprobe-agent 交互式完成运行时取证，cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli
+- **浏览器会话收尾**：每轮验证结束后必须执行 `cssprobe-cli close`。如确需跨步骤保留会话（如等待部署后复测），先告知用户保留原因，并在复测结束后立即关闭
