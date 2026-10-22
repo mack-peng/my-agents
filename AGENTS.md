@@ -57,6 +57,7 @@ No build, test, or lint at the root level.
 - **design-agent** — produces structured `.spec.md` files in `design-agent/output/`. Its output format uses `## Problem`, `## Solution`, `## Sign-off` sections with table-driven requirements. Do not output implementation specs as YAML — use the design-agent `.spec.md` format instead.
 - Agents have clear boundaries: dify-builder-agent executes modifications; design-agent only reviews and outputs specs, never implements.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
+- **openfilm-agent** — 网页做片（`film.html` + Studio 人机共编）。读其 `AGENTS.md` 后按 workflow 索引执行；**默认不导出**，导出由用户在 Studio 操作；禁止 `openfilm update`（本地 fork）。
 
 ## JSON 处理约定
 
