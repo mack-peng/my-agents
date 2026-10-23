@@ -51,6 +51,8 @@
 | 3 | Guideline Check | `guideline-checks/backend.md`、`frontend.md`、`project-heuristics.md` |
 | 4 | Final Contract & 机械拼装 | `final-review-contract.md`、`review.md` |
 
+**评审启动门禁（Todo List 确认）**：判明方向、解析完输入（MR / 工单 / Spec / diff 范围）后，进入 Phase 1 前必须先用 `todowrite` 向用户输出本次评审的 todo list（评审范围、batch / checkpoint、检查清单、验证方式、预计 artifact），并等待用户确认。**未确认前不得进入 Phase 1/2 深度评审、不得派发 batch reviewer、不得生成最终 `review.md`**；Phase 0 的环境预检与输入解析可先行。用户确认后按 todo list 执行；范围变化时更新 todo list 并重新确认。
+
 **有效评审面**：变更文件数扣除纯重命名（内容 100% 相同，R100）、纯拷贝、机器生成数据文件（VCR cassette / snapshot / fixture 快照）后的数量。规模阈值按有效评审面判断，不按原始文件数。**计算用 `script/review-scope.sh`**（在目标仓库执行；输出 JSON：有效文件数/行数/guideline scope/batch-fast 判定），不靠人工心算；JSON 摘要记入 `review-index.md`。
 
 **评审规模阈值**（任一触发即用分批评审 + 低上下文 artifact）：有效评审文件 > 8、代码变更行数 > 500、跨多个独立功能模块/Requirement、同时涉及前后端（多 guideline scope）。明细见 `workflows/review-phases.md`。
@@ -136,6 +138,7 @@
 
 ## Hard Stop
 
+- **未收到用户对 todo list 的确认前，停止在 Phase 1 之前**（不得开始深度评审或派发 reviewer）
 - 每个 Phase 按 `workflows/review-phases.md` 的 Hard Stop 边界停止
 - `review.md` 交付后停止，等待用户确认，不自动发布评论
 - 如果 context compression 已开始或即将开始，先写完当前 card 再停止
