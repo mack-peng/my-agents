@@ -3,6 +3,8 @@
 `@orangemust/gitee-cli` is a CLI tool for managing Gitee (码云) repos, issues, PRs, releases, and orgs.
 Run via `gitee-cli` (global install) or `npx @orangemust/gitee-cli`.
 
+Inline comments and `pr reply` require gitee-cli >= 0.2.0 (`gitee-cli --version`).
+
 ## Authentication
 
 ```
@@ -129,11 +131,21 @@ gitee-cli pr close <number>                     # Close PR
 gitee-cli pr close <number> --repo <owner/repo> # Explicit repo
 gitee-cli pr close <number> --json              # JSON output
 
-gitee-cli pr comment <number> --body "..."      # Add comment
+gitee-cli pr comment <number> --body "..."      # Add PR (timeline) comment
+gitee-cli pr comment <number> --body "..." --path src/a.ts --line 42      # Inline comment (new-file line)
+gitee-cli pr comment <number> --body "..." --path src/a.ts --position 18  # Inline comment (raw diff position)
+gitee-cli pr comment <number> --body "..." --path src/a.ts --line 42 --commit-id <sha>
 gitee-cli pr comment <number> --repo <owner/repo> --body "..." # Explicit repo
 gitee-cli pr comment <number> --json            # JSON output
 
+gitee-cli pr reply <number> <comment-id> --body "..."  # Reply (flat at same diff position)
+gitee-cli pr reply <number> <comment-id> --body "..." --no-quote --no-mention
+gitee-cli pr reply <number> <comment-id> --body "..." --threaded # Experimental; Gitee ignores it, CLI falls back
+gitee-cli pr reply <number> <comment-id> --body "..." --json # {comment, mode: threaded|inline|pr, fallback, position, threaded_unconfirmed?}
+
 gitee-cli pr comments <number>                  # List all comments
+gitee-cli pr comments <number> --type diff      # Only inline/diff comments
+gitee-cli pr comments <number> --type pr        # Only regular PR comments
 gitee-cli pr comments <number> --repo <owner/repo> # Explicit repo
 gitee-cli pr comments <number> --page <n>       # Pagination
 gitee-cli pr comments <number> --per-page <n>   # Results per page
@@ -159,6 +171,20 @@ gitee-cli pr review-comments <number> --page <n> # Pagination
 gitee-cli pr review-comments <number> --per-page <n> # Results per page
 gitee-cli pr review-comments <number> --json     # JSON output
 ```
+
+### Inline comments / replies
+
+- `--line <n>` is the new-file line number; the CLI resolves it to a diff position automatically.
+- `--position` is the raw diff position, for advanced/manual use.
+- `--path` requires `--line` or `--position`; `--commit-id` defaults to the PR head SHA.
+- `pr reply` default behavior:
+  - Parent is a diff comment → post a new inline comment at the same `path`/position, quoting the parent and mentioning its author.
+  - If the parent's diff position cannot be resolved, it falls back to a regular PR comment.
+  - Parent is a regular PR comment → post a regular PR comment, quoting the parent and mentioning its author.
+- `--threaded` is experimental. Gitee OpenAPI v5 ignores `in_reply_to_id`; the CLI attempts to delete the temporary top-level comment and falls back to a flat reply. **Do not use `--threaded` by default.**
+- `pr review-comments <number>` is now equivalent to `pr comments <number> --type diff`.
+- Gitee's official API does not support resolving comments. Use the Gitee web UI or browser-agent when resolution is required.
+- `--line` fails on binary files, oversized diffs, or files without a patch. Use `--position` or a regular PR comment instead.
 
 ## Release
 
@@ -216,6 +242,10 @@ gitee-cli repo list --json | jq '.[].full_name'
 gitee-cli issue list --json | jq '.[] | {number: .number, title: .title}'
 gitee-cli pr list --json | jq '.[] | select(.state == "open") | .title'
 
+# Reply to the first inline comment
+id=$(gitee-cli pr comments 123 --type diff --json | jq -r '.[0].id')
+gitee-cli pr reply 123 "$id" --body "已修复"
+
 # One-liner install + configure
 npm install -g @orangemust/gitee-cli && echo "token" | gitee-cli auth login --with-token && gitee-cli auth status
 ```
@@ -227,3 +257,6 @@ npm install -g @orangemust/gitee-cli && echo "token" | gitee-cli auth login --wi
 - **Not found** → Repo doesn't exist or token lacks access.
 - **Forbidden** → Token lacks required scopes.
 - **Could not determine repository** → Not in a Gitee git dir and no `--repo` flag.
+- **Line `<n>` was not found on the new side of `<path>`'s diff** → Wrong line or deleted line; use `--position` or a regular comment.
+- **No diff found for `<path>`** → Binary or oversized file without a patch; use `--position` or a regular comment.
+- **Could not determine the commit SHA** → Pass `--commit-id` explicitly.
