@@ -9,6 +9,7 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - **外科手术式修改**。只碰与请求有因果关系的文件和行。不夹带重构、格式化变更、无关清理。发现无关死代码或设计问题时只提出来，不静默修掉。
 - **只清理自己产生的垃圾**。删除自己引入后不再使用的 import、变量、文件、辅助代码，不动原有的死代码。
 - **贴合现有风格**。写代码前先学习并模仿相关现有代码的 import 风格、命名、文件组织、抽象层级、错误处理、状态流和测试写法。如果现有模式明显是 code smell 不要盲目模仿；选择最小、局部可理解的改进方式并说明原因。
+- **样式先定约定**。样式文件按同目录/同类文件的主流写法判断（抽样 ≥3 个），不只看当前文件；新写/重写块按项目主流，存量平铺不主动重构。
 - **优先复用**。可合理复用现有 helper、component、module、service、hook、store、API、测试工具或扩展点时优先复用。评估复用候选时必须检查候选的实际实现、关键调用方、依赖假设和副作用，禁止仅凭相似名称、签名或表面用途判断。
 - **可验证的结果**。非平凡任务先定预期结果，运行 typecheck、lint 等验证，不能验证时记录确切阻塞原因。
 
@@ -39,6 +40,7 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - 确认渲染链路闭合后停止，不展开全局样式表、不拆解第三方组件源码、不遍历组件树
 - **方向不对 → 立即停，问用户补充上下文**。例如："当前追溯到 X，但这看起来不属于你描述的场景。能否确认 Y？"
 - **信任工具结果** — cssgraph/codegraph 返回的匹配项就是答案候选，不要因为样式来源看起来"不属于当前场景"而跳过验证
+- **涉及样式修改** → 按「样式编写规范」执行（新写/重写块强制嵌套，存量平铺不重构）
 
 ### 分支 B：Feature
 **条件**：用户提供 Spec + Code Design 文档（或明确说有完整设计方案）
@@ -77,6 +79,8 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 
 > **反例**：用户说"把 `.foo` 宽度改成 responsive"，只改 `width → max-width` → 忽略了 `position: absolute` 的子元素在 flex 流中错位、DOM 多余的嵌套层级未处理。
 
+0. **先定约定** — 按「样式编写规范 > 先定约定」抽样同目录 ≥3 个同类文件，确认嵌套、命名、token、断点习惯后再改。
+
 ##### 搜索分层：CSS 问题 cssgraph 优先，不要从 codegraph/grep 开始
 
 | 入口 | 第一步 | 第二步 |
@@ -98,6 +102,7 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 ### Phase 3: 编码
 
 - **模仿现有模式** — import 风格、命名约定、组件库选择，参考 Phase 2 调研结果
+- **样式** — 按「样式编写规范」编写；不重复父选择器，不为嵌套而嵌套
 - **批量并行写入** — 同层的新文件（多个新组件）并行写入，减少往返
 - **不写注释** — 用自描述的命名和结构表达意图
 - **英文 Commit** — `type(scope): description`
@@ -108,6 +113,7 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - 交付级：全部完成后跑一次完整验证
 - 类型检查（如 `tsc --noEmit`）
 - Lint 检查（如 `eslint src/ --fix`）
+- 样式：有 stylelint 配置则跑变更文件；无 stylelint 时确认 Less/SCSS 构建/编译无错
 - 修完所有 error 后再交付
 
 ### Hard Stop
@@ -116,6 +122,36 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 - 每个变更组：调研 → 实现 → 验证，逐组循环；不得跳过验证
 - 全部变更组完成后：跑一次完整验证（typecheck / lint / 测试）后停止，不自动推进非代码 follow-up
 - 如果 context compression 已开始或即将开始，先落盘进度（分支 + 变更组状态 + commit）再停止
+
+---
+
+## 样式编写规范（Branch A / Phase 3 通用）
+
+### 先定约定
+
+- 识别样式技术栈：`.less` / `.scss` / `.sass` / `.css` / `*.module.*` / Tailwind / CSS-in-JS。
+- 抽样同目录 ≥3 个同类文件，记录：是否用 `&` 嵌套、命名法（BEM / 前缀 / camelCase）、token / mixin 位置、`@media` 放在块内还是文件末尾。
+- 新写/重写的样式块按项目主流写法；存量平铺文件不主动重构，除非本次需求就是样式重构。
+
+### 嵌套（仅 `.less` / `.scss` / `.sass`）
+
+- 同一父选择器下的状态、伪类、伪元素必须用 `&` 嵌套，不重复父选择器：`&:hover`、`&:focus-visible`、`&.is-active`。
+- 子元素若共享父级前缀（BEM `block__el` 或 `block-el`），用 `&__el` / `&-el` 拼接，不重复父选择器。
+- 独立 class 保持顶层平铺；跨组件覆盖、第三方组件覆盖、全局工具类不塞进组件块。
+- 后代嵌套仅用于 DOM 归属明确的子结构，深度 ≤3；不写 `&__a__b` 链式 BEM。
+- 单条规则、无状态、无子元素时保持平铺，不为嵌套而嵌套。
+- CSS Modules：`:global` 仅用于第三方/全局覆盖，不嵌套在组件块内。
+
+### 复用与命名
+
+- 颜色、间距、字号、圆角、阴影、断点优先复用现有变量 / token / mixin；新增字面量必须说明来源。
+- 新增 class 跟随同目录命名法，不混用 BEM 与 camelCase。
+- 先查 cssgraph 再新增，不复制相邻文件已有的同义样式。
+
+### 验证
+
+- 有 stylelint 配置则跑变更文件；无 stylelint 时至少保证 Less/SCSS 编译通过。
+- 能拿到编译产物时，抽查新增 selector：嵌套已展开、无重复父选择器、特异性符合预期。
 
 ---
 
@@ -155,6 +191,7 @@ cssgraph rule ".container .my-title"  # ← workdir: /path/to/other-project
 ### 原则
 
 - **信任 CodeGraph/CSSGraph 结果** — 不要再用 grep/Read 验证
+- **cssgraph 支持嵌套** — Less/SCSS 的 `&` 会展开为完整 selector，不要因为担心索引失效而写平铺
 - **编辑后注意 staleness banner** — 如果有文件 pending sync，直接 Read 那个文件
 
 ---
