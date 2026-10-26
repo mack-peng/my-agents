@@ -20,13 +20,38 @@
 
 ## 发布模式
 
-- **Summary note**：一条评论，含结论与选定发现（默认、最稳）
-- **Inline candidates**：仅对文件/行映射可靠的评论尝试行级评论；评论简洁但必须含：
-  - stance + issue 摘要
-  - 证据（spec/design 引用 + 代码路径或行号）
-  - 影响与建议动作（不明显时）
+**默认必须使用行级评论（inline code-line comment）**：每条 issue 落在对应的新增行/变更行上，便于作者就地查看与回复。只有以下情况才允许降级为 summary note：
 
-行级评论与位置 payload 视平台而定；**行级发布失败或行映射不确定时降级为 summary note**，在正文引用文件路径与行号。
+- 行映射不可靠（跨文件汇总、删除行无法定位、生成文件等）
+- 平台不支持行级 discussion，或行级 API 连续失败
+
+禁止用一条 summary note 代替本可定位到代码行的 issue。行级评论必须含：
+
+- stance + issue 摘要
+- 证据（spec/design 引用 + 代码路径或行号）
+- 影响与建议动作（不明显时）
+
+### GitLab 行级 discussion payload
+
+```json
+{
+  "body": "<comment>",
+  "position": {
+    "position_type": "text",
+    "base_sha": "<diff_refs.base_sha>",
+    "start_sha": "<diff_refs.start_sha>",
+    "head_sha": "<diff_refs.head_sha>",
+    "new_path": "<file>",
+    "new_line": 123
+  }
+}
+```
+
+- `new_line` 使用 head 版本的行号，且必须是 diff 中新增/变更的行；删除行用 `old_line`。
+- SHA 必须取 MR 当前 `diff_refs`（`glab api projects/:id/merge_requests/:iid | jq .diff_refs`）；head 变更后旧行号可能失效，发布前重新核对。
+- 发布后用 API 或 `glab mr view` 复核评论是否落在预期行；失败则按上文的降级规则处理，并在 `review.md` 记录失败项。
+
+**Summary note** 仅在降级时使用，且正文必须引用 `file:line` 并说明为何无法行级定位。
 
 ---
 
@@ -34,8 +59,8 @@
 
 | 平台 | 方式 |
 |------|------|
-| GitHub PR | 委托 github-agent（`gh pr comment` / `gh api` 行级评论） |
-| GitLab MR | 委托 gitlab-agent（`glab mr note`；行级 discussion 视实例版本，失败降级 summary） |
+| GitHub PR | 委托 github-agent：行级用 `gh api -X POST repos/:owner/:repo/pulls/:n/comments`（`commit_id` / `path` / `line` / `side`）；失败再降级 `gh pr comment` |
+| GitLab MR | 委托 gitlab-agent：行级用 `POST /projects/:id/merge_requests/:iid/discussions`（`position` 见上）；失败再降级 `glab mr note` |
 
 ---
 

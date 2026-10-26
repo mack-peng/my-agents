@@ -119,6 +119,11 @@
 - 允许保留英文：代码标识符、文件路径、API 名称、字段名、第三方产品名、原始英文文案
 - 过程管理文件（`TASK_STATE.md`）可用英文
 
+**评论发布规范**
+
+- 发布到 PR/MR 的评审评论**默认必须落在代码行上**（行级 inline discussion，锚定新增/变更行）；summary note 仅在行映射不可靠或行级 API 失败时降级使用
+- 行级 payload（GitLab `position` 的 SHA/行号取法）、失败降级与复核流程见 `workflows/publish.md`
+
 ## 知识库导航（按需读取）
 
 | 文件 | 何时读 |
