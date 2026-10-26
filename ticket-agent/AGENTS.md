@@ -123,7 +123,7 @@ Phase 6 对两类流程通用：无代码变更的工单（自定义代码 / 支
 ## Git 规范
 
 - **分支名**：使用前缀 `feat-` / `fix-` / `refactor-`，分隔符用 `-`（不用 `/`）
-- **Commit message**：`<type>(<scope>): <简短描述>`，只写 title 不写 body
+- **Commit message**：`<type>(<scope>): <简短描述>`；行为变更的 commit 需在 body 用英文写清 **Why / Before / After**，纯依赖升级或机械改动可只写 title
 - **禁止 force push**：禁止 `git push --force` / `git push -f` / `git push origin +<branch>`。如需修改已推送的 commit，追加新 commit，不 amend 已推送的 commit
 
 ```

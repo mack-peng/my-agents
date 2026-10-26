@@ -231,10 +231,17 @@ glab mr create --source-branch <branch-name> --target-branch develop ...
 <type>(<scope>): <简短描述>
 ```
 
-只写 title，不写 body。示例：
+行为变更的 commit 需补英文 body，说明 **Why / Before / After**；纯依赖升级或机械改动可只写 title。示例：
 
 ```
 fix(searchable-dropdown): calculate viewport space for fixed positioning
+
+Why: the dropdown opened under the viewport edge on short screens.
+Before: position was computed from the trigger only.
+After: available viewport space is measured before choosing the direction.
+```
+
+```
 fix(deps): update component-kit to <commit-id>
 chore(deps): update yarn.lock
 Build: product
