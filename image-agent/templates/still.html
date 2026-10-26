@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440, height=1920">
+<title>Still</title>
+<style>
+  @font-face {
+    font-family: "Maple Mono NF CN";
+    src: url("../../input/brand/fonts/MapleMono-NF-CN-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: block;
+  }
+
+  :root {
+    --w: 1440px;
+    --h: 1920px;
+    --u: calc(var(--w) / 100);
+    --bg: #0B0C0E;
+    --ink: #F5F5F0;
+    --muted: #8A8F98;
+    --accent: #D7FF3F;
+    --line: rgba(245, 245, 240, 0.14);
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "Maple Mono NF CN", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: var(--w);
+    height: var(--h);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .still {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(70% 50% at 24% 30%, rgba(215, 255, 63, 0.10) 0%, rgba(215, 255, 63, 0) 62%),
+      radial-gradient(60% 45% at 82% 76%, rgba(120, 140, 255, 0.08) 0%, rgba(120, 140, 255, 0) 65%),
+      #0B0C0E;
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(245, 245, 240, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(245, 245, 240, 0.035) 1px, transparent 1px);
+    background-size: calc(var(--u) * 8) calc(var(--u) * 8);
+    mask-image: radial-gradient(115% 85% at 50% 30%, #000 28%, transparent 100%);
+  }
+
+  .glow {
+    position: absolute;
+    right: calc(var(--u) * -12);
+    top: calc(var(--h) * 0.18);
+    width: calc(var(--u) * 58);
+    height: calc(var(--u) * 58);
+    border-radius: 50%;
+    background: rgba(215, 255, 63, 0.12);
+    filter: blur(calc(var(--u) * 9));
+    opacity: 0.55;
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 12, 14, 0.10) 0%, rgba(11, 12, 14, 0.28) 58%, rgba(11, 12, 14, 0.86) 100%);
+  }
+
+  .safe {
+    position: absolute;
+    inset: 0;
+    padding: calc(var(--u) * 6) calc(var(--u) * 6.5);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: calc(var(--u) * 3);
+  }
+
+  .brand {
+    font: 500 calc(var(--u) * 1.55) / 1.1 var(--font-mono);
+    letter-spacing: 0.14em;
+  }
+
+  .kicker {
+    color: var(--accent);
+    font: 500 calc(var(--u) * 1.25) / 1 var(--font-mono);
+    letter-spacing: 0.20em;
+  }
+
+  .hero {
+    margin-top: auto;
+    margin-bottom: auto;
+    transform: translateY(calc(var(--h) * 0.025));
+  }
+
+  .rule {
+    width: calc(var(--u) * 12);
+    height: 2px;
+    background: var(--accent);
+    margin-bottom: calc(var(--u) * 2.4);
+  }
+
+  .headline {
+    margin: 0;
+    font-size: calc(var(--u) * 9.2);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+    font-weight: 600;
+  }
+
+  .headline .accent {
+    color: var(--accent);
+  }
+
+  .subhead {
+    margin: calc(var(--u) * 2.4) 0 0;
+    color: rgba(245, 245, 240, 0.82);
+    font-size: calc(var(--u) * 2.55);
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: calc(var(--u) * 2);
+    padding-top: calc(var(--u) * 2);
+    border-top: 1px solid var(--line);
+  }
+
+  .stat strong {
+    display: block;
+    color: var(--accent);
+    font: 500 calc(var(--u) * 4.6) / 1 var(--font-mono);
+    letter-spacing: -0.04em;
+    white-space: nowrap;
+  }
+
+  .stat span {
+    display: block;
+    margin-top: calc(var(--u) * 0.8);
+    color: var(--muted);
+    font: 400 calc(var(--u) * 1.3) / 1.3 var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: calc(var(--u) * 2.4);
+    color: var(--muted);
+    font: 400 calc(var(--u) * 1.2) / 1.35 var(--font-mono);
+    letter-spacing: 0.12em;
+  }
+
+  .bottom .big {
+    color: var(--ink);
+    font-size: calc(var(--u) * 1.5);
+  }
+
+  .right { text-align: right; }
+</style>
+</head>
+<body>
+  <main id="still" class="still">
+    <div class="bg"></div>
+    <div class="grid"></div>
+    <div class="glow" data-bleed></div>
+    <div class="scrim"></div>
+    <div class="safe">
+      <header class="top">
+        <div>
+          <div class="brand">BRAND / WEEKLY</div>
+          <div class="kicker">THEME 01</div>
+        </div>
+        <div class="kicker">2026.10</div>
+      </header>
+      <section class="hero">
+        <div class="rule"></div>
+        <h1 class="headline">把标题写成<br><span class="accent">一句钩子</span></h1>
+        <p class="subhead">副标题用一句话解释：这张图解决什么问题，<br>读者为什么值得停下来看。</p>
+      </section>
+      <section class="stats">
+        <div class="stat"><strong>10</strong><span>个要点</span></div>
+        <div class="stat"><strong>1440×1920</strong><span>画布尺寸</span></div>
+        <div class="stat"><strong>01</strong><span>主视觉锚点</span></div>
+      </section>
+      <footer class="bottom">
+        <div><div class="big">2026.10.26</div><div>下一期 · 周一</div></div>
+        <div class="right"><div>IMAGE-AGENT</div><div>DRAFT</div></div>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

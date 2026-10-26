@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1600, height=1200">
+<title>Contact Sheet</title>
+<style>
+  @font-face {
+    font-family: "Maple Mono NF CN";
+    src: url("../../input/brand/fonts/MapleMono-NF-CN-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: block;
+  }
+
+  :root {
+    --bg: #0B0C0E;
+    --ink: #F5F5F0;
+    --muted: #8A8F98;
+    --accent: #D7FF3F;
+    --line: rgba(245, 245, 240, 0.14);
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "Maple Mono NF CN", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 1600px;
+    height: 1200px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    width: 1600px;
+    height: 1200px;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .title {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .meta {
+    color: var(--muted);
+    font: 500 14px/1.2 var(--font-mono);
+    letter-spacing: 0.14em;
+  }
+
+  .grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 24px;
+    min-height: 0;
+  }
+
+  .card {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .thumb {
+    flex: 1;
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, rgba(215, 255, 63, 0.08) 0%, rgba(215, 255, 63, 0) 45%),
+      #111318;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(245, 245, 240, 0.28);
+    font: 500 56px/1 var(--font-mono);
+    letter-spacing: -0.04em;
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 18px;
+  }
+
+  .caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--muted);
+    font: 400 14px/1.4 var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .caption b {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .accent { color: var(--accent); }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="head">
+      <div class="title">封面方案对比</div>
+      <div class="meta">IMAGE-AGENT / CONTACT SHEET</div>
+    </header>
+    <section class="grid">
+      <figure class="card">
+        <div class="thumb">A</div>
+        <figcaption class="caption"><b>方向 A</b><span>深色科技编辑感</span></figcaption>
+      </figure>
+      <figure class="card">
+        <div class="thumb">B</div>
+        <figcaption class="caption"><b>方向 B</b><span>明亮杂志感</span></figcaption>
+      </figure>
+      <figure class="card">
+        <div class="thumb">C</div>
+        <figcaption class="caption"><b>方向 C</b><span>拼贴/手作感</span></figcaption>
+      </figure>
+      <figure class="card">
+        <div class="thumb">D</div>
+        <figcaption class="caption"><b>方向 D</b><span>满版图 + 文字</span></figcaption>
+      </figure>
+      <figure class="card">
+        <div class="thumb">E</div>
+        <figcaption class="caption"><b>方向 E</b><span>数据卡堆叠</span></figcaption>
+      </figure>
+      <figure class="card">
+        <div class="thumb">F</div>
+        <figcaption class="caption"><b>方向 F</b><span class="accent">你的选择</span></figcaption>
+      </figure>
+    </section>
+  </main>
+</body>
+</html>
