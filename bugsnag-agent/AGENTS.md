@@ -2,7 +2,8 @@
 
 BugSnag 错误监控工作台代理 — 通过自研 `bugsnag-cli`（只读）做错误查询、整理、全景画像与 AI 根因分析，产出错误报告；配置飞书模式后，报告可归档到飞书知识库。
 
-本 agent 使用 `bugsnag-cli`（Node+TS+zod，**只读**），覆盖 组织/项目、错误、事件、pivots/trends 4 个域 12 命令。CLI 本体与完整架构文档在 `/Users/mack/Cli-projects/bugsnag-cli/`（需求真值 `docs/spec.md`）。
+- CLI 本体与完整架构文档在 `~/Cli-projects/bugsnag-cli/`（需求真值 `docs/spec.md`）。Node+TS+zod，覆盖 组织/项目、错误、事件、pivots/trends 4 个域 12 命令，**只读**。
+- **命令真值**：本目录 `.agents/skills/bugsnag-cli/SKILL.md` + `references/pitfalls.md`（由 `bugsnag-cli skill-install --target opencode --local` 生成；CLI 升级后重新生成，**勿手抄**）。不确定的命令先 `bugsnag-cli <cmd> --help`。
 
 ## 只读原则（本 agent 与 CLI 的硬边界）
 
@@ -13,16 +14,17 @@ BugSnag 错误监控工作台代理 — 通过自研 `bugsnag-cli`（只读）�
 
 - 用户说 "use bugsnag-agent" / "看下错误" 但**没有指定具体任务**时：先展示能力 + 预检，引导用户选或描述任务，**不要一进来就提问**。用户给出明确任务（或粘贴 Dashboard 链接）后直接执行，按需懒引导。
 - 面向用户一律说人话：**错误全景**（= 错误清单 + 影响面）、**深度分析**（= 堆栈 + 维度 + 趋势）、**保存报告**（= 本地归档 / 配置飞书后建飞书文档）；CLI 原文只在用户明确要命令时展示。
+- **操作完成后的反馈规范**：一句人话结果 + 对之后使用行为的影响 + 一个下一步建议（三部分）。**不展示** .env 键值、gitignore/文件路径等机器细节、命令行输出、配置日志；密钥与 WIKI_ID 只提状态不提值（如"已绑定你的知识库"）。
 
 ```
 bugsnag-agent 能为你做什么
 
-**1. 项目错误全景** — 拉一个项目的错误清单 + 影响面与趋势概览
+**1. 项目错误全景** — 拉一个项目的全量错误统计 + 影响面，归纳值得处理的问题
 　示例："看下 strikingly-bobcat-fe 今天的错误"
 **2. 单错误深度分析** — 堆栈定位 + 维度归因 + 趋势定性，产出错误报告
 　示例："详细看看 EcommerceSettingsFetchError"
 **3. Dashboard 链接转查询** — 粘贴 BugSnag 链接，直接拉同口径数据
-　示例：粘贴一个 app.bugsnag.com/strikingly/... 链接
+　示例：粘贴一个 app.bugsnag.com/... 链接
 **4. 保存错误报告** — 本地归档；配置飞书模式后同步建飞书文档
 　示例："保存这份报告" / "存到飞书"
 
@@ -50,7 +52,7 @@ grep -q '^FEISHU_WIKI_ID=' bugsnag-agent/.env 2>/dev/null && echo "FEISHU_WIKI_I
 which lark-cli >/dev/null 2>&1 && echo "lark-cli: present" || echo "lark-cli: missing"
 ```
 
-按输出填预检行。token / WIKI_ID 只回显开关，不回显值。
+按输出填预检行。token / WIKI_ID 只回显开关，不回显值。执行工作流前再补 `bugsnag-cli --version && bugsnag-cli config-show --json`；未安装时 `npm install -g bugsnag-cli`（Node.js >= 18）。
 
 ### 首次使用判定
 
@@ -60,30 +62,21 @@ which lark-cli >/dev/null 2>&1 && echo "lark-cli: present" || echo "lark-cli: mi
 
 ## 其他 agent 快速对接
 
-外部 agent（develop-agent / 工作流脚本等）直接调 CLI 查询即可，**不产生任何持久化**；需要归档时显式说「保存报告」走同一持久化分支。最常用 5 条：
+外部 agent（develop-agent / 工作流脚本等）直接调 CLI 查询即可，**不产生任何持久化**；需要归档时显式说「保存报告」走同一持久化分支。命令用法见 `.agents/skills/bugsnag-cli/SKILL.md`（Quick Reference + pitfalls）；全景同口径的列表命令见下方工作流 1。
+
+## 大输出纪律（先落盘，聚合后再进对话）
+
+bugsnag-cli 无 `-o` 落盘参数，用 shell 重定向：
 
 ```bash
-# 今日 open 错误 Top10（Dashboard 同口径）
-bugsnag-cli error-list --project <slug> --sort events --filter "error.status=open" --filter "event.since=1d" --limit 10 --json
-# 错误详情
-bugsnag-cli error-show <errorId> --project <slug> --json
-# 最新事件全堆栈（免 --project）
-bugsnag-cli error-latest-event <errorId> --json
-# 维度归因
-bugsnag-cli error-pivots <errorId> --summary-size 5 --project <slug> --json
-# 趋势
-bugsnag-cli error-trend <errorId> --resolution 2h --project <slug> --json
+mkdir -p tmp/bugsnag
+bugsnag-cli --json error-list ... > tmp/bugsnag/<name>.json
+jq -r '.[] | {id, error_class, events, users}' tmp/bugsnag/<name>.json   # 先 jq 'keys' 探结构，再取字段
 ```
 
-## 前置检查（执行工作流时）
-
-```bash
-which bugsnag-cli || echo "未安装"
-bugsnag-cli --version
-bugsnag-cli config-show --json
-```
-
-未安装时：`npm install -g bugsnag-cli`（需要 Node.js >= 18）。
+- 全景 / 事件 / pivots / trend 的 `--json` 输出**一律先落盘再 jq 聚合**，禁止整段原始 JSON 进入对话（同仓库「大输出先落盘再 jq」约定）
+- 单次进上下文的 JSON ≤ 50KB；超限继续 jq，不要整段引用原始输出
+- 报告里引用的每个数字来自 jq 聚合结果，不凭记忆转述原始 JSON
 
 ## 认证
 
@@ -105,8 +98,7 @@ bugsnag-cli org-list
 ```
 
 - 配置存 `~/.bugsnagrc`（JSON）。多账号：`config-new <profile>` → `-p <profile>` 操作 → `config-use` 切换
-- 环境变量覆盖：`BUGSNAG_AUTH_TOKEN`、`BUGSNAG_BASE_URL`、`BUGSNAG_ORGANIZATION`、`BUGSNAG_PROJECT`
-- 优先级：CLI flags > 环境变量 > rc 配置；`base-url` 默认 `https://api.bugsnag.com`，勿随意改
+- 环境变量覆盖与优先级（flags > env > rc）、config key 清单见 pitfalls.md「Auth & Config」；`base-url` 默认 `https://api.bugsnag.com`，勿随意改
 
 ## 实例信息
 
@@ -118,90 +110,23 @@ bugsnag-cli org-list --json | jq '.[] | {id, name, slug}'
 bugsnag-cli project-list --json           # 项目 slug + id + open_error_count
 ```
 
-CLI 内建解析：`--organization` / `--project` 接受 24-hex id 或名称/slug（自动解析，24-hex 正则 `^[0-9a-f]{24}$` 直接透传）。注意：`error-pivots`/`error-trend`/`error-events` 都**需要**项目上下文（显式 `--project` 或已 config-set 默认），`error-latest-event` 不需要。
-
-## 命令参考
-
-全局配有 `--json`、`--raw`、`-p/--profile`、`--auth-token`、`--base-url`。不懂的命令用 `bugsnag-cli <cmd> --help` 查看。
-
-### 组织与项目
-
-```bash
-bugsnag-cli org-list
-
-# 列项目（支持搜索与排序：created_at/name/favorite）
-bugsnag-cli project-list --organization <slug> --q frontend --sort name --direction asc
-
-# 单项目详情
-bugsnag-cli project-show --project <slug>
-```
-
-### 错误
-
-```bash
-# 错误列表（sort: last_seen|first_seen|users|events，默认 last_seen）
-bugsnag-cli error-list --project <slug>
-bugsnag-cli error-list --project <slug> --sort events --direction desc
-
-# 过滤（可重复，语法见下）
-bugsnag-cli error-list --project <slug> --filter "error.status=open" --filter "event.since=1d"
-
-# 详情
-bugsnag-cli error-show <errorId> --project <slug>
-```
-
-> Filters 语法：`k=v`（eq）、`k=v1,v2`（多值 eq）、`k!=v`（ne）、`k:empty=true|false`。常用字段：`error.status`（open/resolved/regression）、`app.version`、`release_stage`、`user.email`、`event.since`（`1d` 相对或 ISO 绝对）、`event.before`。合法字段 id 用 `event-fields` 查。
->
-> **分页硬约束**：每个 list 命令 `--per-page <n>`（默认 30）+ `--limit <n>`（默认 100）；遍历到 limit 即停；**不存在 `--all`**，不要假设能拉全量。60000 错误码（排序结果超上限）CLI 自动降级 `sort=unsorted` 重试，无需干预。
-
-### 事件（AI 分析核心）
-
-```bash
-# 最快拿全堆栈 + 源码上下文（无需 --project）
-bugsnag-cli error-latest-event <errorId>
-
-# 事件列表（--full-reports 默认 true，拿完整报告）
-bugsnag-cli error-events <errorId> --limit 5 --project <slug>
-
-# 单事件详情（text 模式直接渲染堆栈）
-bugsnag-cli event-show <eventId> --project <slug>
-
-# 可用 filter/pivot 字段
-bugsnag-cli event-fields --project <slug>
-```
-
-### Pivots & Trends（维度归因）
-
-```bash
-# 错误维度拆解（浏览器/版本/用户分布，可 --pivots 指定字段）
-bugsnag-cli error-pivots <errorId> --summary-size 5 --project <slug>
-
-# 某维度取值分布
-bugsnag-cli error-pivot-values <errorId> <fieldId> --sort events --project <slug>
-
-# 时间趋势，二选一模式：bucket 桶数（默认 30）或 resolution 枚举
-bugsnag-cli error-trend <errorId> --resolution 2h --project <slug>
-```
-
-> `--resolution` 枚举：`1m` `5m` `30m` `2h` `12h`（不是 1d/1h，乱传会被 Zod 拦）。
-
-### 配置与 Skill
-
-```bash
-bugsnag-cli config-show / config-set / config-list / config-use / config-new / config-path
-#   config-set 允许的 key：auth-token、base-url、organization、project
-
-bugsnag-cli skill-install        # SKILL.md + pitfalls.md 装进各 agent 目录
-bugsnag-cli skill-uninstall
-```
+`--organization` / `--project` 接受 24-hex id 或名称/slug（自动解析）。哪些命令需要项目上下文、哪些不需要，见 pitfalls.md「latest_event Needs No Project」。
 
 ## 常见工作流
 
 ### 1. 项目错误全景（与 Dashboard 同口径）
 
+全景 = 全量统计，不是首屏 Top10。先拉全量（**走「大输出纪律」：落盘 → jq 聚合**），归纳值得处理的聚集性问题（同类多变体高量 / 单错误高量 / UnknownErrorClass 需查明），长尾标为噪音；Top 10 仅作展示。
+
 ```bash
-# Dashboard filters[error.status]=open&filters[event.since]=1d&sort=events 等价命令
-bugsnag-cli error-list --project <slug> --sort events \
+# 全量 → 落盘（返回数 < limit 即未截断；60000 降级自动处理，无需干预）
+bugsnag-cli --json error-list --project <slug> --sort events \
+  --filter "error.status=open" --filter "event.since=1d" --per-page 100 --limit 1000 \
+  > tmp/bugsnag/<slug>-open-1d.json
+jq -r '.[] | [.error_class, .events, .users] | @tsv' tmp/bugsnag/<slug>-open-1d.json
+
+# Top 10 展示（Dashboard 首屏，量小可直接进对话）
+bugsnag-cli --json error-list --project <slug> --sort events \
   --filter "error.status=open" --filter "event.since=1d" --limit 10 --json
 ```
 
@@ -212,16 +137,16 @@ bugsnag-cli error-list --project <slug> --sort events \
 | `filters[error.status]=open` | `--filter "error.status=open"` |
 | `filters[event.since]=1d` | `--filter "event.since=1d"` |
 | `sort=events` | `--sort events` |
-| `/strikingly/<slug>/errors` | `--organization strikingly --project <slug>` |
+| `app.bugsnag.com/<org>/<slug>/errors` | `--organization <org> --project <slug>` |
 
-### 3. 单错误深度六步链（默认走这条）
+### 3. 单错误深度分析链（五步，默认走这条）
 
 ```bash
-bugsnag-cli error-latest-event <errorId> --json          # ① 全堆栈 + 源码上下文
-bugsnag-cli error-events <errorId> --limit 5 --json      # ② 多次事件对比找共性
-bugsnag-cli error-pivots <errorId> --summary-size 5 --project <slug> --json   # ③ 维度归因
-bugsnag-cli error-trend <errorId> --resolution 2h --project <slug> --json     # ④ spike vs 慢性定性
-bugsnag-cli error-show <errorId> --json --project <slug>                      # ⑤ 元数据（first/last seen、grouping）
+bugsnag-cli --json error-latest-event <errorId> > tmp/bugsnag/<errorId>-latest.json   # ① 全堆栈 + 源码上下文（免 --project，输出大必落盘）
+bugsnag-cli --json error-events <errorId> --limit 5 --project <slug> > tmp/bugsnag/<errorId>-events.json   # ② 多次事件对比找共性
+bugsnag-cli --json error-pivots <errorId> --summary-size 5 --project <slug>          # ③ 维度归因（量小可直接进对话）
+bugsnag-cli --json error-trend <errorId> --resolution 2h --project <slug>            # ④ spike vs 慢性定性（--resolution 枚举见 --help）
+bugsnag-cli --json error-show <errorId> --project <slug>                             # ⑤ 元数据（first/last seen、grouping）
 ```
 
 ### 4. 跨错误族对比
@@ -238,10 +163,16 @@ bugsnag-cli error-show <errorId> --json --project <slug>                      # 
 # USE_FEISHU=true  → ① + ② + ③
 ```
 
-- ① **本地落盘（始终执行）**：`output/<slug或错误名>-<triage|deepdive>-<YYYYMMDD>.md`，骨架见 `templates/report.md`。文件名把 `/` 等非法字符替换为 `-`
-- ② **飞书归档（USE_FEISHU=true 时）**：委托 feishu-agent（read 其 AGENTS.md 后按快捷命令执行，本 agent 不直接调 lark-cli）：
+- ① **本地落盘（始终执行）**：`output/<slug或错误名>-<triage|deepdive>-<YYYYMMDD>.md`，骨架见 `templates/report.md`
+  - 文件名 sanitize：非 `[a-zA-Z0-9._-]` 字符（空格、`/`、`—`、`#` 等）统一替换为 `-`
+  - 同名文件已存在 → 追加 `-2` / `-3` / `-HHmm`，**不覆盖既有报告**
+- ② **飞书归档（USE_FEISHU=true 时）**：按 feishu-agent/AGENTS.md 快捷命令**抄写执行**（与仓库其他 agent 一致，不进入 feishu-agent 工作流）。**先查重再建**：同标题节点已存在 → 只回写既有 URL，不重建文档
 
 ```bash
+# 查重：列知识库节点比对标题（feishu-agent/AGENTS.md 快捷命令）
+lark-cli wiki +node-list --space-id "$FEISHU_WIKI_ID"
+
+# 无同名 → 创建
 lark-cli docs +create --api-version v2 --doc-format markdown \
   --parent-token "$FEISHU_WIKI_ID" --content $'<报告 markdown 全文>'
 ```

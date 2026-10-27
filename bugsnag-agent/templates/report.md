@@ -9,6 +9,7 @@
 - 每条假设标置信度：`DEFINITE`（CLI 事实或直接可验证结论）/ `PROBABLE`（强形态推断，一处数据即可验证）/ `INDEFINITE`（方向性判断）/ `UNVERIFIABLE`（当前上报缺失无法判断）
 - 堆栈注明 `in_project`：`true` = 第一方代码可修；`null` = 第三方/压缩 bundle → 责任抛向前端阈值调整或后端
 - 涉及用户邮箱 / IP 一律脱敏后引用
+- 文件名遵循 AGENTS.md「报告持久化」：非 `[a-zA-Z0-9._-]` 字符替换为 `-`，同名已存在则追加序号，不覆盖
 - 尾部固定一行状态位（本地版本记录飞书归档链接；未归档写 `（未归档）`）
 
 ---
@@ -28,6 +29,7 @@ Top N 表格：# / 错误类 / events / users / 触发页 / 一句话描述
 
 - 全量 vs Top N 占比；用户数、浏览器与 OS 分布（error-pivots --summary-size 5）
 - release 维度（error-pivots release.seen_in）、版本分布缺口
+- **注：pivots 是单错误维度的拆解，全景仅取 Top1-3 抽样，代表性强但不等同全项目全集**
 
 ## 3 错误分组
 
