@@ -1,5 +1,7 @@
 # Dify Workflow
 
+> 无图形界面（`DISPLAY` 为空）时，去掉命令中的 `--headed`，使用无头模式。
+
 Dify 会话已持久化到 `dify.state.json`。
 
 | 用户指令 | 操作 |

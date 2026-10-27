@@ -4,10 +4,12 @@ This directory is configured for browser automation using `playwright-cli` and P
 
 ## Environment
 
-- `playwright-cli`: Installed globally via npm
-- Default browser: Chromium (use `--browser=firefox` or `--browser=webkit` to switch)
-- **默认有头模式**：`open` / `attach` 一律显式加 `--headed`，只有用户明确要求无头时才省略
-- **本机未安装 Chrome**：`open` 不带 `--browser` 时可能尝试 Chrome 而报错，必须显式 `--browser=chromium`
+- `playwright-cli`: Installed globally via npm (v0.1.22)
+- Default browser: bundled Chromium 1248（通过 `~/.playwright/cli.config.json` 配置，无需系统 Chrome；可用 `--browser=firefox` 或 `--browser=webkit` 切换）
+- **按图形环境选择有头/无头**：
+  - 有图形界面（`DISPLAY` 或 `WAYLAND_DISPLAY` 非空）：`open` / `attach` 显式加 `--headed`
+  - 无图形界面（SSH/服务器，`DISPLAY` 为空）：省略 `--headed`，使用无头模式；否则会报 `Missing X server or $DISPLAY`
+  - 无头机器需要看到窗口时：用 `ssh -X` / `ssh -Y` 重新连接后再加 `--headed`
 - Run `playwright-cli --help` for full command list
 
 ### run-code 文件格式
@@ -23,7 +25,7 @@ async (page) => {
 
 文件内**禁止**顶层 `const` / `module.exports` / IIFE — 会报 `SyntaxError`。需要 `setTimeout` 时用 `page.waitForTimeout(ms)`。
 
-## playwright-cli Quick Reference (v0.1.13)
+## playwright-cli Quick Reference (v0.1.22)
 
 All commands: `playwright-cli <command> [args] [options]`
 Named session: `playwright-cli -s=<name> <command> [args] [options]`
@@ -178,7 +180,7 @@ Global options: `--help [command]`, `--json`, `--raw`, `--version`
 
 ### Basic browse + screenshot
 ```bash
-playwright-cli open https://example.com --headed
+playwright-cli open https://example.com --headed   # 无图形界面时去掉 --headed
 playwright-cli screenshot
 playwright-cli close
 ```
