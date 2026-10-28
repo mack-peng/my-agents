@@ -37,6 +37,7 @@
 
 ```
 输入 Zendesk 工单 URL 或 ID    → 新建模式：Phase 1 开始（飞书 / Session 模式通用）
+输入 Jira 工单 URL             → 新建模式：Phase 1 开始（Jira 来源，经 acli 读取，飞书 / Session 模式通用）
 输入飞书文档 URL               → 飞书模式续接（仅 USE_FEISHU=true 有效）
 输入 "跳到 Phase N"            → Session 模式跳阶段（仅 USE_FEISHU=false 有效）
 ```
@@ -83,6 +84,8 @@ zcli-ticket -p <profile> ticket-show <id>
 ```
 
 如果 URL 中无法提取子域名（如仅提供 ID），默认使用当前 active profile，并告知用户。
+
+Jira 工单 URL 不适用本节：站点即 URL 的 Atlassian host，身份由 `acli jira auth` 管理（见 `acli-agent/AGENTS.md`），无需 profile。
 
 ## 阶段流程
 
@@ -138,6 +141,7 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 - [ ] 如果工单涉及样式修改 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
 - [ ] 如果工单涉及布局/滚动/定位 → `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
 - [ ] 工单后续需要回复 → `zcli-ticket -p <profile> config-show` 的 `oauthScope` 含 `tickets:write` → 否则 `config-set oauth-scope "tickets:read tickets:write"` + `oauth-login`
+- [ ] Jira 来源工单 → `acli jira auth status` 已认证 → 未认证时按 `acli-agent/AGENTS.md` 登录
 
 ### Phase 2 调研策略
 
@@ -331,6 +335,8 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 - 本 agent 不直接使用 glab / zcli-ticket 命令
 - 需要工单数据 → `use zendesk-agent`
+- Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同
+- Jira 工单回复：`acli jira workitem comment create --key <KEY>`；Jira 评论无公开/隐私之分，发送前同样需展示草稿并获得 sign-off
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use cssprobe-agent`，按 cssprobe-agent 流程交互式完成诊断
 - 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
 - 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`

@@ -41,6 +41,9 @@ patches/
 # Temporary working scripts and test artifacts
 tmp/
 
+# Ticket working data (fetched Jira/Zendesk session artifacts)
+ticket-agent/work/
+
 # Cookie/session scripts (contain credentials)
 browser-agent/set-cookies.js
 browser-agent/update-state.js
