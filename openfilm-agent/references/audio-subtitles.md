@@ -71,7 +71,19 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
   ```
 
 - 归一化只改响度不改时长（VTT 时间轴不动）；**重录的 VO 是新文件，必须重新归一**
-- 音乐床：长度 = 影片总时长，音量压低（`volume="0.15"`–`0.3` 视音乐而定），结尾淡出
+- **音乐床配方**（`get music` 未连服务商 ≠ 没有音乐——库里有免版权素材可直接复用：Mixkit "Close Up"（免费可商用、无需署名），已在上期工程 `assets/audio/music/`，License README 随素材走）：
+
+  ```bash
+  # 1) VO 混合轨（侧链键）：每条 adelay 到各自 at（毫秒），amix 不归一
+  ffmpeg -y -v error -i vo1.wav -i vo2.wav … \
+    -filter_complex "[0]adelay=150|150[a0];[1]adelay=6550|6550[a1];…;[a0][a1]…amix=inputs=N:normalize=0" /tmp/vo-mix.wav
+  # 2) 音乐床：截到总时长、-5dB（volume 0.56）、淡入淡出、按 VO 闪避
+  ffmpeg -y -v error -i close-up.mp3 -i /tmp/vo-mix.wav \
+    -filter_complex "[0:a]atrim=0:<总时长>,asetpts=PTS-STARTPTS,volume=0.56,afade=t=in:d=1.5,afade=t=out:st=<总时长-2>:d=2[bed];[1:a]volume=1.6,apad=whole_dur=<总时长>[duck];[bed][duck]sidechaincompress=threshold=0.02:ratio=6:attack=80:release=600" \
+    -ac 2 -ar 48000 assets/audio/music/music-bed.wav
+  ```
+
+  **实测坑**：sidechain 输出长度 = 两个输入的较短者——VO 混合轨比全片短（最后一条 VO 结束即止），音乐床会被截短；必须给侧链链路加 `apad=whole_dur=<总时长>` 补静音。
 - 交付前 `openfilm look` 读输出里的 integrated LUFS / true peak，与基线比对；偏差大则调 `volume` 或重 norm，**不盲调**
 
 ## 字幕样式基线（竖屏 1080×1920）
@@ -100,3 +112,17 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 4. 结尾（淡出前的最后一条，如 t=96）
 
 检查：不压正文关键数字、不压下一章标题、不压结尾大字、box 在安全区内、文字完整不被裁。
+
+**Studio API 抽帧**（自动化验收用）：
+
+```bash
+# POST /api/projects/<projectId>/exports，folder 必须用 jobs 形式传——
+# 单个 ask 里的 folder 会被忽略，落到默认导出目录（Desktop，TCC 限制还删不掉）
+curl -s -X POST "http://127.0.0.1:4747/api/projects/<id>/exports" \
+  -H "x-studio-key: <openfilm open 打印的 key>" -H "Content-Type: application/json" \
+  -d '{"jobs":[{"kind":"stills","format":"png","at":[2,20,88,96],"burnSubtitles":true,"name":"subtitles-qa"}],"folder":"<影片工程绝对路径>/.film/qa"}'
+# 轮询 GET /api/projects/<id>/exports 看 status=done，解包 zip 后全尺寸 Read
+```
+
+- `x-studio-key` 用 `openfilm open` 打印地址里的 key（不回显到交付物）
+- QA 完删除 `.film/qa`（工具目录里不留我的中间产物）

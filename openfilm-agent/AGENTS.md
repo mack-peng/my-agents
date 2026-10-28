@@ -75,6 +75,7 @@ git --version                     # Studio 版本保存需要（本机 ✅）
 - 本机 `openfilm` 已通过 `npm link` 指向本地 fork `/Users/mack/Open-projects/openfilm/packages/openfilm`；**不要用 `npx openfilm@latest`**（会绕过本地百炼 provider）。链接丢失时重新执行 `cd /Users/mack/Open-projects/openfilm/packages/openfilm && npm link`。
 - **禁止 `openfilm update`**：本地 fork 可能落后上游且带未提交改动（如百炼 provider），update 会覆盖。CLI 打印 "newer version is out" 时只报告给用户，不执行升级；fork 升级是单独的手工任务，不属于本 agent 工作流。
 - **不改 OpenFilm fork / CLI / Studio 代码**：openfilm-agent 是文档封装层，除非用户明确要求改 fork，否则只调用不修改。
+- **已获用户授权的 fork 改动记录**（同步上游时留意分歧）：「小红书」导出预设 feed 3:4 → **vertical 9:16**（1080×1920，2026-10-28，commit d033389 @ `feat/bailian-provider`）；百炼 provider 为未提交状态的同仓改动。
 - `openfilm` — 完整手册（约千字）；**实现/改片前先跑一次**，细节以手册为准
 - `open [folder | url]` — 建/开影片；相对路径按 cwd 解析；GitHub 地址会被复制进 projects 库后打开
 - `look [what] [t | a-b]` — 校验：接触表 + 同一 t 两遍乱序绘制比对 + 页面报错/字体失败/缺失音频/被裁文本检查（**不校验字幕**）；`look 4.5` 单帧、`look 3-6` 区间、`look assets/a.mp4` 媒体文件
@@ -121,6 +122,7 @@ window.film = {
 - `openfilm look` 看不到字幕；字幕要在 Studio 预览或烧录导出后抽帧验收。
 - 当前 `openfilm render` 只出画面+混音，**不烧字幕**；带字幕成片用 Studio 导出中心勾选「烧录字幕」（自动化可用导出 API 的 `burnSubtitles: true`）。
 - 竖屏字幕基线（1080×1920）：`y≈0.786`、字号 `3.8%`、黑色 box `48%`、圆角 `.18em`、padding `.5/.22em`、无描边无阴影；位置用相对比例，不写死像素。若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
+- **竖屏全片安全区**（2026-10 复盘入档）：顶部 0–252、字幕带 ~1465–1553、平台描述区 1620 以下留空，内容底边 ≤1400；量边界用 `openfilm-agent/scripts/probe-safe-area.mjs`。细则与实测教训见 `references/visual-qa.md`。
 - 字幕位置/样式属于人（`.film/subtitles.json`），**禁止文本编辑器直接改 JSON**；用户明确要求调整时，通过 Studio UI 或 Studio API 操作（等同于人在 Studio 改），改前先读当前配置。交付前抽 4 帧：开头、首个内容镜、密集信息镜、结尾。
 - **TTS 输入稿 ≠ 字幕显示稿**（读音改写表、"1M 读一兆"约定）与**口播稿自检** → `references/audio-subtitles.md`；画面/图表类 QA 教训（图表诚实、SVG 指针映射、look 高发问题）→ `references/visual-qa.md`
 
