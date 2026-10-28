@@ -104,7 +104,7 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 **布局类工单** → **必须**进入 Phase 2b（详见 `workflows/phase2b-css-forensics.md`）。Phase 2b 包含 cssprobe-agent 运行时取证（必须步骤），完成后回到步骤 4（分析根因）。
 
-**非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。
+**非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。工单描述含 **BugSnag 项目名 / Dashboard 链接 / 错误 id** 时，**必须先执行下方「Bugsnag 数据取证」节**，根因分析（步骤 5）以取证产物为基准。
 
 ### 3. 打开 Livesite（如有）
 
@@ -211,3 +211,36 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 - Phase 2 完成后停止，不得自动进入 Phase 3
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
 - 如果 context compression 已开始，先落盘（飞书模式写文档 / Session 模式记录摘要）再停止
+
+## Bugsnag 数据取证（工单含 BugSnag 错误时）
+
+工单描述中含 BugSnag 项目名、Dashboard 链接（`app.bugsnag.com/<org>/<slug>/errors/<errorId>`）或 error id 时，根因分析不能只靠代码静态推断。**先读 `bugsnag-agent/AGENTS.md`**（能力 + 预检命令 + 大输出纪律），并完成预检（bugsnag-cli 存在、token 状态），再按其「单错误深度分析链」取数。
+
+### 触发
+
+- 工单提及 BugSnag 项目 / Dashboard 链接 / error id（如 SI-863 类工单）
+- 需要确认错误影响面（变体数、事件与用户量、时间跨度）
+- 需要判断报错与部署 / release / 升级的相关性
+
+### 链路（对每个相关 error id；大输出先落盘再 jq）
+
+```bash
+bugsnag-cli --json error-show <errorId> --project <slug>        # first/last seen、severity、status
+bugsnag-cli --json error-latest-event <errorId>                 # 堆栈 + 上下文（输出大，必落盘）
+bugsnag-cli --json error-trend <errorId> --resolution 2h --project <slug>   # 按天 jq 聚合
+bugsnag-cli --json error-pivots <errorId> --summary-size 5 --project <slug> # 维度基数
+bugsnag-cli --json error-events <errorId> --limit 5 --project <slug>        # 事件对比（按需）
+```
+
+### 取数要点
+
+1. **部署基线确认**：first seen 日期 ↔ 相关修复 commit / release 对照；`release.seen_in` 基数是否恒一（同一 release 持续报错 → 修复未生效或未部署）
+2. **趋势相位对比**：多错误变体各自按天聚合（jq `group_by(.from[0:10])` + `events_count` 求和）；同步 → 同因，不同步 → 独立抛错路径
+3. **维度归因**：pivots 的 release / 设备 / OS / 浏览器 / context 分布；latest-event 的 request url / context 与工单叙事对照（报错页面可能不止工单描述的场景）
+4. **堆栈核对**：latest-event 关键帧与本地源码逐字符对照（压缩变量名模式级比对），佐证产线运行的代码形态
+
+### 边界（必读）
+
+- `bugsnag-cli` **只读**：无 resolve / discard / update——状态操作引导用户去 Dashboard，不代做
+- BugSnag **不提供请求延迟指标**：p95 / 超时率等 APM 数据本 agent 拿不到 → 标注「外部依赖」，需要时向用户或服务端同学索取，禁止以事件数冒充延迟数据
+- 数字一律来自 jq 聚合结果，不凭原始 JSON 记忆转述

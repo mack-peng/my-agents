@@ -337,6 +337,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - 需要工单数据 → `use zendesk-agent`
 - Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同
 - Jira 工单回复：`acli jira workitem comment create --key <KEY>`；Jira 评论无公开/隐私之分，发送前同样需展示草稿并获得 sign-off
+- 需要监控平台数据（BugSnag 错误全景 / 单错误深度 / 事件对比 / 趋势 / 维度归因）→ `use bugsnag-agent`（只读；BugSnag 不提供请求延迟指标——p95 / 超时率等 APM 数据仍需服务端或监控平台，输出时如实标注外部依赖）
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use cssprobe-agent`，按 cssprobe-agent 流程交互式完成诊断
 - 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
 - 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`
