@@ -10,6 +10,8 @@
 
 ## 封面制作
 
+- **外包 image-agent（用户点名"use image-agent"做封面时）**：读其 `AGENTS.md` + `workflows/make-cover.md`，设计/渲染/自动 QA 走它的流程，付费 AI 生图先经用户确认。产物**双落点**：工程（HTML / assets / `recipe.md`）留在 image-agent 侧 `output/<slug>/`；成品 PNG 拷贝到**影片工程根** `cover-3x4.png`（Studio 交付清单引用它）。封面内容口径仍受本仓库闸门约束——数字/标题来自已确认的选取表，不改事实
+
 1. **复用影片设计语言**：`<link rel="stylesheet" href="styles.css">` 共用颜色/字体变量；封面自己的布局写在页内 `<style>`，不污染影片页面
 2. **尺寸精确**：`html, body` 与 `.cover` 都设为 1080×1440（或 1440×1080），`<meta name="viewport">` 同步
 3. **光学居中（重要）**：主内容块用 `display:flex; flex-direction:column; justify-content:center` 垂直居中，顶部品牌/期号、底部日期用绝对定位；因顶部/底部 chrome 会拉低视觉重心，主内容与数据卡整体加 `translateY(30–50px)` 下移校准——**不能只靠 flex-start**（已实测教训：纯 flex-start 显得内容偏上）

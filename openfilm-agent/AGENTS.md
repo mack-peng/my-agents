@@ -122,6 +122,7 @@ window.film = {
 - 当前 `openfilm render` 只出画面+混音，**不烧字幕**；带字幕成片用 Studio 导出中心勾选「烧录字幕」（自动化可用导出 API 的 `burnSubtitles: true`）。
 - 竖屏字幕基线（1080×1920）：`y≈0.786`、字号 `3.8%`、黑色 box `48%`、圆角 `.18em`、padding `.5/.22em`、无描边无阴影；位置用相对比例，不写死像素。若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
 - 字幕位置/样式属于人（`.film/subtitles.json`），**禁止文本编辑器直接改 JSON**；用户明确要求调整时，通过 Studio UI 或 Studio API 操作（等同于人在 Studio 改），改前先读当前配置。交付前抽 4 帧：开头、首个内容镜、密集信息镜、结尾。
+- **TTS 输入稿 ≠ 字幕显示稿**（读音改写表、"1M 读一兆"约定）与**口播稿自检** → `references/audio-subtitles.md`；画面/图表类 QA 教训（图表诚实、SVG 指针映射、look 高发问题）→ `references/visual-qa.md`
 
 ## 人机协作规则（重要）
 

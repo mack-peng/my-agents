@@ -16,10 +16,33 @@
 
 ## TTS 生成
 
-- 首选 `openfilm get tts --out <name> --text "<文案>" --voice <voiceId>`：返回 `src`/`dur`/自带 VTT（词级时间，**不需要再跑 asr**）
+- 首选 `openfilm get tts --out <name> --text "<文案>" --voice <voiceId>`：返回 `src`/`dur`。**当前本地 fork 的百炼 provider 不带词级转写**（transcript 返回 `none`，提示 `get asr` 生成）→ 时间轴走 `get asr --src`，文字以口播稿校正；若上游恢复自带转写（词级时间）则免 asr
 - 文件落 `assets/audio/vo/`；语义化命名 `vo-<序号>-<slug>.wav`
 - **provider 报错先报告用户**（如本地 fork 曾报 `Alibaba Cloud Bailian could not be reached (fetch failed)`），不静默换服务商；用户同意后才走替代方案（如 DashScope 直连 `qwen3-tts-flash`），key 从 `~/.openfilm/providers.json` 读，**绝不打印/落盘 key**
 - 手写兜底 VTT：TTS 无词级时间时按口播稿分句手写（见下）
+
+### 读音改写表（TTS 输入稿 ≠ 字幕显示稿）
+
+TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26 年"）。**喂给 TTS 的文本**与**字幕显示稿**是两份，一份管读音、一份管版面：
+
+| 字幕/画面显示（书面） | TTS 输入（读音改写） | 说明 |
+|---|---|---|
+| 2026 年 | 二零二六年 | 年份逐位读 |
+| 1M | 一兆 | 本工作台口播约定（2026-10 用户确认入档） |
+| 10 月 19 日 | 10 月 19 号 | 日期口语，显示保留"日" |
+| $0.15 / $0.60 | 0.15 美元、0.60 美元 | 货币补全，首次出现点明"每百万词元"口径 |
+
+- VTT 文字按**显示稿**校正（专名/版本号/单位照书面形式），读音靠 TTS 输入稿保证
+- 读音改写只动"读法"——数字、事实、结论一个不动
+
+## 口播稿自检（生成 TTS 前念一遍）
+
+付费重录是全链返工（重生成 → 量时长 → 回填 at → VTT 重做 → look），口语问题必须在闸门 2 之前解决：
+
+- 整稿**念出声**一遍，别扭即改：四字对仗/书面造语（实测错例"不必为发而换"）→ 大白话（"犯不着急着换"）
+- 被动句改主动（"价格被压到新低" → "价格直接打到了新低"）；"则/其/之"类书面连接词口语化
+- 没发生的事不做镜头、不进口播（"某家没发新品"一句带过或删除，见 `from-doc.md` 提炼原则）
+- 改口播后逐条确认读音敏感点（上表），再批量重录
 
 ## VTT 规则
 
@@ -31,7 +54,23 @@
 ## 混音基线
 
 - **目标：integrated ≈ -19.0 LUFS，true peak ≤ -3.6 dBTP**（当前项目实测基线，用户确认采用）
-- 每条 VO 生成后统一 loudnorm 到基线（`ffmpeg -af loudnorm=I=-19:TP=-3.6:LRA=11`），再进 film.html
+- 每条 VO 生成后统一 loudnorm 到基线，再进 film.html。**用两遍法**（单遍 dynamic 模式会在语音停顿处抽动）；zsh 内联拼 `measured_*` 参数会被 ffmpeg 进度符的 `\r` 干坏，必须先 `tr '\r' '\n'` 清洗——实测可跑脚本：
+
+  ```bash
+  for f in 1 2 3 4 5 6 7 8; do
+    src="assets/audio/vo/$f.wav"; tmp="assets/audio/vo/.norm-$f.wav"
+    ffmpeg -y -v info -i "$src" -af "loudnorm=I=-19:TP=-3.6:LRA=11:print_format=json" -f null /dev/null 2>&1 \
+      | tr '\r' '\n' | awk '/^\{$/{flag=1} flag{print} flag && /^\}$/{exit}' > /tmp/ln-$f.json
+    MI=$(jq -r '."input_i"' /tmp/ln-$f.json);   MT=$(jq -r '."input_tp"' /tmp/ln-$f.json)
+    ML=$(jq -r '."input_lra"' /tmp/ln-$f.json); MTH=$(jq -r '."input_thresh"' /tmp/ln-$f.json)
+    MO=$(jq -r '."target_offset"' /tmp/ln-$f.json)
+    ffmpeg -y -v error -i "$src" \
+      -af "loudnorm=I=-19:TP=-3.6:LRA=11:measured_I=${MI}:measured_TP=${MT}:measured_LRA=${ML}:measured_thresh=${MTH}:offset=${MO}:linear=true" \
+      -ac 1 -ar 48000 "$tmp" && mv "$tmp" "$src"
+  done
+  ```
+
+- 归一化只改响度不改时长（VTT 时间轴不动）；**重录的 VO 是新文件，必须重新归一**
 - 音乐床：长度 = 影片总时长，音量压低（`volume="0.15"`–`0.3` 视音乐而定），结尾淡出
 - 交付前 `openfilm look` 读输出里的 integrated LUFS / true peak，与基线比对；偏差大则调 `volume` 或重 norm，**不盲调**
 
