@@ -18,8 +18,9 @@
 | 情况 | 模式 |
 |---|---|
 | 文字、数据、Logo、UI、图表是主体 | **手工 HTML/SVG**，不用 AI |
-| 摄影、插画、纹理、背景、概念图 | **AI 文生图** |
-| 需要 AI 画面 + 精确文字/Logo | **混合**：AI 出图，HTML 叠字 |
+| 真实照片（办公室/人物/城市/产品场景） | **Unsplash**，见下文 |
+| 插画、纹理、背景、概念图 | **AI 文生图** |
+| 需要 AI/摄影画面 + 精确文字/Logo | **混合**：AI/摄影出图，HTML 叠字 |
 | 要保留现有图的主体/风格 | **图生图**，见 `edit-image.md` |
 
 ## Step 2 写 prompt
@@ -57,6 +58,20 @@ node image-agent/scripts/ve-image.mjs t2i \
 ```
 
 或直接 `ve cv CVSync2AsyncSubmitTask` + `GetResult`，见 `references/provider-routing.md`。
+
+### Unsplash 摄影素材
+
+需要真实照片（办公室、人物、城市、产品场景）而不是 AI 画面时：
+
+```bash
+unsplash search "<英文关键词>" \
+  --orientation landscape --per-page 6 --json
+
+unsplash search "<英文关键词>" \
+  --download 2 --out-dir output/<slug>/assets/refs/unsplash/
+```
+
+配置、署名与 License 见 `references/unsplash.md`。
 
 规则：
 

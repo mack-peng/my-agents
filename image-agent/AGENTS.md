@@ -1,6 +1,6 @@
 # image-agent
 
-用网页做图 — 精确排版 + AI 图像 + 多平台适配。
+用网页做图 — 精确排版 + AI 图像 + 真实摄影 + 多平台适配。
 **OpenCode 原生 agent**：手工图用 HTML/CSS/SVG 经 Playwright 截图；AI 生图/改图委托 `aliyun-agent`（`bl`）与 `volcengine-agent`（`ve`）。
 输入根 `input/`，输出根 `output/<slug>/`。
 
@@ -18,7 +18,7 @@ image-agent 能为你做什么
 **2. 做分享图** — 小程序分享卡 / OG / 朋友圈 / 社群海报，按平台尺寸和安全区设计
 　示例："做一张 1280×1024 的小程序分享图"
 
-**3. 生成一张图** — 描述你想要的画面：文生图 / 图生图 / 纯手工排版
+**3. 生成一张图** — 描述你想要的画面：文生图 / 图生图 / 真实摄影素材 / 纯手工排版
 　示例："生成一张深色科技感的抽象背景，左侧留白放标题"
 
 **4. 改图** — 换背景 / 扩图 / 去物 / 改风格 / 加 Logo / 改尺寸
@@ -35,6 +35,8 @@ image-agent 能为你做什么
 
 回复 1–6，或直接描述你的任务。
 ```
+
+需要真实摄影素材时直接说，我会用 Unsplash（`unsplash search ...`）找图，不占 AI 额度。
 
 - 用户给出明确任务或选择编号后，再按 Workflow 索引读对应文档并执行。
 - 预检命令（展示前实时检测，不缓存；**不要回显任何 AK/SK**）：
@@ -56,7 +58,7 @@ which sips
 |---------|--------|---------|
 | 封面 / 小红书封面 / 小程序封面 / 公众号首图 / 视频封面 | ① 封面 | `workflows/make-cover.md` |
 | 分享图 / OG / 朋友圈 / 社群海报 / 小程序分享卡 / 广告图 | ② 分享图 | `workflows/make-share.md` |
-| 生成一张图 / 画一张 / 文生图 / 图生图 / 插画 / 背景 | ③ 自由图 | `workflows/make-image.md` |
+| 生成一张图 / 画一张 / 文生图 / 图生图 / 插画 / 背景 / 真实摄影 | ③ 自由图 | `workflows/make-image.md` |
 | 改图 / 换背景 / 扩图 / 去物 / 改风格 / 加 Logo / 改尺寸 | ④ 改图 | `workflows/edit-image.md` |
 | 飞书文档 / 文章链接 + 出图意图 | ⑤ 从文档 | `workflows/from-doc.md` |
 | 多方案 / 多尺寸 / 一次出几版 / A-B | ⑥ 批量 | `workflows/batch-variants.md` |
@@ -67,8 +69,9 @@ which sips
 **一张图 = 一个 HTML 画布 + 一个最终 PNG。**
 
 - **手工**：HTML/CSS/SVG/Canvas 直接画；适合文字、数据、Logo、UI、图表、几何/生成艺术。
-- **AI**：`bl` / `ve` 文生图、图生图；适合摄影、插画、纹理、背景、概念图。
-- **混合（封面默认）**：AI 出背景/主体，HTML 叠精确文字、数据、Logo；解决 AI 中文字不可靠的问题。
+- **AI**：`bl` / `ve` 文生图、图生图；适合插画、纹理、背景、概念图。
+- **摄影**：`unsplash` CLI 搜索/下载真实照片；适合办公室、人物、城市、产品场景。
+- **混合（封面默认）**：AI/摄影出背景或主体，HTML 叠精确文字、数据、Logo；解决 AI 中文字不可靠的问题。
 
 铁律：
 
@@ -88,6 +91,8 @@ ls ~/Library/Caches/ms-playwright      # chromium_headless_shell 已存在
 which sips                             # PNG/JPG 尺寸与压缩
 bl auth status --output json           # 阿里云百炼
 test -f ~/.volcengine/config.json      # 火山引擎已配置
+which unsplash                         # Unsplash CLI（可选）
+test -n "$UNSPLASH_ACCESS_KEY" || security find-generic-password -s unsplash-cli -a default >/dev/null 2>&1  # Unsplash key（可选）
 ```
 
 - `scripts/shoot.mjs` 优先使用本地 `playwright-core`；否则从全局 `openfilm` / `@playwright/cli` 解析；仍缺失时提示安装或改用 `browser-agent` 的 `playwright-cli`。
@@ -127,6 +132,31 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 - 火山：`node image-agent/scripts/ve-image.mjs t2i ...` 或 `i2i ...`；封装 submit / poll / download。`--dry-run` 只打印请求不扣费；`--task-id` 可恢复已提交任务。也可直接按 `references/provider-routing.md` 的 `ve cv` 命令执行。
 - **不静默重试付费调用**；失败报告用户。批量/4K/多图前先确认。
 
+### 素材图库（Unsplash）
+
+真实摄影素材用已发布的 `unsplash` CLI（`@orangemust/unsplash-cli`，GitHub: `mack-peng/unsplash-cli`）；配置与合规见 `references/unsplash.md`。
+
+```bash
+# 首次：安装 + 把 Access Key 存入 macOS Keychain
+npm install -g @orangemust/unsplash-cli
+unsplash auth set
+
+# 搜索并下载前 2 张到工程
+unsplash search "minimal desk" \
+  --orientation portrait --download 2 \
+  --out-dir output/<slug>/assets/refs/unsplash/
+
+# 按 id / 链接下载
+unsplash download Dwu85P9SOIk \
+  --out output/<slug>/assets/refs/unsplash/desk.jpg --size full
+```
+
+- key 存 macOS Keychain（service `unsplash-cli`）；不写 `.env`；`UNSPLASH_ACCESS_KEY` 仅作 CI 覆盖；不打印 key。
+- 下载同时写 `<id>.json` sidecar（作者/原图页/query/license）并上报 download；发布保留署名。
+- `--json` 给 agent 解析；`--size full` 默认，`--size regular` 更快。
+- 无全局 CLI 时可用零依赖备用：`node image-agent/scripts/unsplash.mjs ...`（读同一 Keychain 项）。
+- 限流/401/403/429 不自动重试，直接报错。
+
 ### 压缩与检查
 
 ```bash
@@ -140,7 +170,7 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 - 用户素材 → 根 `input/`：图片 / Logo / 字体 / 参考图 / 文案 / 数据 / 文档。**不修改、不覆盖、不删除**。
 - 每个图一个工程 → 根 `output/<slug>/`：
   - `still.html` 或按尺寸命名的 HTML（`xhs-cover-1440x1920.html`）
-  - `assets/`：`ai/`（生成图）、`brand/`（Logo/色板）、`fonts/`、`refs/`（参考图）
+  - `assets/`：`ai/`（生成图）、`brand/`（Logo/色板）、`fonts/`、`refs/`（参考图；Unsplash 素材放 `refs/unsplash/`，含 `<id>.json` sidecar）
   - 成品：`xhs-cover-1440x1920.png`、`wechat-cover-900x383.jpg` 等
   - `recipe.md`：brief、文案、数据来源、prompt/model/seed/task_id、色板/字体、QA、下次改哪里
   - 可选 `contact-sheet.png`
@@ -189,6 +219,7 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 |------|------|
 | 阿里云百炼生图 / 改图 | `aliyun-agent`（`bl image generate/edit`） |
 | 火山即梦 / Seedream 生图 / 图生图 | `volcengine-agent`（`ve cv` / `ve-image.mjs`） |
+| Unsplash 真实摄影素材 | 本地 `unsplash` CLI（`@orangemust/unsplash-cli`，见 `references/unsplash.md`） |
 | 飞书文档读取 | `feishu-agent`（`lark-cli docs +fetch`） |
 | 网页文章抓取 | `firecrawl-agent` / `browser-agent` |
 | 浏览器预览 / 截图 / 登录页 | `browser-agent`（`playwright-cli`） |
@@ -200,7 +231,7 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 |---------|---------|
 | 封面（小红书/小程序/公众号/视频号） | `workflows/make-cover.md` |
 | 分享图（OG/朋友圈/社群/小程序分享卡/广告图） | `workflows/make-share.md` |
-| 自由生成一张图（文生图/图生图/手工） | `workflows/make-image.md` |
+| 自由生成一张图（文生图/图生图/真实摄影/手工） | `workflows/make-image.md` |
 | 改图（换背景/扩图/去物/改风格/加 Logo/改尺寸） | `workflows/edit-image.md` |
 | 文档/文章 → 封面/分享图 | `workflows/from-doc.md` |
 | 多方向/多尺寸/A-B | `workflows/batch-variants.md` |

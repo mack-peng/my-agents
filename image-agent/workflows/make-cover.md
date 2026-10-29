@@ -67,6 +67,14 @@ node image-agent/scripts/ve-image.mjs t2i \
   --out output/<slug>/assets/ai/bg.png
 ```
 
+需要真实摄影底图时用 Unsplash（见 `references/unsplash.md`）：
+
+```bash
+unsplash search "<英文关键词>" \
+  --orientation portrait --download 2 \
+  --out-dir output/<slug>/assets/refs/unsplash/
+```
+
 3. 写 HTML：以 `templates/still.html` 为骨架复制到 `output/<slug>/<name>.html`，改：
    - `--w` / `--h` 与 `<meta name="viewport">` 为目标尺寸。
    - `:root` 色板/字体。

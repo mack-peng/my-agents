@@ -43,7 +43,7 @@
 ## Step 3 制作
 
 1. 建工程：`mkdir -p output/<slug>/assets/{ai,brand,refs}`。
-2. 需要背景图 → `bl image generate` / `ve-image.mjs`；提示词留出文字区，`no text`。
+2. 需要背景图 → `bl image generate` / `ve-image.mjs`；提示词留出文字区，`no text`。真实摄影素材用 Unsplash：`unsplash search "<英文关键词>" --download 2 --out-dir output/<slug>/assets/refs/unsplash/`（见 `references/unsplash.md`）。
 3. 以 `templates/still.html` 为骨架，改尺寸/色板/文案；分享图通常更简洁，删掉不必要的装饰。
 4. 渲染：
 

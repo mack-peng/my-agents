@@ -10,8 +10,9 @@
 - [ ] 素材已本地化到 `output/<slug>/assets/`；没有依赖外链。
 - [ ] 字体可用：`document.fonts.check()` 通过，或已接受系统字体兜底。
 - [ ] 画布尺寸与平台预设一致；`<meta name="viewport">` 已同步。
-- [ ] AI 图已下载并检查分辨率 ≥ 展示尺寸的 1.2 倍。
-- [ ] 内部/敏感图片未发给 AI 服务商。
+- [ ] AI/摄影图已下载并检查分辨率 ≥ 展示尺寸的 1.2 倍。
+- [ ] Unsplash 素材有 `<id>.json` sidecar；`recipe.md` 记录 Photo ID、摄影师、原图页；发布署名保留。
+- [ ] Unsplash 搜索词不含内部/敏感信息；内部/敏感图片未发给 AI 服务商。
 
 ## 2. 渲染
 

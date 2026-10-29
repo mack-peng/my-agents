@@ -40,6 +40,13 @@
 - 输出：
 - 成本/耗时：
 
+## 素材与署名
+
+- 来源：用户素材 / AI / Unsplash（`unsplash` CLI）
+- Unsplash Photo ID：
+- 摄影师 / 原图页：
+- 署名文案：
+
 ## 文件
 
 - HTML：

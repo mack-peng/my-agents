@@ -24,7 +24,7 @@ No build, test, or lint at the root level.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`cssprobe-agent/`** — runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser. Supports iframe targeting (`--frame`), timeline sampling (`sample` / `wait-stable`), and JSON scenario regression suites (`scenario run`). Produces structured reports with DEFINITE/INDEFINITE/UNVERIFIABLE confidence levels.
 - **`seo-agent/`** — OpenCode-native SEO review & design agent. Five workflows: SEO audit / fix design (file-level change groups for code-agent) / page-purpose blueprint / AI-visibility sampling / keyword-intent research. **只出设计不改代码**；抓取委托 firecrawl-agent / browser-agent。Knowledge base in `seo-agent/references/`（含 `google-currency.md` 时效账本），skill 包移植自 yao-geo-skills（MIT，见 `seo-agent/.agents/skills/README.md`）。输出落 `seo-agent/output/`（gitignored）。
-- **`image-agent/`** — OpenCode-native still-image agent。封面 / 分享图 / 自由图 / 改图 / 从文档出图；手工排版用 HTML/CSS/SVG 经 Playwright 截图（`scripts/shoot.mjs`），AI 生图/改图委托 aliyun-agent（`bl`）/ volcengine-agent（`ve`）。输入 `input/`，输出 `output/<slug>/`；字体只保留 URL，按需下载到 `input/brand/fonts/`（不入 git）。
+- **`image-agent/`** — OpenCode-native still-image agent。封面 / 分享图 / 自由图 / 改图 / 从文档出图；手工排版用 HTML/CSS/SVG 经 Playwright 截图（`scripts/shoot.mjs`），AI 生图/改图委托 aliyun-agent（`bl`）/ volcengine-agent（`ve`），真实摄影素材用已发布的 `unsplash` CLI（`@orangemust/unsplash-cli`，key 存 macOS Keychain；备用脚本 `scripts/unsplash.mjs`）。输入 `input/`，输出 `output/<slug>/`；字体只保留 URL，按需下载到 `input/brand/fonts/`（不入 git）。
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 - **`bugsnag-agent/`** — bugsnag-cli wrapper，**默认只读、显式写** 的 BugSnag 错误分析 agent（全景 / 深度分析 / 项目健康 / 发布回归 / 性能排查 / 报告归档）。命令真值在 `bugsnag-agent/.agents/skills/bugsnag-cli/`（`bugsnag-cli skill-install --target opencode --local` 生成，勿手抄）；报告落 `bugsnag-agent/output/`（gitignored），飞书归档按 `bugsnag-agent/.env` 开关。triage 写操作仅允许 `error-update` / `error-bulk-update` 且必须带 `--write`。
 
@@ -60,7 +60,7 @@ No build, test, or lint at the root level.
 - Agents have clear boundaries: dify-builder-agent executes modifications; design-agent only reviews and outputs specs, never implements.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
 - **openfilm-agent** — 网页做片（`film.html` + Studio 人机共编）。读其 `AGENTS.md` 后按 workflow 索引执行；**默认不导出**，导出由用户在 Studio 操作；禁止 `openfilm update`（本地 fork）。
-- **image-agent** — 用网页做图（HTML 画布 + `scripts/shoot.mjs`）。封面/分享图默认混合：AI 出背景、HTML 叠文字；文字/Logo/数据永远 HTML。输入 `input/`，输出 `output/<slug>/`；字体按需下载到 `input/brand/fonts/`（不入 git）。
+- **image-agent** — 用网页做图（HTML 画布 + `scripts/shoot.mjs`）。封面/分享图默认混合：AI 出背景、HTML 叠文字；真实摄影素材走 Unsplash（`unsplash` CLI / `@orangemust/unsplash-cli`，key 存 macOS Keychain）。文字/Logo/数据永远 HTML。输入 `input/`，输出 `output/<slug>/`；字体按需下载到 `input/brand/fonts/`（不入 git）。
 
 ## JSON 处理约定
 
