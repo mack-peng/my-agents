@@ -119,6 +119,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 ## Context 隔离
 
 - 若 runtime 提供可调用的 sub-agent 工具，大面积 Diff 评审默认由 root agent 派发 sub-agent 分批审查。Root agent 只读 compact 索引与最终 contract，不读全部 diff。
+- **本工作台常设偏好（用户明确禁止，优先于上条）**：禁用 Task / sub-agent 派发（含批量评审）；一律 fallback 模式——root agent 逐批自评，一次只完成一个 batch，完成 card 落盘并更新 TASK_STATE 后报告 checkpoint，再进下一批。
 - Sub-agent 单层：所有 sub-agent 由 root agent 派发，sub-agent 之间不得互相派发。
 - **禁止并行评审**：同一时间只允许一个 batch reviewer 运行；该 batch 的 card 落盘并更新 `TASK_STATE.md` 后才能派发下一个。逐条派发为默认方式（多任务同发会超宿主载荷上限导致派发失败，且验证命令互相争用环境）。
 - Fallback 模式仅当 sub-agent 工具不可用/不可调用、或用户明确禁止时使用；fallback 下一次只完成一个 batch，完成后停止并汇报 checkpoint。
