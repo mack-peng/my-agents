@@ -1,4 +1,4 @@
-# BugSnag 错误报告模板
+# BugSnag 报告模板
 
 本文件是 bugsnag-agent 报告的骨架事实源。动笔前按报告类型选骨架；报告中所有数字必须能追溯到一次 CLI 调用。
 
@@ -84,6 +84,84 @@ Top N 表格：# / 错误类 / events / users / 触发页 / 一句话描述
 ## 结论
 
 2-4 句收束：定性 + 责任划分 + 第一优先动作。
+
+---
+飞书归档：（未归档）
+```
+
+---
+
+## 骨架三：项目健康 / 发布回归（health / release）
+
+发布回归场景把标题换成 `BugSnag 发布回归报告 | <project-slug> | <release-stage> | <YYYY-MM-DD>`，其余章节相同。
+
+```markdown
+# BugSnag 项目健康报告 | <project-slug> | <窗口> | <YYYY-MM-DD>
+
+> 日期 ｜ 项目：<slug>（<project-id 前 8 位>）｜ 口径：project-trend --buckets-count 30 + project-stability + release 对比
+
+## 1 项目概览
+
+- 当前 open errors / 近窗口 events / users
+- 主要 release stages
+
+## 2 稳定性与趋势
+
+- project-stability：总会话 / 未处理会话 / 用户影响
+- project-trend：峰值、拐点、与上一窗口对比
+
+## 3 发布回归
+
+- release-list / release-group-list：最近版本、发布时间
+- errors_introduced_count / errors_seen_count 异常版本
+- 发布前后 trend 是否同步抬升
+
+## 4 维度归因
+
+- project-pivots / project-pivot-values：release_stage、version、browser/OS 等
+
+## 5 结论与下一步
+
+- 是否为发布回归 / 慢性问题 / 噪音
+- 建议动作与验证方式
+
+---
+飞书归档：（未归档）
+```
+
+---
+
+## 骨架四：性能报告（performance）
+
+```markdown
+# BugSnag 性能报告 | <project-slug> | <窗口> | <YYYY-MM-DD>
+
+> 日期 ｜ 项目：<slug>（<project-id 前 8 位>）｜ 口径：span-group-list + trace/trace-fields + performance-overview
+
+## 1 性能概览
+
+- performance-overview（若套餐支持）
+- 关键指标：duration p50/p95/p99、slow/frozen frame、HTTP 4xx/5xx
+
+## 2 慢操作 Top N
+
+- span-group-list 按 duration_p95 / p99 排序
+- 分类：page load / network / app start / custom
+
+## 3 单操作下钻
+
+- span-group-show / timeline / distribution
+- span-group-spans：最慢 span、耗时分布、last_seen
+
+## 4 Trace 分析
+
+- trace-fields 确定可用维度
+- trace-spans / org-trace-spans：关键路径与瓶颈 span
+
+## 5 结论与下一步
+
+- 瓶颈归属（前端/后端/网络/设备）
+- 建议动作与验证方式
 
 ---
 飞书归档：（未归档）

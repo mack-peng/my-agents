@@ -26,7 +26,7 @@ No build, test, or lint at the root level.
 - **`seo-agent/`** — OpenCode-native SEO review & design agent. Five workflows: SEO audit / fix design (file-level change groups for code-agent) / page-purpose blueprint / AI-visibility sampling / keyword-intent research. **只出设计不改代码**；抓取委托 firecrawl-agent / browser-agent。Knowledge base in `seo-agent/references/`（含 `google-currency.md` 时效账本），skill 包移植自 yao-geo-skills（MIT，见 `seo-agent/.agents/skills/README.md`）。输出落 `seo-agent/output/`（gitignored）。
 - **`image-agent/`** — OpenCode-native still-image agent。封面 / 分享图 / 自由图 / 改图 / 从文档出图；手工排版用 HTML/CSS/SVG 经 Playwright 截图（`scripts/shoot.mjs`），AI 生图/改图委托 aliyun-agent（`bl`）/ volcengine-agent（`ve`）。输入 `input/`，输出 `output/<slug>/`；字体只保留 URL，按需下载到 `input/brand/fonts/`（不入 git）。
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
-- **`bugsnag-agent/`** — bugsnag-cli wrapper，**只读** BugSnag 错误分析 agent（全景 / 深度分析 / 报告归档）。命令真值在 `bugsnag-agent/.agents/skills/bugsnag-cli/`（`bugsnag-cli skill-install --target opencode --local` 生成，勿手抄）；报告落 `bugsnag-agent/output/`（gitignored），飞书归档按 `bugsnag-agent/.env` 开关。
+- **`bugsnag-agent/`** — bugsnag-cli wrapper，**默认只读、显式写** 的 BugSnag 错误分析 agent（全景 / 深度分析 / 项目健康 / 发布回归 / 性能排查 / 报告归档）。命令真值在 `bugsnag-agent/.agents/skills/bugsnag-cli/`（`bugsnag-cli skill-install --target opencode --local` 生成，勿手抄）；报告落 `bugsnag-agent/output/`（gitignored），飞书归档按 `bugsnag-agent/.env` 开关。triage 写操作仅允许 `error-update` / `error-bulk-update` 且必须带 `--write`。
 
 ## Skills
 
