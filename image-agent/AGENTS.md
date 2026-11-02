@@ -92,7 +92,7 @@ which sips                             # PNG/JPG 尺寸与压缩
 bl auth status --output json           # 阿里云百炼
 test -f ~/.volcengine/config.json      # 火山引擎已配置
 which unsplash                         # Unsplash CLI（可选）
-unsplash auth status --json | jq -r '.configured'  # Unsplash key（Keychain / 环境变量，可选）
+unsplash auth status --json | jq -r '.configured'  # Unsplash key（~/.unsplashrc / 环境变量，可选）
 ```
 
 - `scripts/shoot.mjs` 优先使用本地 `playwright-core`；否则从全局 `openfilm` / `@playwright/cli` 解析；仍缺失时提示安装或改用 `browser-agent` 的 `playwright-cli`。
@@ -137,7 +137,7 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 真实摄影素材用已发布的 `unsplash` CLI（`@orangemust/unsplash-cli`，GitHub: `mack-peng/unsplash-cli`）；配置与合规见 `references/unsplash.md`。
 
 ```bash
-# 首次：安装 + 把 Access Key 存进 macOS Keychain（service: unsplash-cli）
+# 首次：安装 + 把 Access Key 写入 ~/.unsplashrc（JSON，mode 600）
 npm install -g @orangemust/unsplash-cli
 unsplash auth set
 
@@ -151,10 +151,10 @@ unsplash download Dwu85P9SOIk \
   --out output/<slug>/assets/refs/unsplash/desk.jpg --size full
 ```
 
-- key 存 macOS Keychain（service `unsplash-cli`，account `default`）；`UNSPLASH_ACCESS_KEY` 优先于 Keychain，供 CI / 非 macOS；不写 `.env`；不打印 key。`unsplash auth clear` 删除。
+- key 存 `~/.unsplashrc`（JSON，mode 600，profiles）；`UNSPLASH_ACCESS_KEY` 优先于配置文件，供 CI / 非 macOS；不写 `.env`；不打印 key。`unsplash auth clear` 删除。
 - 下载同时写 `<id>.json` sidecar（作者/原图页/license/下载上报状态）并上报 download；发布保留署名。`download` 也支持 `--out-dir`（按 `<id>.<ext>` 命名）。
 - `--json` 给 agent 解析；`--size full` 默认，`--size regular` 更快。
-- 无全局 CLI 时可用零依赖备用：`node image-agent/scripts/unsplash.mjs ...`（读同一 Keychain，或 `UNSPLASH_ACCESS_KEY` / 旧版 `~/.unsplashrc`）。
+- 无全局 CLI 时可用零依赖备用：`node image-agent/scripts/unsplash.mjs ...`（读同一 `~/.unsplashrc` 或 `UNSPLASH_ACCESS_KEY`）。
 - 限流/401/403/429 不自动重试，直接报错。
 
 ### 压缩与检查

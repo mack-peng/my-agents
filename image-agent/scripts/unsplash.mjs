@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
-import { homedir, platform } from 'node:os';
+import { homedir } from 'node:os';
 
 const fail = (error) => {
   console.error(`Error: ${error?.message || error}`);
@@ -12,8 +11,6 @@ process.on('uncaughtException', fail);
 process.on('unhandledRejection', fail);
 
 const API = process.env.UNSPLASH_API_BASE || 'https://api.unsplash.com';
-const KEYCHAIN_SERVICE = 'unsplash-cli';
-const KEYCHAIN_ACCOUNT = 'default';
 const RC_PATH = process.env.UNSPLASH_RC_PATH || join(homedir(), '.unsplashrc');
 const SIZES = new Set(['raw', 'full', 'regular', 'small', 'thumb']);
 const HELP = `Usage:
@@ -39,23 +36,12 @@ Common:
   --json              Machine-readable JSON on stdout
   --help              Show this help
 
-Key: macOS Keychain (service "unsplash-cli"), UNSPLASH_ACCESS_KEY, or legacy ~/.unsplashrc
+Key: ~/.unsplashrc (profiles) or UNSPLASH_ACCESS_KEY
 `;
 
 function loadKey() {
   const env = process.env.UNSPLASH_ACCESS_KEY?.trim();
   if (env) return env;
-
-  if (platform() === 'darwin') {
-    try {
-      const key = execFileSync(
-        'security',
-        ['find-generic-password', '-s', KEYCHAIN_SERVICE, '-a', KEYCHAIN_ACCOUNT, '-w'],
-        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
-      ).trim();
-      if (key) return key;
-    } catch {}
-  }
 
   let rc = null;
   try {
@@ -74,7 +60,7 @@ function loadKey() {
   }
 
   throw new Error(
-    'Unsplash Access Key is not configured. Install `@orangemust/unsplash-cli` and run `unsplash auth set` (Keychain), or set UNSPLASH_ACCESS_KEY.',
+    'Unsplash Access Key is not configured. Install `@orangemust/unsplash-cli` and run `unsplash auth set`, or set UNSPLASH_ACCESS_KEY.',
   );
 }
 
