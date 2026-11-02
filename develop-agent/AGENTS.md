@@ -2,7 +2,7 @@
 
 端到端需求开发 agent。七阶段流程，每阶段需人工 sign-off。
 使用飞书文档作为跨机器状态持久化。
-**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / code-review-agent / ci-lite（构建部署工作区）/ gitee-agent / feishu-agent。**
+**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / ci-lite（构建部署工作区）/ gitee-agent / feishu-agent。代码评审不在本 session 内执行：MR 创建后由用户在另一 agent 中使用 code-review-agent 完成评审。**
 
 ## 工程原则
 
@@ -66,8 +66,8 @@ Develop Agent 已加载。模式：飞书模式 (USE_FEISHU=true)
 2. Code Design — 代码设计文档（可选跳过）
 3. Code — 代码实现
 4. Verify — 构建部署 + 线上验证
-5. Code Review — 代码评审（Spec / Code Design 一致性 + 工程清单）
-6. Release — PR 合并 + 文档归档
+5. MR 提交 — 创建 PR，交接外部评审
+6. Merge — 外部评审通过后合并 + 文档归档
 
 开始方式：
 - 需求描述 → 新建需求处理（Phase 1 开始）
@@ -84,8 +84,8 @@ Develop Agent 已加载。模式：Session 模式
 2. Code Design — 代码设计文档（可选跳过）
 3. Code — 代码实现
 4. Verify — 构建部署 + 线上验证
-5. Code Review — 代码评审（Spec / Code Design 一致性 + 工程清单）
-6. Release — PR 合并 + 文档归档
+5. MR 提交 — 创建 PR，交接外部评审
+6. Merge — 外部评审通过后合并 + 文档归档
 
 开始方式：
 - 需求描述 → 新建需求处理（Phase 1 开始）
@@ -105,8 +105,8 @@ Develop Agent 已加载。模式：Session 模式
 | 有 `✅ Phase 1 Sign-off` 但无 Phase 2 标记 | Phase 2 |
 | 有 `✅ Phase 2 Sign-off` 但无 Phase 3 标记 | Phase 3（Phase 2 跳过时：有 Phase 1 Sign-off 且声明跳过 Phase 2） |
 | 有 `✅ Phase 3 Sign-off` 但无 Phase 4 标记 | Phase 4 |
-| 有 `✅ Phase 4 Sign-off` 但无 Phase 5 标记 | Phase 5 (Code Review) |
-| 有 `✅ Phase 5 Sign-off` 但无 Phase 6 标记 | Phase 6 (Release) |
+| 有 `✅ Phase 4 Sign-off` 但无 Phase 5 标记 | Phase 5 (MR 提交) |
+| 有 `✅ Phase 5 Sign-off` 但无 Phase 6 标记 | Phase 6 (Merge + 归档) |
 | 有 `✅ Phase 6 Sign-off` | 已完成 |
 
 ### Session 模式：阶段跳转规则
@@ -118,7 +118,7 @@ Develop Agent 已加载。模式：Session 模式
 
 ## Context 隔离
 
-- 本 agent 是协调器：Phase 1（design-agent）、Phase 5（code-review-agent）与 Phase 4/6（ci-lite / gitee-agent / feishu-agent）采用「上下文切换」委托。
+- 本 agent 是协调器：Phase 1（design-agent）与 Phase 4/5/6（ci-lite / gitee-agent / feishu-agent）采用「上下文切换」委托。Phase 5/6 的代码评审由用户在另一 agent 中使用 code-review-agent 完成，不在本 session 执行。
 - **Phase 2（Code Design）与 Phase 3（Code）为线性单上下文执行**：协调器本人依次加载 code-design-agent / code-agent 的 AGENTS.md 并执行其工作流，**禁止再派发子 agent**（不用 Task 拆 requirement / 不设 Worker、Reviewer、Assembler 角色）。
 - **飞书模式**：跨 Phase / 跨 session 的状态一律通过飞书文档传递（进度、变更组编号、sign-off 结论）。单次会话过长时先落盘，再从飞书文档续接。
 - 每个 Phase 完成后停止，等待用户 sign-off。
@@ -132,8 +132,8 @@ Develop Agent 已加载。模式：Session 模式
 | 2 | Code Design | code-design-agent | Spec | FE + BE Code Design（可选跳过） |
 | 3 | Code | code-agent | Spec + Code Design | commit + push |
 | 4 | Verify | ci-lite | 分支名 | build + deploy + 线上验证 |
-| 5 | Code Review | code-review-agent | Spec (+ Code Design) + 开发分支 diff | review.md |
-| 6 | Release | gitee-agent + feishu-agent | 分支 + review.md | PR 合并 + 更新 Develop 文档 |
+| 5 | MR 提交 | gitee-agent | 分支 + Phase 0-4 证据 | PR + MR 链接（交接外部 review） |
+| 6 | Merge + 归档 | gitee-agent + feishu-agent | 外部 review 结论 | PR 合并 + 更新 Develop 文档 |
 
 每个 Phase 完成后：
 1. 输出总结给用户
@@ -213,31 +213,33 @@ Develop Agent 已加载。模式：Session 模式
 
 详见 `workflows/phase4-verify.md`。
 
-### Phase 5: Code Review
+### Phase 5: MR 提交
 
-委托 code-review-agent 对开发分支变更做结构化评审（项目方向：Spec + Code Design（如有）+ diff），产出 review.md。
-
-流程：
-1. 协调器收集上下文：Spec（Phase 1）、Code Design（Phase 2，如有）、开发分支 commit 范围、Phase 4 验证证据
-2. code-review-agent 按项目方向执行（diff 用本地分支对比，PR 未创建也可评审），产出 `output/code-review/{project}-{branch}/review.md`
-3. P1/P2 `[must]` blocking issue → 返回 Phase 3 修复 → 重跑 Phase 4 验证 → 复审（round 2，增量走 `review-round-delta.md`）
-4. 非阻塞项（P3 / non-blocking）记录，由用户决定是否处理
-5. 用户确认评审结论后 sign-off
-6. 飞书模式：更新 Develop 文档（结论 + review.md 路径 + blocking 清零情况）
-
-详见 `workflows/phase5-code-review.md`。
-
-### Phase 6: Release
-
-委托 gitee-agent 提交 PR 并合并，委托 feishu-agent 更新 Develop 任务文档。
+委托 gitee-agent 创建 PR，交付 MR 链接并交接外部评审。
 
 流程：
-1. gitee-agent 创建 PR（head: 开发分支 → base: master）：PR body 套用 `references/bobcat-mr-*-template.md`（FE/BE × Bugfix/Final-Review），由协调器依据 Phase 1-5 证据填充内容并勾选 Self-checklist（不留给提交者）；review.md 结论作为 PR 自检与评审证据引用
-2. 用户 review 通过后 gitee-agent approve + merge
-3. 飞书模式：feishu-agent 更新 Develop 任务文档（追加最终摘要）
-4. 输出完整流程摘要
+1. 协调器收集上下文：Spec（Phase 1）、开发分支 commit 范围、Phase 4 验证证据
+2. gitee-agent 创建 PR（head: 开发分支 → base: master）：PR body 套用 `references/bobcat-mr-*-template.md`（FE/BE × Bugfix/Final-Review），由协调器依据 Phase 0-4 证据填充内容并勾选 Self-checklist（不留给提交者）
+3. PR 保鲜：`git fetch origin && git merge origin/master` 入开发分支并 push（禁止 rebase / force push），`gitee-cli pr view --json` 确认 `mergeable=true`
+4. 输出 MR 链接 + 外部 review 指引：用户在另一 agent（新 session）中 `use code-review-agent` 评审（项目方向：Spec + MR），review.md 在外部 session 产出，结论带回本 session
+5. 用户确认已接收链接后 sign-off，**本 session 停止，等待外部 review 结论**
 
-详见 `workflows/phase6-release.md`。
+外部 review 发现 P1/P2 `[must]` blocking issue → 回本 session 修复（走 Phase 3/4 修复轮）→ 追加 commit 并 push 更新 MR → 用户在外部再次 review（round 2，增量走 `review-round-delta.md`）。
+
+详见 `workflows/phase5-mr-submit.md`。
+
+### Phase 6: Merge + 归档
+
+用户在外部完成 review 后，带回结论执行合并与归档。
+
+流程：
+1. 用户提供外部 review 结论（review.md 摘要 / blocking 清零情况）
+2. P1/P2 `[must]` blocking 未清零 → 回 Phase 5 修复轮；已清零 → 进入合并（P3 / non-blocking 由用户决定是否处理）
+3. gitee-agent 合并：合并前复查 `mergeable=true`（review 期间 master 可能前进，不满足则 PR 保鲜），`gitee-cli pr review <number> --action approve` + `gitee-cli pr merge <number>`
+4. 飞书模式：feishu-agent 更新 Develop 任务文档（追加最终摘要）
+5. 输出完整流程摘要
+
+详见 `workflows/phase6-merge-archive.md`。
 
 ## Git 规范
 
@@ -333,21 +335,24 @@ Develop Agent 已加载。模式：Session 模式
 - [x] ...
 ✅ Phase 4 Sign-off: 已确认
 
-## Phase 5: Code Review
-- **结论**: Approved（blocking 0 / P3 n）
-- **评审产物**: output/code-review/{project}-{branch}/review.md
+## Phase 5: MR 提交
+- **PR**: #{number} {title}
+- **MR 链接**: {url}
+- **外部 review**: 待用户在另一 agent 中执行 code-review-agent
 
 ## Phase 5 TODO
-- [x] code-review-agent 评审（round 1）
-- [x] blocking 修复与复审（如有）
+- [x] gitee-agent 创建 PR（Self-checklist 已勾选）
+- [x] MR 链接交付，交接外部 review
 ✅ Phase 5 Sign-off: 已确认
 
-## Phase 6: Release
+## Phase 6: Merge + 归档
+- **外部 review 结论**: Approved（blocking 0 / P3 n）
 - **PR**: #{number} {title}
 - **状态**: merged
 
 ## Phase 6 TODO
-- [x] ...
+- [x] 接收外部 review 结论
+- [x] gitee-agent approve + merge
 ✅ Phase 6 Sign-off: 已完成
 ```
 
@@ -366,6 +371,7 @@ Develop Agent 已加载。模式：Session 模式
 
 - 每个 Phase 完成后必须停止，不得自动推进下一 Phase
 - 用户 sign-off 前不得追加飞书文档 / 进入下一 Phase
+- Phase 5 sign-off（MR 链接交付）后本 session 停止，未收到用户带回的外部 review 结论前不得进入 Phase 6
 - 如果 context compression 已开始或即将开始，先完成当前 TODO 项并等待 sign-off
 - Phase 6 sign-off 后任务结束，不得自动开启新需求
 
@@ -375,7 +381,7 @@ Develop Agent 已加载。模式：Session 模式
 - 需要产品审查或 Spec → `use design-agent`
 - 需要代码设计 → `use code-design-agent`
 - 需要代码实现 → `use code-agent`
-- 需要代码评审 → `use code-review-agent`（Spec + diff → review.md）
+- 代码评审不在本 session 内执行：MR 交付后由用户在另一 agent 中 `use code-review-agent` 评审（项目方向：Spec + MR → review.md），结论带回后进入 Phase 6
 - 需要构建部署 → `use ci-lite`（加载 `~/ci-lite/AGENTS.md`，执行 scripts/）
 - 需要 PR 操作 → `use gitee-agent`；gitee-cli 命令在目标项目目录下执行
 - 需要飞书操作 → `use feishu-agent`
@@ -388,7 +394,7 @@ Develop Agent 已加载。模式：Session 模式
 
 | 方式 | 适用场景 |
 |------|---------|
-| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-design-agent / code-agent / code-review-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
+| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
 | **`Task` 工具** | 仅用于轻量、独立、无需用户交互的**只读检索**子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
 
 **Phase 2 / Phase 3 的额外约束（硬性）**：
