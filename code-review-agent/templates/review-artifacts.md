@@ -152,10 +152,17 @@ compact 进度文件；不粘贴需求正文、完整 diff、长测试日志、�
 - Impact:
 - Recommendation:
 - Suggested PR comment:
+- Published discussion: <discussion_id> / note <note_id>（<path>:<line>；发布后记录，供 Round 2+ 关闭）
 - Status history:
   - Round 1: Open - <brief note>
   - Round 2: Fixed - <brief note and evidence>
 ```
+
+**Discussion resolution（发布后）**
+
+- 发布行内评论时必须在 issue 详情记录 discussion id / note id / `path:line`
+- Round 2+ 复核确认 `Fixed` / `Obsolete` 后，按 `workflows/publish.md` resolve 对应 discussion；`Open` / `Needs confirmation` 保持 unresolved
+- 以代码 / 测试 / 复现验证为准，不以作者声称修复为依据；resolve 失败（403 / outdated / 已删除）记录在 `review.md`「发布计划」
 
 超 20 个 issue 或 300 行 → 详情移 `issues/ISSUE-xxx.md`（同 block 格式），root 只留汇总计数、blocking id、最近变化 id、shard 路径；`issues/*.md` 超 20 文件 → `issue-shards/shard-N.md`。
 
@@ -358,6 +365,12 @@ scope = `backend` / `frontend` / `project-heuristics`。记录加载的清单来
 - Status-changed issue ids:
 - Obsolete issue ids:
 
+## Discussion Delta
+
+- Resolved discussion ids:
+- Kept unresolved:
+- Resolution failures:
+
 ## Verification Delta
 
 - Newly passed checks:
@@ -445,6 +458,13 @@ scope = `backend` / `frontend` / `project-heuristics`。记录加载的清单来
   - Round 1: Open - <brief note>
 
 ## 测试与验证
+
+## 发布计划 / 讨论关闭
+
+- 已发布评论:
+- Resolved discussions:
+- 保持 unresolved:
+- 失败项:
 
 ## 限制与不确定性
 ```

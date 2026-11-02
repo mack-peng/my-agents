@@ -74,3 +74,4 @@ acli confluence page view --id <page-id> --json --body-format storage
 - `review.md` 的「评审输入」记录 Spec / Code Design 来源类型与指针
 - 「Spec / Code Design 一致性」与「Spec / Design 冲突」两张表由各 card 机械合并
 - 交付后等待用户确认；如需发布评论到 MR，见 `workflows/publish.md`
+- 重复评审确认 issue 为 `Fixed` / `Obsolete` 后，按 `workflows/publish.md`「修复后关闭讨论」resolve 对应行内评论；`Open` / `Needs confirmation` 保持 unresolved

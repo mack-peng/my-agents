@@ -74,3 +74,4 @@ acli jira workitem view <KEY> --json | jq '.fields.summary'
 
 - `review.md` 的「评审输入」记录工单链接与来源类型；「限制与不确定性」记录无法核实的工单信息
 - 交付后等待用户确认；如需发布评论到 MR，见 `workflows/publish.md`
+- 重复评审确认 issue 为 `Fixed` / `Obsolete` 后，按 `workflows/publish.md`「修复后关闭讨论」resolve 对应行内评论；`Open` / `Needs confirmation` 保持 unresolved

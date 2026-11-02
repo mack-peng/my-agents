@@ -2,7 +2,7 @@
 
 **这条工作流是什么**：把本地评审报告的结论与发现发布到 PR / MR 评论（GitHub / GitLab）。**默认不发布**——评审默认只产出本地报告。
 
-**哪几步停下来等你**：发布前必须获得用户显式确认。
+**哪几步停下来等你**：发布前必须获得用户显式确认。Round 2+ 对已复核为 `Fixed` / `Obsolete` 的 discussion 执行 resolve 属增量流程，按下方「修复后关闭讨论」直接执行并汇报，不需要再次确认。
 
 ---
 
@@ -80,4 +80,28 @@
 ## 发布后
 
 - 在 `review.md` 的「发布计划」节回填已发布内容与失败项
+- 在 `issue-registry.md` 对应 issue 详情记录 discussion id / note id / `path:line`（供 Round 2+ 关闭）；模板见 `templates/review-artifacts.md`
 - 不改动 issue-registry 的状态语义（发布 ≠ 修复）；已解决问题由作者提交新版本后走重复评审（见 `workflows/review-phases.md` 的 round delta）
+
+## 修复后关闭讨论（Round 2+）
+
+**触发**：重复评审（新 commit / 上游修复）确认 issue 状态变为 `Fixed` 或 `Obsolete`，且该 issue 有本 agent 发布的行内 discussion。
+
+**门禁**：
+
+1. 已在新 head 上复核修复（代码 / 测试 / 复现），不是只读作者回复
+2. `issue-registry.md` 能映射到 discussion id（发布时记录；缺失时按 note id / body 反查）
+3. 只 resolve `Fixed` / `Obsolete`；`Open` / `Needs confirmation` 保持 unresolved
+4. 只处理本 agent 发布、且仍存在的行内 discussion；summary note 不适用
+
+**关闭命令（GitLab）**：
+
+```bash
+glab api --method PUT "projects/<url-encoded-path>/merge_requests/<iid>/discussions/<discussion_id>?resolved=true"
+```
+
+发布后复核 `resolved: true`（`GET .../discussions`）。GitHub PR 对应 GraphQL `resolveReviewThread`（thread id 从 `reviewThreads` 取）；当前工作台主要使用 GitLab，GitHub resolve 失败按下方失败处理记录。
+
+**失败处理**：403 / outdated / discussion 已删除 → 在 `review.md`「发布计划」记录未关闭的 discussion id 与原因，不假装已关闭；必要时用普通 note 说明。若行已失效但仍需回复，按 summary 降级规则处理。
+
+**回填**：在 `review.md`「发布计划」与 `review-round-delta.md` 的 Discussion Delta 记录 resolved / unresolved ids；`resolve` 不等于修复，issue 状态仍以 `issue-registry.md` 为准。

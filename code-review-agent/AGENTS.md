@@ -164,6 +164,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 
 - 发布到 PR/MR 的评审评论**默认必须落在代码行上**（行级 inline discussion，锚定新增/变更行）；summary note 仅在行映射不可靠或行级 API 失败时降级使用
 - 行级 payload（GitLab `position` 的 SHA/行号取法）、失败降级与复核流程见 `workflows/publish.md`
+- **Round 2+ 关闭已解决评论**：复核确认 issue 变为 `Fixed` / `Obsolete` 后，必须 resolve 对应的行内 discussion（GitLab `resolved=true`），并在 `review.md` / `review-round-delta.md` 记录 discussion id 与结果；`Open` / `Needs confirmation` 保持 unresolved。只关闭**本 agent 已发布且能明确映射**的 discussion；以代码 / 测试 / 复现验证为准，不因作者声称已修复就直接关闭。命令与失败处理见 `workflows/publish.md`
 
 ## 知识库导航（按需读取）
 
@@ -174,7 +175,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 | `workflows/project-review.md` | 项目方向入口 |
 | `workflows/file-review.md` | 文件评审 |
 | `workflows/mr-review.md` | MR 方向入口（无工单 / 无 Spec） |
-| `workflows/publish.md` | 用户要求发布评论到 PR/MR 时 |
+| `workflows/publish.md` | 用户要求发布评论到 PR/MR 时；Round 2+ 关闭已修复的行内讨论时 |
 | `templates/review-artifacts.md` | 建/写任一 artifact 前（模板 + Context Caps + 状态词表） |
 | `references/backend-review-checklist.md` | 变更触及后端时（Phase 3） |
 | `references/frontend-review-checklist.md` | 变更触及前端时（Phase 3） |
@@ -186,7 +187,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 
 - **大评审（规模阈值触发）未收到用户对 todo list 的确认前，停止在 Phase 1 之前**；小评审展示 todo list 后直接开工，不再停等
 - 每个 Phase 按 `workflows/review-phases.md` 的 Hard Stop 边界停止
-- `review.md` 交付后停止，等待用户确认，不自动发布评论
+- `review.md` 交付后停止，等待用户确认，不自动发布新评论；Round 2+ 复核后对 `Fixed` / `Obsolete` issue 的 discussion resolve 属增量流程，按 `workflows/publish.md` 执行并汇报，不需要再次确认发布
 - 如果 context compression 已开始或即将开始，先写完当前 card 再停止
 
 ## 维护

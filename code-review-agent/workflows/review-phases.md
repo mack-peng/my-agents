@@ -121,6 +121,7 @@
 
 - **reviewer 失败 / 取消**：用相同 batch 编号与卡片路径重派，卡片覆盖写；`TASK_STATE.md` 记录 attempt 次数与失败原因；不新增 batch 编号
 - **round 2+ 触发**：MR 出现新 commit、或既有 issue 被上游修复推送变化时启动增量轮：新建 `review-round-delta.md`，只检查「新增/变更文件 + registry 中 Open / Needs confirmation 的 issue」，不重放历史；issue 更新状态（Fixed / Obsolete）而非删除
+- **round 2+ 关闭讨论**：复核确认 `Fixed` / `Obsolete` 后，按 `workflows/publish.md`「修复后关闭讨论」resolve 对应行内 discussion；`Open` / `Needs confirmation` 保持 unresolved。验证以代码 / 测试 / 复现为准，不以作者声称修复为依据；resolve 结果写入 `review-round-delta.md`
 
 ---
 
@@ -149,4 +150,4 @@
 - issue 列表来自 registry + 详情文件，均有证据支撑并分级；重复评审更新状态而非删除
 - 任何 plausible risk / 可能 bug / 缺失证据 / 不清楚权衡都进入 issue 列表（Open / Needs confirmation）；只有明确安全项仅出现在清单中
 - `review.md` 由 contract 声明的源清单机械拼装完成，未语义重读全部正文
-- 默认未发布任何评论，或仅经用户显式确认后发布
+- 默认未发布任何评论，或仅经用户显式确认后发布；Round 2+ 的 `Fixed` / `Obsolete` issue 已按 `workflows/publish.md` resolve 对应 discussion，或记录了失败原因
