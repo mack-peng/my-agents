@@ -1,12 +1,12 @@
 # Unsplash 素材
 
-已发布 CLI：**`@orangemust/unsplash-cli`**（npm: <https://www.npmjs.com/package/@orangemust/unsplash-cli>；GitHub: <https://github.com/mack-peng/unsplash-cli>）。本 agent 首选 `unsplash` 命令；`scripts/unsplash.mjs` 是无安装备用，读同一个 Keychain 项。
+已发布 CLI：**`@orangemust/unsplash-cli`**（npm: <https://www.npmjs.com/package/@orangemust/unsplash-cli>；GitHub: <https://github.com/mack-peng/unsplash-cli>）。本 agent 首选 `unsplash` 命令；`scripts/unsplash.mjs` 是无安装备用，读同一个 Keychain 项（也支持 `UNSPLASH_ACCESS_KEY` 与旧版 `~/.unsplashrc`）。
 
 ## 安装与配置
 
 1. 打开 <https://unsplash.com/oauth/applications> → **New application**，同意 API Guidelines。
 2. 复制 **Access Key**（不是 Secret Key）。
-3. 安装 CLI 并存入 macOS Keychain（不写 `.env`）：
+3. 安装 CLI 并把 key 存进 macOS Keychain（service `unsplash-cli`，account `default`）：
 
 ```bash
 npm install -g @orangemust/unsplash-cli
@@ -16,7 +16,7 @@ unsplash auth set
 pbpaste | unsplash auth set --stdin
 ```
 
-`unsplash auth status` 可检查配置，不会打印 key。CI 可用 `UNSPLASH_ACCESS_KEY` 覆盖。不要把 key 贴进对话、日志或提交到 git。
+`unsplash auth status --json` 返回 `{configured, source, env, keychain}`，不会打印 key；首次读取可能弹 Keychain 授权，选 **Always Allow**。`unsplash auth clear` 删除。CI / 非 macOS 用 `UNSPLASH_ACCESS_KEY`，优先于 Keychain。不要把 key 贴进对话、日志或提交到 git。
 
 ## 命令
 
@@ -32,17 +32,22 @@ unsplash search "minimal desk" \
   --orientation portrait --download 2 \
   --out-dir output/<slug>/assets/refs/unsplash/
 
-# 按 id 或 unsplash.com 链接下载
+# 按 id 或 unsplash.com 链接下载（--out 指定文件名）
 unsplash download Dwu85P9SOIk \
   --out output/<slug>/assets/refs/unsplash/desk.jpg --size full
+
+# 或按目录下载（自动命名 <id>.<ext>）
+unsplash download Dwu85P9SOIk \
+  --out-dir output/<slug>/assets/refs/unsplash/ --size full
 ```
 
 - `--size`：`raw | full | regular | small | thumb`，默认 `full`（大画布优先）。
-- `--color` / `--orientation` / `--order-by relevant|latest` / `--page`。
+- `--per-page`（1–30，默认 6）/ `--color` / `--orientation` / `--order-by relevant|latest` / `--page`。
 - `--download N` 必须配 `--out-dir`。
-- 输出：`<id>.jpg` + `<id>.json` sidecar（作者、原图页、query、license、下载时间）。
+- 输出：`<id>.jpg` + `<id>.json` sidecar（作者、原图页、attribution、license、下载上报状态、下载时间）。
+- 下载接口同时支持 `--out`（精确路径）与 `--out-dir`（按 `<id>.<ext>` 命名）。
 
-无全局 CLI 时用备用脚本（参数相同，只是前缀不同）：
+无全局 CLI 时用备用脚本（参数相同，只是前缀不同；认证优先 `UNSPLASH_ACCESS_KEY`，其次 Keychain，兼容旧版 `~/.unsplashrc`）：
 
 ```bash
 node image-agent/scripts/unsplash.mjs search "minimal desk" --json

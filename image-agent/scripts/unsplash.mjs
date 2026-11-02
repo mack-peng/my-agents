@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
-import { platform } from 'node:os';
+import { homedir, platform } from 'node:os';
 
 const fail = (error) => {
   console.error(`Error: ${error?.message || error}`);
@@ -14,6 +14,7 @@ process.on('unhandledRejection', fail);
 const API = process.env.UNSPLASH_API_BASE || 'https://api.unsplash.com';
 const KEYCHAIN_SERVICE = 'unsplash-cli';
 const KEYCHAIN_ACCOUNT = 'default';
+const RC_PATH = process.env.UNSPLASH_RC_PATH || join(homedir(), '.unsplashrc');
 const SIZES = new Set(['raw', 'full', 'regular', 'small', 'thumb']);
 const HELP = `Usage:
   node image-agent/scripts/unsplash.mjs search "<query>" [options]
@@ -38,12 +39,13 @@ Common:
   --json              Machine-readable JSON on stdout
   --help              Show this help
 
-Key: macOS Keychain (service "unsplash-cli") or UNSPLASH_ACCESS_KEY env
+Key: macOS Keychain (service "unsplash-cli"), UNSPLASH_ACCESS_KEY, or legacy ~/.unsplashrc
 `;
 
 function loadKey() {
   const env = process.env.UNSPLASH_ACCESS_KEY?.trim();
   if (env) return env;
+
   if (platform() === 'darwin') {
     try {
       const key = execFileSync(
@@ -54,8 +56,25 @@ function loadKey() {
       if (key) return key;
     } catch {}
   }
+
+  let rc = null;
+  try {
+    rc = JSON.parse(readFileSync(RC_PATH, 'utf8'));
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw new Error(`Cannot read ${RC_PATH}: ${error?.message || error}`);
+    }
+  }
+
+  const profileName = process.env.UNSPLASH_PROFILE || rc?.active || 'default';
+  const profiles = rc?.profiles;
+  if (profiles && Object.prototype.hasOwnProperty.call(profiles, profileName)) {
+    const key = profiles[profileName]?.['access-key'];
+    if (typeof key === 'string' && key.trim()) return key.trim();
+  }
+
   throw new Error(
-    'Unsplash Access Key is not configured. Install `@orangemust/unsplash-cli` and run `unsplash auth set`, or set UNSPLASH_ACCESS_KEY.',
+    'Unsplash Access Key is not configured. Install `@orangemust/unsplash-cli` and run `unsplash auth set` (Keychain), or set UNSPLASH_ACCESS_KEY.',
   );
 }
 
