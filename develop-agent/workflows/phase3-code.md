@@ -36,6 +36,7 @@ git checkout -b feat-{需求短名}
 - 目标项目路径
 - 已切换到开发分支，可直接修改
 - 本项目约定（从项目 AGENTS.md 获取）
+- 测试用例规范：已有用例能不动就不动，冲突时最小修改；仅在规范场景新增（高风险 bug 必须、普通 bug 建议、新契约至少 1 条、重构前补 characterization）
 
 ### 4. code-agent 工作流（线性，禁止派子 agent）
 
@@ -49,6 +50,7 @@ code-agent 按自身 AGENTS.md 执行，且必须**在同一上下文内按变�
 
 约束：
 - **禁止用 Task 或任何方式把实现拆给子 agent**
+- **测试用例遵循「测试用例规范」**（见 AGENTS.md）：已有用例能不动就不动，冲突时做最小修改；仅在规范场景新增（高风险 bug 必须、普通 bug 建议、新契约至少 1 条、重构前补 characterization）
 - 上下文接近上限时先落盘进度（分支 + 变更组状态），再从落盘处续接
 
 code-agent 负责 git 提交和推送：
@@ -61,6 +63,7 @@ code-agent 负责 git 提交和推送：
 - 展示 diff 统计（文件数、+lines/-lines）
 - 确认分支名 + commit hash
 - 确认 typecheck + lint 零错误
+- 确认测试决策记录：新增/修改的用例清单及对应场景；未新增时说明理由或替代验证证据
 - 用户确认后 sign-off
 
 ### 6. 归档（飞书模式）
@@ -79,6 +82,7 @@ code-agent 负责 git 提交和推送：
   - `{hash}` {message}
 - **修改文件**: {n} files, +{x}/-{y}
 - **验证**: typecheck ✅ lint ✅
+- **测试决策**: {新增/修改用例清单及场景；或未新增理由 / 替代验证证据}
 
 ## Phase 3 TODO
 - [x] code-agent 实现代码修改
