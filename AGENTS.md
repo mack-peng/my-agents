@@ -19,7 +19,7 @@ No build, test, or lint at the root level.
 - **`develop-agent/`** — 六阶段需求开发协调器。委托 design-agent / code-design-agent / code-agent / ci-lite（`~/ci-lite` 构建部署工作区）/ gitee-agent / feishu-agent 串行执行，每阶段需人工 sign-off。支持飞书持久化（`USE_FEISHU=true`）或 Session 模式，通过 `.env` 配置。`.env` gitignored。
 - **`deploy-agent/`** — 构建/部署入口（Dagger 栈已退役）。不直接执行构建，统一走 ci-lite（`~/ci-lite`：读其 `AGENTS.md` 后执行 `scripts/`）；文档含 morph-cli → ci-lite 命令映射。
 - **`strk-agent/`** — skill-based STRK development workflow entrypoint. Coordinates `strk-sync-specs`, `strk-review-spec`, `strk-code-design`, `strk-write-code`, and `strk-review-code` skills. Stores repo paths in `strk-agent/.env` (gitignored).
-- **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/` (lark-doc, lark-drive, lark-markdown, lark-shared, lark-sheets, lark-wiki). **禁止加载系统级 skill 文件（`~/.agents/skills/lark-*`）**：大多数飞书操作直接从 `feishu-agent/AGENTS.md` 的快捷命令抄写执行，仅在复杂操作（XML block、公式、权限管理等）时才读取 agent 自带的 skill 文件。
+- **`feishu-agent/`** — has 6 sub-skills in `feishu-agent/.agents/skills/` (lark-doc, lark-drive, lark-markdown, lark-shared, lark-sheets, lark-wiki). 全局不再安装任何 `lark-*`：大多数飞书操作直接从 `feishu-agent/AGENTS.md` 的快捷命令抄写执行，仅在复杂操作（XML block、公式、权限管理等）时才读取 agent 自带的 skill 文件。
 - **`doc-agent/`** — has a top-level `SKILL.md` for `officecli`. Sub-skills loaded dynamically via `officecli load_skill <name>`.
 - **`browser-agent/`** — has `.playwright-cli/` runtime artifacts and `*.state.json` session files for saved browser state (dify, doubao, gitlab, zendesk).
 - **`cssprobe-agent/`** — runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser. Supports iframe targeting (`--frame`), timeline sampling (`sample` / `wait-stable`), and JSON scenario regression suites (`scenario run`). Produces structured reports with DEFINITE/INDEFINITE/UNVERIFIABLE confidence levels.
@@ -30,8 +30,42 @@ No build, test, or lint at the root level.
 
 ## Skills
 
-- 飞书 skills 仅位于 `feishu-agent/.agents/skills/`，通过 `npx -y skills add https://open.feishu.cn --skill -y` 安装/更新。**不要安装到 `~/.agents/skills/`**（会导致系统 prompt 中 available_skills 膨胀），feishu-agent 的 AGENTS.md 已自带快捷命令覆盖常用操作。
-- STRK skills 位于 `strk-agent/.agents/skills/`（仅 strk-agent 使用），从 `agent-rnd-skills` 仓库同步。
+**核心原则：skill 只放 `X-agent/.agents/skills/`，根目录和全局永远不装。** opencode 会从 cwd 向上发现 `.agents/skills` / `.claude/skills` / `.opencode/skills`；从仓库根目录调用 agent 时，子目录 skill 不会进入 system prompt，需要时按 `X-agent/AGENTS.md` 的指示读取 `X-agent/.agents/skills/<name>/SKILL.md`。
+
+### 当前保留
+
+| Agent | 已提交 skill | 说明 |
+| --- | --- | --- |
+| `feishu-agent` | `lark-doc` / `lark-drive` / `lark-markdown` / `lark-shared` / `lark-sheets` / `lark-wiki` | 仅这 6 个，不装飞书目录里的其他 22 个 |
+| `strk-agent` | `strk-*`（8 个） | 工作流完整链路，从 `agent-rnd-skills` 同步 |
+| `seo-agent` | `yao-geo-*`（5 个） | 5 个 workflow 各一个 |
+| `bugsnag-agent` | `bugsnag-cli` | 单一 CLI skill |
+| `dify-agent` | `dify-cli` | 单一 CLI skill |
+| `code-agent` | `cssgraph` | CSS 检索 / 影响分析 |
+| `cssprobe-agent` | `cssprobe-cli` | 运行时 CSS 探针 |
+| `aliyun-agent` | `bailian-cli` / `bailian-gen` / `bailian-protocol` | 百炼主入口；从 `~/.bailian/skills` 手工复制，无 lock |
+| `image-agent` | `bailian-gen` / `bailian-protocol` | 直接调用 `bl image`；从 `~/.bailian/skills` 手工复制，无 lock |
+
+不提交、按需读取：`bailian-docs-llm-wiki`（32M，canonical 在 `~/.bailian/skills/`，只读 `models/` + `wiki/` + `llms.txt`）；`bailian-finetune` / `managed-agent` / `sandbox` / `train-deploy`（少用，需要时从 `~/.bailian/skills/` 复制单个）。
+
+### 新增 skill 的决策流程
+
+1. **先判断是否需要 skill**：只是 3–5 行 CLI 命令 → 写进对应 `X-agent/AGENTS.md`，不装 skill。
+2. **先看目录再选**：`skills add <source> -l`，只挑需要的；读一遍 `SKILL.md` 和 `scripts/`，不要整包 `--all`。
+3. **一个 skill 只放一个 agent**：`cd X-agent && skills add <source> -s <skill> -a opencode -y`。禁止 `-g` / `--global`、`-a '*'`、`--all`、在仓库根目录执行。
+4. **决定是否提交**：
+   - 核心、小（< 1M）、稳定、离线要用 → 提交 `X-agent/.agents/skills/` + `skills-lock.json`。
+   - 大（如 32M 文档）、少用、社区 / 实验性 → 不提交；在 `X-agent/AGENTS.md` 写预检：
+     ```md
+     使用前检查 `.agents/skills/<name>/SKILL.md`；缺失时在本目录执行：
+     skills add <source> -s <name> -a opencode -y
+     ```
+     百炼的少用 skill 不用 `bl skill add`（它会装全局），改为：
+     `cp -R ~/.bailian/skills/<name> .agents/skills/`
+5. **验证**：`cd X-agent && skills list`；`skills list -g` 必须没有社区 skill；`/Users/mack/Agents/.agents/skills/` 必须为空；重启 opencode 后从根目录看不到子目录 skill。
+6. **清理**：任何 provider 的批量安装（`bl skill init`、`skills add --all`、`-a '*'`）之后，删除它在全局目录创建的软链，只保留目标 agent 目录。
+
+> Provider 的 skill 目录是按产品面铺开的（飞书 28 个、百炼 10+ 个），不是按你的工作流打包；只装当前 agent 真正用到的，其余不装。
 
 ## Reference docs
 

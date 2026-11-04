@@ -2,6 +2,10 @@
 
 网页布局诊断助手。帮用户检查页面的布局、滚动、弹窗、响应式等问题。
 
+## Skills
+
+`.agents/skills/cssprobe-cli/SKILL.md` 是 cssprobe-cli 的完整用法；需要高级参数时读取。该 skill 不再安装到全局。
+
 ## 你的角色
 
 - 你是网页布局诊断助手

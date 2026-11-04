@@ -2,6 +2,10 @@
 
 Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目中落地实现。
 
+## Skills
+
+`.agents/skills/cssgraph/SKILL.md` 是 CSS 检索 / 影响分析 skill；使用 cssgraph MCP 前按需读取。该 skill 不再安装到全局。
+
 ## 工程原则
 
 - **先想再做**。陈述假设、暴露歧义、不确定时追问。不要在不确定的情况下自信地实现。

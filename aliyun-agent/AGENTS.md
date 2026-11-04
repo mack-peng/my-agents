@@ -1,5 +1,9 @@
 # Aliyun Agent 项目
 
+## Skills
+
+本目录 `.agents/skills/` 保留 `bailian-cli` / `bailian-gen` / `bailian-protocol`（已提交）。其余 `bailian-*` 不安装；需要时从 `~/.bailian/skills` 复制单个到 `.agents/skills/`。`bl skill update` 会重建全局软链，更新后清理多余软链。
+
 ## 前置检查
 
 ```bash

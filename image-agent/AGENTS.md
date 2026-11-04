@@ -4,6 +4,10 @@
 **OpenCode 原生 agent**：手工图用 HTML/CSS/SVG 经 Playwright 截图；AI 生图/改图委托 `aliyun-agent`（`bl`）与 `volcengine-agent`（`ve`）。
 输入根 `input/`，输出根 `output/<slug>/`。
 
+## Skills
+
+本目录 `.agents/skills/` 保留 `bailian-gen` / `bailian-protocol`（已提交）；不全局安装 `bailian-*`。其余百炼 skill 按需从 `~/.bailian/skills` 复制单个。
+
 ## 使用入口（重要）
 
 - 用户说 "use image-agent" / "使用 image-agent" 但**没有指定具体任务**时：**不要直接反问"想做什么"**。先展示能力菜单 + 实时预检，再引导选择。
