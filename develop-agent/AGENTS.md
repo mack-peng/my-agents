@@ -2,14 +2,14 @@
 
 端到端需求开发 agent。七阶段流程，每阶段需人工 sign-off。
 使用飞书文档作为跨机器状态持久化。
-**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / ci-lite（构建部署工作区）/ gitee-agent / feishu-agent。代码评审不在本 session 内执行：MR 创建后由用户在另一 agent 中使用 code-review-agent 完成评审。**
+**本 agent 是协调器，具体操作委托给 design-agent / code-design-agent / code-agent / ci-lite（可选构建部署工作区，仅用户确认后使用）/ gitee-agent / feishu-agent。代码评审不在本 session 内执行：MR 创建后由用户在另一 agent 中使用 code-review-agent 完成评审。**
 
 ## 工程原则
 
 - **先想再做**。不确定的约束、影响面先向用户澄清，不要假设。
 - **协调器薄层**。只做分派和汇总，不直接执行深度代码分析或修改。
 - **逐项确认**。每个 Phase 完成后必须等待用户 sign-off，不闭门造车。
-- **可验证的结果**。Phase 4 部署后必须线上验证，不能验证时记录阻塞原因。
+- **可验证的结果**。Phase 4 必须在用户确认的验证路径上完成验证（ci-lite 线上验证或本地浏览器回归），不能验证时记录阻塞原因。
 - **止损点**。同一模块连续 ≥3 个修复轮未收敛（或每次修复需新增同步 / 补偿 / 开关类机制才能成立）→ 停手，主动提请用户做模型级复盘（状态表 + 操作表 + 不变量三问），按结论重构或显式接受限制，不再排下一个补丁。
 
 ## 运行模式
@@ -118,7 +118,7 @@ Develop Agent 已加载。模式：Session 模式
 
 ## Context 隔离
 
-- 本 agent 是协调器：Phase 1（design-agent）与 Phase 4/5/6（ci-lite / gitee-agent / feishu-agent）采用「上下文切换」委托。Phase 5/6 的代码评审由用户在另一 agent 中使用 code-review-agent 完成，不在本 session 执行。
+- 本 agent 是协调器：Phase 1（design-agent）与 Phase 4/5/6（本地验证或经用户确认的 ci-lite / gitee-agent / feishu-agent）采用「上下文切换」委托。Phase 5/6 的代码评审由用户在另一 agent 中使用 code-review-agent 完成，不在本 session 执行。
 - **Phase 2（Code Design）与 Phase 3（Code）为线性单上下文执行**：协调器本人依次加载 code-design-agent / code-agent 的 AGENTS.md 并执行其工作流，**禁止再派发子 agent**（不用 Task 拆 requirement / 不设 Worker、Reviewer、Assembler 角色）。
 - **飞书模式**：跨 Phase / 跨 session 的状态一律通过飞书文档传递（进度、变更组编号、sign-off 结论）。单次会话过长时先落盘，再从飞书文档续接。
 - 每个 Phase 完成后停止，等待用户 sign-off。
@@ -131,7 +131,7 @@ Develop Agent 已加载。模式：Session 模式
 | 1 | Design | design-agent | 需求描述 + 目标页面 | Spec (.spec.md) |
 | 2 | Code Design | code-design-agent | Spec | FE + BE Code Design（可选跳过） |
 | 3 | Code | code-agent | Spec + Code Design | commit + push |
-| 4 | Verify | ci-lite | 分支名 | build + deploy + 线上验证 |
+| 4 | Verify | 本地验证 / ci-lite（用户确认后） | 分支名 | build +（可选 deploy）+ 验证 |
 | 5 | MR 提交 | gitee-agent | 分支 + Phase 0-4 证据 | PR + MR 链接（交接外部 review） |
 | 6 | Merge + 归档 | gitee-agent + feishu-agent | 外部 review 结论 | PR 合并 + 更新 Develop 文档 |
 
@@ -199,17 +199,20 @@ Develop Agent 已加载。模式：Session 模式
 
 ### Phase 4: Verify
 
-使用 ci-lite（`~/ci-lite`）构建并部署到 preprod 环境。
+默认走本地验证。**无 preprod / 测试环境的项目（如静态小游戏、个人项目）直接本地验证，不使用也不询问 ci-lite**；只有受 ci-lite 支持且存在测试环境的项目，才在用户确认后使用（ci-lite 只服务部分项目，`~/ci-lite` 不一定存在）。
 
 流程：
-0. **确定测试分支**：默认沿用**上次部署的分支** —— `cd ~/ci-lite && ./scripts/status.sh <project>` 取最近一条部署记录的 BRANCH（无部署记录时按新建处理）
-1. 测试分支已存在 → 拉到最新后 cherry-pick Phase 3 commits；**需新建分支时，必须先向用户确认分支名**，再从 master 切出。完成后 push
+0. **判断验证路径**：
+   - 项目无 preprod / 测试环境（如静态小游戏、个人项目）→ 本地验证：`npm run build` + dev/preview + 浏览器回归（响应式、玩法、Toast、结算），记录证据，不依赖 `~/ci-lite`，不询问 ci-lite
+   - 项目受 ci-lite 支持且存在 preprod → 询问用户是否使用 ci-lite；确认后才用
+   - 用户明确要求使用 ci-lite → 检查 `~/ci-lite` 存在且项目受支持；缺失/不支持时回到本地验证或请用户提供路径
+1. **确定测试分支（仅 ci-lite 路径）**：默认沿用**上次部署的分支** —— `cd ~/ci-lite && ./scripts/status.sh <project>` 取最近一条部署记录的 BRANCH（无部署记录时按新建处理）
+2. 测试分支已存在 → 拉到最新后 cherry-pick Phase 3 commits；**需新建分支时，必须先向用户确认分支名**，再从 master 切出。完成后 push
    > 冲突时优先 `git checkout --theirs <file>` 接受开发分支版本，再 `git cherry-pick --continue`
-2. ci-lite `scripts/build.sh` 构建测试分支 → 获得 BUILD ID
-3. ci-lite `scripts/deploy.sh` 部署到 preprod → 获得 DEPLOY ID
-4. 协调器验证线上效果（fetch 页面、检查关键变更点）
-5. 自动验证（OG 图片 200、JSON-LD 正确、meta 标签存在等）
-6. 用户确认后 sign-off
+3. ci-lite `scripts/build.sh` 构建测试分支 → 获得 BUILD ID
+4. ci-lite `scripts/deploy.sh` 部署到 preprod → 获得 DEPLOY ID
+5. 验证：ci-lite 路径做线上验证（页面可访问、关键变更、OG/JSON-LD 等）；本地路径做浏览器回归（清单见 workflow）
+6. 记录验证结果；用户确认后 sign-off
 
 详见 `workflows/phase4-verify.md`。
 
@@ -382,7 +385,7 @@ Develop Agent 已加载。模式：Session 模式
 - 需要代码设计 → `use code-design-agent`
 - 需要代码实现 → `use code-agent`
 - 代码评审不在本 session 内执行：MR 交付后由用户在另一 agent 中 `use code-review-agent` 评审（项目方向：Spec + MR → review.md），结论带回后进入 Phase 6
-- 需要构建部署 → `use ci-lite`（加载 `~/ci-lite/AGENTS.md`，执行 scripts/）
+- 需要构建部署 → 无测试环境的项目直接本地 build + 浏览器验证；有 preprod 的项目先询问用户是否使用 ci-lite，确认后 `use ci-lite`（加载 `~/ci-lite/AGENTS.md`，执行 scripts/）
 - 需要 PR 操作 → `use gitee-agent`；gitee-cli 命令在目标项目目录下执行
 - 需要飞书操作 → `use feishu-agent`
 - 协调器自身可执行简单 git 操作（分支创建、切换），不执行代码修改或提交
@@ -394,7 +397,7 @@ Develop Agent 已加载。模式：Session 模式
 
 | 方式 | 适用场景 |
 |------|---------|
-| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
+| **上下文切换**（加载 AGENTS.md） | 委托给完整 agent（design-agent / code-design-agent / code-agent / gitee-agent / feishu-agent）或工作区（ci-lite：仅在用户确认后加载 `~/ci-lite/AGENTS.md`）。加载其 AGENTS.md 作为操作指令，执行其完整工作流。 |
 | **`Task` 工具** | 仅用于轻量、独立、无需用户交互的**只读检索**子任务（如代码搜索、单文件读取）。**禁止**用 Task 委托完整 agent。 |
 
 **Phase 2 / Phase 3 的额外约束（硬性）**：

@@ -1,8 +1,16 @@
 # Phase 4: Verify
 
-使用 ci-lite（`~/ci-lite`）构建测试分支并部署到 preprod 环境，然后验证线上效果。
+验证默认在本地执行。**无 preprod / 测试环境的项目（如静态小游戏、个人项目）直接本地验证，不使用也不询问 ci-lite**；只有受 ci-lite 支持且存在测试环境的项目，才在用户确认后使用。ci-lite 只服务部分项目，`~/ci-lite` 不一定存在，禁止默认假定可用。
 
-## 执行步骤
+## 0. 验证路径判断
+
+- **项目无 preprod / 测试环境**（如 Minesweeper 这类静态小游戏、个人项目）→ 走 A 本地验证，**不询问 ci-lite**
+- **项目受 ci-lite 支持且存在 preprod** → 询问用户是否使用 ci-lite；确认后走 B
+- **用户明确要求使用 ci-lite** → 先检查 `~/ci-lite` 是否存在、项目是否受支持；缺失/不支持则回 A
+
+Minesweeper 这类项目没有测试环境，直接走 A。
+
+## A. 本地验证（默认）
 
 ### 1. 收集上下文
 
@@ -11,10 +19,48 @@
 - commit hash 列表
 - 修改范围摘要
 
-- 部署目标：preprod（固定，无需确认）
-- 测试分支：**默认沿用上次部署的分支**，无需询问；仅当需要新建分支时，先向用户确认分支名
+### 2. 构建
 
-**确定默认测试分支**：查询 ci-lite 部署记录，取最近一条的 BRANCH：
+执行项目对应的构建命令（Minesweeper：`npm run build`）。构建失败 → 回 Phase 3 修复并追加 commit。
+
+### 3. 浏览器回归
+
+启动 `npm run dev` 或 `npm run preview`，加载 browser-agent 的 AGENTS.md，用 `playwright-cli` 验证：
+
+- **响应式矩阵**：320×568 / 390×844 / 568×320 / 667×375 / 768×1024 / 1024×768 / 1440×900；无横向/纵向溢出；HUD、棋盘、Toast 不越界
+- **玩法**：首击 3×3 安全、翻开全部安全格胜利、插满旗不胜利、踩雷失败、计时起停、重开、换难度
+- **状态**：胜负结算卡片、Toast 堆叠（上限 3、8px 间距、不拦截点击）、超旗负数、插旗模式
+- **控制台**：无 console error / pageerror
+
+记录关键断言输出与截图。
+
+### 4. 结果确认
+
+展示验证结果表格（检查项 + 预期 + 实际 + 状态）。失败项记录阻塞原因并讨论。用户确认后 sign-off。
+
+### 5. 归档（飞书模式）
+
+通过 feishu-agent 更新 Develop 任务文档：
+
+- 更新任务上下文：`**测试分支**: 本地验证（未使用 ci-lite）`
+- 追加 Phase 4 章节：记录本地构建结果、浏览器回归结果、截图路径（无 BUILD / DEPLOY ID）
+- 追加 `✅ Phase 4 Sign-off`
+
+## B. ci-lite 路径（用户确认后）
+
+### 1. 前置检查
+
+```bash
+ls ~/ci-lite
+```
+
+- 不存在 → 回到 A 本地验证，或请用户提供 ci-lite 路径
+- 项目需在支持列表：`door-adminpro` / `official-website` / `humanbench-web` / `door-applets-bg` / `door-applets`
+- 不在列表 → 回到 A 本地验证
+
+### 2. 确定测试分支
+
+默认沿用**上次部署的分支**：
 
 ```bash
 cd ~/ci-lite && ./scripts/status.sh <project>
@@ -22,9 +68,9 @@ cd ~/ci-lite && ./scripts/status.sh <project>
 # 无部署记录 → 按新建处理，需用户确认分支名
 ```
 
-### 2. cherry-pick 到测试分支
+### 3. cherry-pick 到测试分支
 
-**注意：不要直接在开发分支上构建。** 测试分支已存在是常态（默认沿用上次部署分支），拉到最新后 cherry-pick 增量 commits；仅当确认需要新建时，才从 master 创建：
+**不要直接在开发分支上构建。** 测试分支已存在是常态，拉到最新后 cherry-pick 增量 commits；仅当确认需要新建时，才从 master 创建：
 
 ```bash
 # 复用（默认路径）
@@ -41,20 +87,21 @@ git cherry-pick <commit1> <commit2> ...
 git push origin <test-branch>
 ```
 
-### 3. 使用 ci-lite 构建
+冲突时优先 `git checkout --theirs <file>` 接受开发分支版本，再 `git cherry-pick --continue`。
 
-**使用上下文切换模式：读取 `~/ci-lite/AGENTS.md` 作为操作指令。**
+### 4. 使用 ci-lite 构建
+
+读取 `~/ci-lite/AGENTS.md` 作为操作指令：
 
 ```bash
 cd ~/ci-lite
 ./scripts/build.sh <project> <test-branch>
 ```
 
-- project：`door-adminpro` / `official-website` / `humanbench-web` / `door-applets-bg` / `door-applets`（从项目 AGENTS.md 或用户确认）
 - 返回 BUILD ID（10 位大写 hex）
 - 构建日志：`{project}/output/{BUILDID}/build.log`
 
-### 4. 使用 ci-lite 部署
+### 5. 使用 ci-lite 部署
 
 ```bash
 cd ~/ci-lite
@@ -66,7 +113,7 @@ cd ~/ci-lite
 - 生产通道未配置，仅支持 preprod
 
 **小程序（door-applets）**：deploy 即上传微信平台（robot 2），不是服务器部署。
-- 版本号缺省自动生成 `vYY.MM.DDTNN`（如 `v26.09.17T01`）；日志见 `{project}/output/{BUILDID}/upload.log`
+- 版本号缺省自动生成 `vYY.MM.DDTNN`；日志见 `{project}/output/{BUILDID}/upload.log`
 - 上传后在微信公众平台「版本管理 → 开发版本」手动「选为体验版」
 - 小程序无法由协调器自动验证，验收依赖真机复测
 
@@ -74,81 +121,34 @@ cd ~/ci-lite
 - 构建期 env 见 `config/env/humanbench-web.env`（`VITE_*`，改后需重新构建）
 - 站点 nginx 反代（`/wx-api/` `/r/` `/og/`）不属于 ci-lite 产物，需在站点配置中维护
 
-### 5. 线上验证
+### 6. 线上验证
 
-协调器自动执行以下验证：
+- 首页与目标页面可访问（HTTP 200）
+- SEO（如适用）：JSON-LD、title/description/Twitter Card/OG、sitemap、OG 图片
+- 功能（如适用）：新组件渲染、iframe、表单
 
-**基础检查：**
-- 首页可访问（HTTP 200）
-- 目标页面可访问（如有特定页面）
+展示验证结果表格（检查项 + 预期 + 实际 + 状态）。
 
-**SEO 相关验证（如适用）：**
-- JSON-LD 结构化数据正确
-- Meta 标签（title、description、Twitter Card、OG）存在
-- Sitemap URL 可访问
-- OG 图片 HTTP 200
+### 7. 归档（飞书模式）
 
-**功能验证（如适用）：**
-- 新组件渲染正常
-- iframe 可加载
-- 表单可提交
-
-向用户展示验证结果表格（检查项 + 预期 + 实际 + 状态）。
-
-### 5. 协调器确认流程
-
-- 展示验证结果
-- 如有失败项，记录阻塞原因并讨论
-- 用户确认后 sign-off
-- 飞书文档追加 `✅ Phase 4 Sign-off`（含验证结果）
-
-### 6. 归档（飞书模式）
-
-通过 feishu-agent 更新 Develop 任务文档：
-
-**更新任务上下文**（补充测试分支信息）：
-- 使用 `str_replace` 更新 `**测试分支**: （待 Phase 4 补充）` 为实际分支名
-
-**追加 Phase 4 章节**：
-
-首次构建部署：
-```markdown
-## Phase 4: Verify
-
-### 第 1 轮
-- **测试地址**: {url}
-- **测试结果**: ✅/❌
-
-## Phase 4 TODO
-- [x] 创建测试分支并 cherry-pick
-- [x] ci-lite 构建（BUILD ID: {bid}）
-- [x] ci-lite 部署（DEPLOY ID: {did}）
-- [x] 线上验证
-✅ Phase 4 Sign-off: 已确认
-```
-
-如发现问题需要修复，追加修复记录：
-```markdown
-### 修复记录
-1. {问题描述} — {修复方案}
-2. {问题描述} — {修复方案}
-
-### 第 {n} 轮（最终）
-- **测试地址**: {url}
-- **测试结果**: ✅ 全部通过
-```
-
-**注意**：每轮修复后，将新的 commit 记录追加到 Phase 3 的 Commit 记录中，保持代码变更历史完整。
+- 更新任务上下文：`**测试分支**: {test-branch}`
+- 追加 Phase 4 章节：BUILD ID / DEPLOY ID / 测试地址 / 验证结果 / 修复记录
+- 追加 `✅ Phase 4 Sign-off`
 
 ## Sign-off 条件
 
-- [ ] Build 成功，有 Build ID
+**本地验证（A）**
+- [ ] 构建成功
+- [ ] 浏览器回归清单通过（失败项已记录阻塞原因）
+- [ ] 飞书文档已追加 Phase 4
+
+**ci-lite（B）**
+- [ ] Build 成功，有 BUILD ID
 - [ ] Deploy 成功，PM2 online
 - [ ] 线上验证完成（关键检查项通过）
-- [ ] 飞书文档已追加 Phase 4 章节
+- [ ] 飞书文档已追加 Phase 4
 
 ## 产出
 
-- Build ID + Deploy ID
-- 验证结果表格
-- 线上可访问的 preprod URL
+- **A**：本地构建结果 + 浏览器回归证据（截图 / 关键断言）
+- **B**：BUILD ID + DEPLOY ID + preprod URL + 验证结果表格
