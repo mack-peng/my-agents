@@ -50,3 +50,6 @@ browser-agent/update-state.js
 
 
 strk-agent/.env
+
+# design-agent: upstream skill license not declared; keep local, restore via skills-lock.json
+design-agent/.agents/skills/web-design-guidelines/

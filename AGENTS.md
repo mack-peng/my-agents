@@ -46,6 +46,8 @@ No build, test, or lint at the root level.
 | `aliyun-agent` | `bailian-cli` / `bailian-gen` / `bailian-protocol` | 百炼主入口；从 `~/.bailian/skills` 手工复制，无 lock |
 | `image-agent` | `bailian-gen` / `bailian-protocol` | 直接调用 `bl image`；从 `~/.bailian/skills` 手工复制，无 lock |
 
+`design-agent` 的 `web-design-guidelines` 为本地安装、不提交（上游未声明 license），仅提交 `design-agent/skills-lock.json`。
+
 不提交、按需读取：`bailian-docs-llm-wiki`（32M，canonical 在 `~/.bailian/skills/`，只读 `models/` + `wiki/` + `llms.txt`）；`bailian-finetune` / `managed-agent` / `sandbox` / `train-deploy`（少用，需要时从 `~/.bailian/skills/` 复制单个）。
 
 ### 新增 skill 的决策流程

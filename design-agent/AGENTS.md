@@ -8,6 +8,12 @@ OpenCode 产品设计审查代理。审查现有代码库的产品质量（UI/UX
 
 学习资源: https://www.woshipm.com/（人人都是产品经理 — 交互体验/产品设计专栏）
 
+## Skills
+
+- `web-design-guidelines`（`.agents/skills/web-design-guidelines/`）：审查 UI 代码用，按 Vercel Web Interface Guidelines 输出 `file:line` 问题；执行审查模式时优先读取。
+- 上游 `vercel-labs/agent-skills` 未声明 LICENSE，因此 skill 内容不提交，只提交 `design-agent/skills-lock.json`；缺失时在本目录执行 `skills experimental_install`，或 `skills add vercel-labs/agent-skills -s web-design-guidelines -a opencode -y`。
+- 从仓库根目录调用 design-agent 时，先读 `.agents/skills/web-design-guidelines/SKILL.md`；不要安装到全局 `~/.agents/skills` / `~/.claude/skills`。
+
 ## 工程原则
 
 - **先想再做**。陈述假设、暴露歧义、不确定时追问，不要在不确定的情况下自信地输出。
