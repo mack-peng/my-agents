@@ -25,7 +25,7 @@ ve version
 npx -y @volcengine/skills-setup@latest
 ```
 
-> npm 安装时会自动安装火山引擎核心 Skill 到 `~/.agents/skills`（会让宿主 available_skills 膨胀）。如不需要，安装时设置 `VOLCENGINE_CLI_SKIP_SKILLS=1`。
+> 本项目不保留全局 skill：安装时设置 `VOLCENGINE_CLI_SKIP_SKILLS=1`，避免自动装到 `~/.agents/skills`；需要某个官方 skill 时，复制到 `volcengine-agent/.agents/skills/`。
 > 常用官方 skill：`volcengine-cli`（ve 用法）、`volcengine-api`（查 API 参数/枚举/错误码）、`volcengine-sdk-generator`（生成 SDK 示例）、`volcengine-knowledge-search`（文档全文检索）、`volcengine-troubleshooting`（排障）。
 
 ## 配置与登录

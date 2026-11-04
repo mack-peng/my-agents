@@ -34,9 +34,16 @@ npm install -g @larksuite/cli
 
 ### 3. 安装 Skills
 
+本目录已提交 6 个精选 skill，通常无需重装。更新/恢复时在本目录执行：
+
 ```bash
-npx -y skills add https://open.feishu.cn --skill -y
+npx -y skills add https://open.feishu.cn \
+  -s lark-doc -s lark-drive -s lark-markdown \
+  -s lark-shared -s lark-sheets -s lark-wiki \
+  -a opencode -y
 ```
+
+不要省略 `-s` / `-a opencode`，也不要用 `-g`：飞书目录有 28 个 skill，整包装会把它们带到全局和所有 agent。
 
 ## 配置与登录
 

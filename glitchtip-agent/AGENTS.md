@@ -208,7 +208,7 @@ glitchtip-cli skill-install --local
 glitchtip-cli skill-uninstall
 ```
 
-> Skill 安装到 `~/.agents/skills/glitchtip-cli/`（opencode/cursor）或 `~/.claude/skills/glitchtip-cli/`（claude）。
+> 在 `glitchtip-agent/` 目录执行 `glitchtip-cli skill-install --local --target opencode`，会装到 `glitchtip-agent/.agents/skills/glitchtip-cli/`。不要省略 `--local`，否则会装到全局 `~/.agents/skills/`。
 
 ## 常见工作流
 
