@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440, height=1920">
+<title>Type Poster</title>
+<style>
+  :root {
+    --w: 1440px;
+    --h: 1920px;
+    --pad-x: 88px;
+    --pad-y: 80px;
+    --bg: #0A0A0A;
+    --ink: #F5F1E8;
+    --muted: rgba(245, 241, 232, 0.62);
+    --line: rgba(245, 241, 232, 0.20);
+    --accent: #FF4D00;
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: var(--w);
+    height: var(--h);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .still {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .still::before {
+    content: "05";
+    position: absolute;
+    right: -0.03em;
+    bottom: -0.12em;
+    font: 800 760px/0.8 var(--font-sans);
+    letter-spacing: -0.09em;
+    color: rgba(245, 241, 232, 0.045);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .bar {
+    position: absolute;
+    top: 0;
+    right: 88px;
+    width: 18px;
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .safe {
+    position: absolute;
+    inset: 0;
+    padding: var(--pad-y) 148px var(--pad-y) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font: 500 16px/1.25 var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .top .right { text-align: right; }
+
+  .hero {
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-right: 40px;
+  }
+
+  .stack {
+    margin: 0;
+    font-size: 280px;
+    line-height: 0.80;
+    letter-spacing: -0.075em;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .stack span { display: block; }
+
+  .stack .accent {
+    display: inline-block;
+    background: var(--accent);
+    color: #0A0A0A;
+    padding: 0 0.10em 0.03em 0.03em;
+    margin-left: -0.03em;
+    transform: translateX(-0.02em);
+  }
+
+  .subhead {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    margin: 54px 0 0;
+    max-width: 720px;
+    color: rgba(245, 241, 232, 0.82);
+    font-size: 34px;
+    line-height: 1.5;
+  }
+
+  .subhead::before {
+    content: "";
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 12px;
+    background: var(--accent);
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font: 400 15px/1.4 var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .bottom strong {
+    display: block;
+    color: var(--ink);
+    font: 500 22px/1.2 var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .bottom .right { text-align: right; }
+</style>
+</head>
+<body>
+  <main id="still" class="still">
+    <div class="bar"></div>
+    <div class="safe">
+      <header class="top">
+        <div>AI WEEKLY / 宣言</div>
+        <div class="right">NO.05<br>2026.11</div>
+      </header>
+
+      <section class="hero">
+        <h1 class="stack">
+          <span>MAKE</span>
+          <span><span class="accent">IT</span></span>
+          <span>LOUD</span>
+        </h1>
+        <p class="subhead">不是更响，是更清楚。<br>一张图只留一个记忆点。</p>
+      </section>
+
+      <footer class="bottom">
+        <div><strong>VOL.05</strong>WORKBENCH NOTES</div>
+        <div class="right"><strong>05 / 06</strong>BRUTALIST TYPE</div>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

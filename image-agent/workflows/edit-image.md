@@ -24,6 +24,8 @@
 
 ## Step 2 执行
 
+改图 prompt 先读 `.agents/skills/prompt-images/SKILL.md`；核心三句：**保留什么、改什么、不能动什么**。一次只改一个变量。
+
 ### HTML 叠加（文字/Logo/数据）
 
 1. 原图拷到 `output/<slug>/assets/`。
@@ -65,6 +67,7 @@ ve cv20240606 Img2ImgXLSft --req_key i2i_xl_sft \
 - 放大 100% 看 AI 痕迹：多余手指、重复纹理、融化边缘。
 - 尺寸/比例是否准确；是否有不必要裁切。
 - 不覆盖原图：输出 `v2` / `archive/`。
+- 合成排版按 `references/design-review.md` 检查，再做 320px 缩略图。
 
 ## Step 4 交付
 

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1600, height=900">
+<title>Data Story</title>
+<style>
+  :root {
+    --w: 1600px;
+    --h: 900px;
+    --pad-x: 72px;
+    --pad-y: 60px;
+    --paper: #F4F1EA;
+    --ink: #141414;
+    --muted: rgba(20, 20, 20, 0.56);
+    --line: rgba(20, 20, 20, 0.14);
+    --accent: #1E46E8;
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: var(--w);
+    height: var(--h);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .still {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(20, 20, 20, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(20, 20, 20, 0.035) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.10));
+  }
+
+  .safe {
+    position: absolute;
+    inset: 0;
+    padding: var(--pad-y) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+    font: 500 16px/1.2 var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .top .right {
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 0.92fr 1.08fr;
+    gap: 64px;
+    align-items: stretch;
+    padding: 44px 0 24px;
+    min-height: 0;
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--line);
+    padding-right: 48px;
+    min-width: 0;
+  }
+
+  .kicker {
+    color: var(--accent);
+    font: 500 16px/1 var(--font-mono);
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+
+  .big {
+    font: 700 300px/0.86 var(--font-sans);
+    letter-spacing: -0.075em;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+  }
+
+  .big .unit {
+    font-size: 0.34em;
+    letter-spacing: -0.02em;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  .hero-label {
+    margin: 26px 0 0;
+    max-width: 420px;
+    font-size: 26px;
+    line-height: 1.45;
+    color: rgba(20, 20, 20, 0.74);
+  }
+
+  .hero-source {
+    margin-top: 28px;
+    color: var(--muted);
+    font: 400 14px/1.5 var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .chart {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    margin-bottom: 30px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .chart-head strong {
+    font: 600 28px/1.2 var(--font-sans);
+    letter-spacing: -0.02em;
+  }
+
+  .chart-head span {
+    color: var(--muted);
+    font: 400 14px/1.4 var(--font-mono);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 132px 1fr 90px;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .row .name {
+    font: 500 18px/1.1 var(--font-mono);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .track {
+    position: relative;
+    height: 30px;
+    background: rgba(20, 20, 20, 0.07);
+  }
+
+  .track i {
+    display: block;
+    height: 100%;
+    background: rgba(20, 20, 20, 0.34);
+    width: var(--value);
+  }
+
+  .row.accent .track i { background: var(--accent); }
+
+  .row .value {
+    font: 500 24px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    letter-spacing: -0.02em;
+  }
+
+  .row.accent .value { color: var(--accent); }
+
+  .axis {
+    display: grid;
+    grid-template-columns: 132px 1fr 90px;
+    gap: 18px;
+    margin-top: 24px;
+    color: var(--muted);
+    font: 400 13px/1 var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+
+  .axis .ticks {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 32px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font: 400 14px/1.4 var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .foot .note {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 20px;
+    letter-spacing: 0.01em;
+  }
+</style>
+</head>
+<body>
+  <main id="still" class="still">
+    <div class="grid-bg"></div>
+    <div class="safe">
+      <header class="top">
+        <div>CAPABILITY / 能力与基准</div>
+        <div class="right">AI WEEKLY · 2026.11<br>PAGE 01 / 04</div>
+      </header>
+
+      <section class="main">
+        <div class="hero">
+          <div class="kicker">AA INTELLIGENCE INDEX V5.0</div>
+          <h1 class="big">59<span class="unit">/100</span></h1>
+          <p class="hero-label">同一个模型，换一把尺子，<br>结论可能完全不同。</p>
+          <div class="hero-source">SOURCE / 待填 · 第三方或厂商自测需标注</div>
+        </div>
+
+        <div class="chart">
+          <div class="chart-head">
+            <strong>五个基准，统一到 0–100</strong>
+            <span>不同刻度不能直接横比<br>数值仅作版式示例</span>
+          </div>
+
+          <div class="rows">
+            <div class="row accent">
+              <div class="name">AA INDEX</div>
+              <div class="track"><i style="--value: 59%"></i></div>
+              <div class="value">59</div>
+            </div>
+            <div class="row">
+              <div class="name">TB 4.0</div>
+              <div class="track"><i style="--value: 50%"></i></div>
+              <div class="value">50.3</div>
+            </div>
+            <div class="row">
+              <div class="name">CYBENCH</div>
+              <div class="track"><i style="--value: 93%"></i></div>
+              <div class="value">93</div>
+            </div>
+            <div class="row">
+              <div class="name">MMLU</div>
+              <div class="track"><i style="--value: 88%"></i></div>
+              <div class="value">88</div>
+            </div>
+            <div class="row">
+              <div class="name">GPQA</div>
+              <div class="track"><i style="--value: 74%"></i></div>
+              <div class="value">74</div>
+            </div>
+          </div>
+
+          <div class="axis">
+            <div></div>
+            <div class="ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+            <div></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <div class="note">先问“这把尺子量什么”，再看数字。</div>
+        <div>SOURCE / REPLACE WITH SOURCE</div>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

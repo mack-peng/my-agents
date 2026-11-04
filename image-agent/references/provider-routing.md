@@ -1,14 +1,15 @@
 # 供应商路由与命令
 
-默认路由：**阿里云快稿 + 火山精修，按场景自动选**。用户点名供应商时以用户为准。
+默认路由：**百炼最终稿 + 火山审美备选 + z-image-turbo 草稿**。用户点名供应商时以用户为准。
 
 ## 决策表
 
 | 场景 | 首选 | 备选 |
 |---|---|---|
-| 快速草稿 / 批量探索 / 背景纹理 | 阿里云 `z-image-turbo` | 火山 `jimeng_t2i_v30` |
+| 快速草稿 / 批量探索 / 极淡纹理 | 阿里云 `z-image-turbo` | 火山 `jimeng_t2i_v30` |
+| 最终主视觉 / 复杂场景 / 长 prompt | 阿里云 `qwen-image-3.0` | 火山 `jimeng_t2i_v40` / `jimeng_seedream46_cvtob` |
 | 高质量中文审美 / 插画 / 主视觉 | 火山 `jimeng_t2i_v40` | 火山 `jimeng_seedream46_cvtob` |
-| 换背景 / 多图合成 / 加 Logo 位置 | 阿里云 `bl image edit` + `wan2.7-image` | 火山 `cv20240606 Img2ImgXLSft` |
+| 换背景 / 多图合成 / 保留主体 | 阿里云 `bl image edit` + `wan2.7-image` | 火山 `cv20240606 Img2ImgXLSft` |
 | 扩图 / 局部重绘 | 火山 `Img2ImgOutpainting` / `Img2ImgInpainting` | 阿里云 `bl image edit` |
 | 需要精确保留文字/Logo/UI | **HTML 叠加**，不让 AI 重画 | 只让 AI 做背景 |
 | 内部/敏感截图 | **纯手工 HTML**，不发给服务商 | 用户明确确认可外发后再用 AI |
@@ -21,22 +22,27 @@
 
 ```bash
 bl image generate \
-  --prompt "<prompt>" \
-  --model z-image-turbo \
+  --prompt "<完整自然语言 prompt>" \
+  --model qwen-image-3.0 \
   --size 3:4 \
-  --n 2 \
+  --n 1 \
+  --seed 42 \
+  --prompt-extend false \
+  --negative-prompt "text, letters, watermark, logo, UI, blurry, oversaturated" \
   --watermark false \
   --out-dir output/<slug>/assets/ai/
 ```
 
-- `--size` 支持比例（`3:4`、`16:9`、`1:1`）或像素（`1440*1920`）。
-- `--n` 最大 6；批量探索默认 2，最终稿默认 1。
+- `--size` 支持比例（`3:4`、`16:9`、`1:1`）或像素（`1440*1920`）。比例不要写进 prompt 正文。
+- `--n` 最大 6；草稿默认 2，最终稿默认 1。
 - 模型：
-  - `z-image-turbo`：快、便宜、同步，适合草稿/背景/纹理。
-  - `wan2.6-t2i`：更高质量，适合最终主视觉。
-  - `qwen-image-3.0`：**当前 MaaS 端点 429 频繁，不默认使用**。
+  - `qwen-image-3.0`：**最终稿默认**。长段自然语言、复杂场景、空间关系理解最好；用 `--prompt-extend false` 保留你自己写的结构。
+  - `wan2.6-t2i`：备选高质量模型；按实际端点可用性选择。
+  - `z-image-turbo`：**只做草稿/批量探索/极淡纹理**，不用于最终主视觉。快、便宜、同步，但细节和审美上限低。
+  - 若 `qwen-image-3.0` 端点 429/不可用：报告用户，再用 `wan2.7-image` 或火山即梦；**不要静默切换**。
 - 默认关闭水印：`--watermark false`。
 - 先看请求不扣费：加 `--dry-run`。
+- prompt 写法见 `references/prompt-recipes.md`；先读 `.agents/skills/prompt-images/SKILL.md`。
 
 ### 改图 / 多图合成
 
@@ -132,6 +138,7 @@ node image-agent/scripts/ve-image.mjs i2i --image input/ref.jpg --prompt "<edit 
 
 - 默认只生成 **1 张最终稿**；草稿最多 2 张；批量/4K/组图先确认。
 - 第一次调用供应商或数量 > 2 时，先向用户确认。
+- 最终稿优先 `qwen-image-3.0`；`z-image-turbo` 只用于草稿，避免“省小钱、毁成品”。
 - 记录每次调用的 provider/model/req_key/seed/size/task_id/输出路径，写入 `recipe.md`。
 - 图生图会把图片上传服务商；内部/敏感截图默认只走手工排版。
 - 不生成真实人物换脸、名人伪造、侵权品牌素材；需要时先确认授权。
@@ -144,3 +151,6 @@ node image-agent/scripts/ve-image.mjs i2i --image input/ref.jpg --prompt "<edit 
 - 2026-10-26：`jimeng_t2i_v40` 1024×1024 调用成功（612KB，轮询约 3s）。空间感、材质和光线明显更好；适合最终主视觉。URL 24h 有效，脚本已即时下载。
 - `ve-image.mjs` 的 `--task-id` 可用于恢复已提交任务，避免重复生成扣费。
 - 火山 i2i（`cv20240606 Img2ImgXLSft`）目前只做了 `--dry-run` 参数验证（2026-10-26），未实测出图；首次真实使用时按小图（≤500KB）验证一次并回填本记录。
+- 2026-11-04：最终稿路由改为 `qwen-image-3.0`（用户确认）；`z-image-turbo` 降级为草稿。
+- 2026-11-04：`qwen-image-3.0` 实测成功：3:4 输出 1728×2368，约 3.7MB，约 15 秒（含下载），seed 42、`prompt_extend=false`。光线、材质、人物背面构图稳定；但 prompt 明确写 `no readable screens` 时，屏幕仍生成了可读代码/UI 文本。含屏幕/文字的题材需要加局部遮罩或改用 HTML 叠字，不要相信模型的“无文字”约束。
+- 2026-11-04：`qwen-image-3.0` 亮色版同样约 15 秒、1728×2368、4.0MB；高调日光场景稳定，但整体对比度低，文字压在浅色照片上需要纸白渐变遮罩，且遮罩过重会让人物发灰。

@@ -257,6 +257,7 @@ if (mode === 't2i') {
     scale: Math.max(1, Math.min(30, Number(opts.scale) || 7)),
     return_url: true,
   };
+  if (Number.isFinite(opts.seed)) body.seed = Math.round(opts.seed);
   if (opts.dryRun) {
     process.stdout.write(`${JSON.stringify({
       dryRun: true,
@@ -268,6 +269,7 @@ if (mode === 't2i') {
       bodyBytes: JSON.stringify(body).length,
       prompt,
       scale: body.scale,
+      seed: Number.isFinite(opts.seed) ? Math.round(opts.seed) : null,
       out,
     }, null, 2)}\n`);
     process.exit(0);

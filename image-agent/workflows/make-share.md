@@ -32,27 +32,37 @@
 
 ## Step 2 方向 sign-off
 
-给 1–2 个方向即可（分享图不需要 3 个复杂方向）：
+给 2 个方向即可（分享图不需要 3 个复杂方向），从 `references/art-direction.md` 选：
 
-- 纯文字卡（最快、最稳）
-- 图像 + 文字（需要背景/人物/产品）
-- 数据/清单卡（3 个要点）
+- 纯文字/大字（Swiss editorial 或 Brutalist）
+- 图像 + 文字（Photo-led）
+- 数据/清单（Data）
 
-确认后制作。
+每个方向带参考图、色板、字体、构图、模板；确认后制作。
 
 ## Step 3 制作
 
 1. 建工程：`mkdir -p output/<slug>/assets/{ai,brand,refs}`。
-2. 需要背景图 → `bl image generate` / `ve-image.mjs`；提示词留出文字区，`no text`。真实摄影素材用 Unsplash：`unsplash search "<英文关键词>" --download 2 --out-dir output/<slug>/assets/refs/unsplash/`（见 `references/unsplash.md`）。
-3. 以 `templates/still.html` 为骨架，改尺寸/色板/文案；分享图通常更简洁，删掉不必要的装饰。
-4. 渲染：
+2. 需要 AI 图时先读 `.agents/skills/prompt-images/SKILL.md` 与 `references/prompt-recipes.md`；最终稿用 `qwen-image-3.0`，prompt 留出文字区，`no text`。真实摄影优先 Unsplash（见 `references/unsplash.md`）。
+3. 按方向选模板：
+   - Swiss editorial：`templates/editorial-poster.html`
+   - Photo-led（深色）：`templates/photo-cover.html`
+   - Photo-led（亮色）：`templates/photo-cover-light.html`
+   - Data：`templates/data-story.html`
+   - Warm humanist：`templates/warm-paper.html`
+   - Brutalist：`templates/type-poster.html`
+   - 其它/fallback：`templates/still.html`
+
+   新模板按 3:4 竖版设计；OG 1200×630、小程序 1280×1024 等横向尺寸要重排版，不要只改 viewport。
+4. 分享图通常更简洁：删掉不必要的装饰、卡片、第二强调色。
+5. 渲染：
 
 ```bash
 node image-agent/scripts/shoot.mjs output/<slug>/<name>.html \
   --out output/<slug>/<name>.png --json
 ```
 
-5. OG 可同时出 JPG：
+6. OG 可同时出 JPG：
 
 ```bash
 node image-agent/scripts/shoot.mjs output/<slug>/og.html \
@@ -60,16 +70,18 @@ node image-agent/scripts/shoot.mjs output/<slug>/og.html \
   --format jpg --quality 88 --json
 ```
 
-6. 检查：
+7. 检查：
    - `sips -g pixelWidth -g pixelHeight` 尺寸准确。
    - 320px 缩略图可读。
    - 中央 1:1 / 中央 80% 裁切后仍成立。
    - OG 文件 < 1MB（如平台要求）。
    - Logo/二维码未变形、未被裁。
+   - 按 `references/design-review.md` 打分并修正后再展示。
 
 ## Step 4 交付
 
 - 最终 PNG/JPG。
+- 设计评审摘要（12 项分数 / 减法测试）。
 - `recipe.md`。
 - 分享文案：一句转发语 + 标题；如用户需要，给 2–3 个版本。
 - 多尺寸时给 contact sheet 或并排预览。

@@ -10,14 +10,18 @@
 - [ ] 素材已本地化到 `output/<slug>/assets/`；没有依赖外链。
 - [ ] 字体可用：`document.fonts.check()` 通过，或已接受系统字体兜底。
 - [ ] 画布尺寸与平台预设一致；`<meta name="viewport">` 已同步。
+- [ ] 视觉方向已选定（`references/art-direction.md` 五选一），不是默认深色科技。
+- [ ] 模板占位已替换：`photo-cover` / `photo-cover-light` 的 `.photo`、`warm-paper` 的 `.figure` 不是默认渐变/空块；`editorial-poster` 的 `--ghost` 与主题相关。
 - [ ] AI/摄影图已下载并检查分辨率 ≥ 展示尺寸的 1.2 倍。
+- [ ] 需要 AI 图时已读 `prompt-images`，prompt 含主体/构图/光线/色板/媒介/约束；没有质量词堆砌。
+- [ ] 最终稿使用 `qwen-image-3.0` / `wan2.7-image` / 即梦 Seedream，不是 `z-image-turbo`。
 - [ ] Unsplash 素材有 `<id>.json` sidecar；`recipe.md` 记录 Photo ID、摄影师、原图页；发布署名保留。
 - [ ] Unsplash 搜索词不含内部/敏感信息；内部/敏感图片未发给 AI 服务商。
 
 ## 2. 渲染
 
 ```bash
-node image-agent/scripts/shoot.mjs output/<slug>/still.html \
+node image-agent/scripts/shoot.mjs output/<slug>/<name>.html \
   --out output/<slug>/<name>.png --json
 ```
 
@@ -41,7 +45,10 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 - [ ] 对比度足够；暗底浅字/亮底深字。
 - [ ] 边缘无意外裁切、无溢出、无滚动条。
 - [ ] 留白节奏舒服；不挤、不空。
-- [ ] 色彩统一；强调色不超过 10% 面积。
+- [ ] 有一个占 35–70% 的主导视觉事件，不是均匀铺满。
+- [ ] 最大/最小字号 ≥ 8×；主标题与副标题 ≥ 1.8×。
+- [ ] ≤ 2 套字体、≤ 3 个字重。
+- [ ] 色彩统一；一个强调色，面积约 10–25%，不抢主视觉。
 - [ ] 中文断行自然；没有孤字/孤行。
 - [ ] Logo 原样、清晰、有足够留白；没有被 AI 重画。
 - [ ] 数字与来源一致；单位/日期/版本号正确。
@@ -61,6 +68,14 @@ sips -Z 320 output/<slug>/<name>.png --out tmp/thumb.png
 **灰度测试**：
 
 - [ ] 去色后层级仍成立；不是只靠颜色区分。
+
+**设计评审**（完整版见 `references/design-review.md`）：
+
+- [ ] 12 项打分完成；没有 ≤ 2 分的项；3 分项已修到 4 分。
+- [ ] 做过减法测试：至少删掉/弱化一个无功能装饰，并记录。
+- [ ] 没有“居中标题 + 三张卡 + 底部按钮”的模板感。
+- [ ] 没有默认紫色/荧光渐变、无主体抽象背景、过小灰字。
+- [ ] 把品牌名换成竞品后图不成立（贴题）。
 
 ## 4. 平台专项
 

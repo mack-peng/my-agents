@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440, height=1920">
+<title>Editorial Poster</title>
+<style>
+  :root {
+    --w: 1440px;
+    --h: 1920px;
+    --pad-x: 96px;
+    --pad-y: 88px;
+    --paper: #F4F1EA;
+    --ink: #141414;
+    --muted: rgba(20, 20, 20, 0.58);
+    --line: rgba(20, 20, 20, 0.14);
+    --accent: #C8102E;
+    --ghost: "SIGNAL";
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: var(--w);
+    height: var(--h);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .still {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .ghost {
+    position: absolute;
+    right: -0.04em;
+    top: 0.1em;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ghost::before {
+    content: var(--ghost);
+    display: block;
+    font: 700 500px/0.8 var(--font-sans);
+    letter-spacing: -0.08em;
+    color: rgba(20, 20, 20, 0.045);
+    white-space: nowrap;
+  }
+
+  .safe {
+    position: absolute;
+    inset: 0;
+    padding: var(--pad-y) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--line);
+    font: 500 18px/1.2 var(--font-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .top .right { text-align: right; }
+
+  .hero {
+    margin-top: auto;
+    margin-bottom: auto;
+    max-width: 1120px;
+  }
+
+  .rule {
+    width: 120px;
+    height: 12px;
+    background: var(--accent);
+    margin-bottom: 44px;
+  }
+
+  .kicker {
+    color: var(--accent);
+    font: 500 22px/1 var(--font-mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 34px;
+  }
+
+  .headline {
+    margin: 0;
+    font-size: 280px;
+    line-height: 0.92;
+    letter-spacing: -0.07em;
+    font-weight: 700;
+  }
+
+  .headline .indent { display: block; padding-left: 0.94em; }
+
+  .subhead {
+    margin: 54px 0 0;
+    max-width: 760px;
+    color: rgba(20, 20, 20, 0.72);
+    font-size: 40px;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+  }
+
+  .bottom {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    margin-top: auto;
+  }
+
+  .stat {
+    padding: 30px 34px 0 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .stat:last-child {
+    border-right: 0;
+    padding-right: 0;
+    padding-left: 34px;
+  }
+
+  .stat:nth-child(2) { padding-left: 34px; }
+
+  .stat strong {
+    display: block;
+    font: 500 62px/1 var(--font-mono);
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat span {
+    display: block;
+    margin-top: 14px;
+    color: var(--muted);
+    font: 400 18px/1.35 var(--font-mono);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+
+  .foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 40px;
+    color: var(--muted);
+    font: 400 17px/1.4 var(--font-mono);
+    letter-spacing: 0.08em;
+  }
+
+  .accent { color: var(--accent); }
+</style>
+</head>
+<body>
+  <main id="still" class="still">
+    <div class="ghost" data-bleed></div>
+    <div class="safe">
+      <header class="top">
+        <div>AI WEEKLY / 信号</div>
+        <div class="right">Nº 05<br>2026.11</div>
+      </header>
+
+      <section class="hero">
+        <div class="rule"></div>
+        <div class="kicker">THE WEEKLY SIGNAL</div>
+        <h1 class="headline">把复杂<span class="indent">讲清楚</span></h1>
+        <p class="subhead">这一期只回答一个问题：<br>当工具越来越多，一个人<br>怎样把判断留给自己。</p>
+      </section>
+
+      <section class="bottom">
+        <div class="stat"><strong>31</strong><span>个 agent</span></div>
+        <div class="stat"><strong>06</strong><span>条流水线</span></div>
+        <div class="stat"><strong class="accent">01</strong><span>人做决策</span></div>
+      </section>
+
+      <footer class="foot">
+        <div>2026.11.04 · VOL.05</div>
+        <div>SOURCE / WORKBENCH NOTES</div>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

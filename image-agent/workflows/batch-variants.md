@@ -5,8 +5,8 @@
 
 ## Step 0 定变量
 
-- **方向变量**：构图（左对齐/居中/满版/数据卡）、图像（AI/摄影/纯色/拼贴）、语气（理性/温暖/锋利）。
-- **色板变量**：默认深色科技 / 明亮杂志 / 品牌色。
+- **方向变量**：`references/art-direction.md` 的 5 个方向（Swiss editorial / Photo-led / Data / Warm humanist / Brutalist），不要只换色板。
+- **色板变量**：品牌色 / 纸白 / 深色；同一方向内最多一个强调色。
 - **文案变量**：标题 A/B（只改标题，不改事实）。
 - **尺寸变量**：同一内容多平台（每个尺寸独立重排版）。
 - **数量上限**：默认 3 个方向 × 2 个色板 = 6 张；先确认再批量。
@@ -16,16 +16,20 @@
 
 ### 纯手工/混合
 
-- 以 `templates/still.html` 为骨架，复制成 `v-a.html`、`v-b.html`…；只改变量。
+- 每个方向用对应模板（`editorial-poster` / `photo-cover` / `photo-cover-light` / `data-story` / `warm-paper` / `type-poster` / `still`），复制成 `v-a.html`、`v-b.html`…；只改变量。
 - 共用 `styles.css`/色板变量，避免 6 份完全独立的 CSS。
-- AI 背景只生成 1–2 张，多个变体复用/裁切/换遮罩。
+- AI 图只生成 1–2 张，多个变体复用/裁切/换遮罩。
 
 ### AI 候选
 
 ```bash
-bl image generate --prompt "<prompt>" --model z-image-turbo \
-  --size 3:4 --n 4 --watermark false --out-dir output/<slug>/assets/ai/
+bl image generate --prompt "<完整 prompt>" --model qwen-image-3.0 \
+  --size 3:4 --n 2 --seed 42 --prompt-extend false \
+  --negative-prompt "text, letters, watermark, logo, UI" \
+  --watermark false --out-dir output/<slug>/assets/ai/
 ```
+
+先用小图/低分辨率选方向，选定后再出最终稿；`z-image-turbo` 只做草稿。
 
 或火山多 seed：
 
@@ -58,7 +62,7 @@ node image-agent/scripts/shoot.mjs output/<slug>/contact-sheet.html \
 - 用户选 1 个方向（或组合：A 的构图 + B 的色板）。
 - 只对选定方向出最终尺寸；需要多平台时每个比例独立重排版。
 - 精修：文案断行、数据核对、安全区、对比度、Logo 留白。
-- 最终按 `qa-checklist.md` 验收。
+- 最终按 `design-review.md` + `qa-checklist.md` 验收。
 
 ## Step 4 交付
 
@@ -76,6 +80,7 @@ node image-agent/scripts/shoot.mjs output/<slug>/contact-sheet.html \
 
 ## 反模式
 
+- ❌ 6 个变体只换色板，不换方向/构图。
 - ❌ 6 个变体都从零写 6 份 HTML，无法维护。
 - ❌ 每个变体都重新抽 AI 图，费用失控。
 - ❌ 用 contact sheet 代替全尺寸验收。

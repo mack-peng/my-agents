@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { basename, dirname, extname, join } from 'node:path';
-import { homedir } from 'node:os';
+import { homedir, platform } from 'node:os';
 
 const fail = (error) => {
   console.error(`Error: ${error?.message || error}`);
@@ -36,7 +37,7 @@ Common:
   --json              Machine-readable JSON on stdout
   --help              Show this help
 
-Key: ~/.unsplashrc (profiles) or UNSPLASH_ACCESS_KEY
+Key: UNSPLASH_ACCESS_KEY, ~/.unsplashrc (profiles), or macOS Keychain (unsplash-cli)
 `;
 
 function loadKey() {
@@ -59,8 +60,19 @@ function loadKey() {
     if (typeof key === 'string' && key.trim()) return key.trim();
   }
 
+  if (platform() === 'darwin') {
+    try {
+      const key = execFileSync(
+        'security',
+        ['find-generic-password', '-s', 'unsplash-cli', '-a', 'default', '-w'],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+      ).trim();
+      if (key) return key;
+    } catch {}
+  }
+
   throw new Error(
-    'Unsplash Access Key is not configured. Install `@orangemust/unsplash-cli` and run `unsplash auth set`, or set UNSPLASH_ACCESS_KEY.',
+    'Unsplash Access Key is not configured. Run `unsplash auth set`, set UNSPLASH_ACCESS_KEY, or create ~/.unsplashrc.',
   );
 }
 

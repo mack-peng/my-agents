@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "prompt-images": {
+      "source": "replicate/skills",
+      "sourceType": "github",
+      "skillPath": "skills/prompt-images/SKILL.md",
+      "computedHash": "e3faef72484b363f5f4bc726a6f9eabcbc079c40a6bc42024cfa567a7ea1030b",
+      "installMode": "copy"
+    }
+  }
+}

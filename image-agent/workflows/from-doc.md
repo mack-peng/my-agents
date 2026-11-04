@@ -10,7 +10,7 @@
 - **目标**：读者看完记住什么；要突出哪 1 个主线。
 - **内容限制**：哪些可对外？内部数据/人名/未公开信息剔除或脱敏。
 - **取舍**：全量覆盖还是精选亮点（长文默认精选 3–5 条）。
-- **风格**：默认深色科技编辑感；有品牌资产/参考图优先。
+- **风格**：按内容选方向（`references/art-direction.md`）；没有倾向时给 Swiss editorial / Photo-led / Data 三选一，有品牌资产/参考图优先。
 
 ## Step 1 读取（委托）
 
@@ -54,17 +54,18 @@ lark-cli docs +fetch --api-version v2 --doc "<url或token>" --scope outline --ma
 
 ## Step 3 设计方向（闸门 2）
 
-- 根据内容选：左对齐编辑部 / 居中海报 / 满版图 + 底部渐变 / 数据卡堆叠。
-- 给 2–3 个方向：概念、色板、字体、构图、AI/手工/混合。
-- 封面默认混合：AI 背景 + HTML 标题/数据；如果内容偏数据/榜单，优先纯手工数据卡。
+- 从 `references/art-direction.md` 的 5 个方向里选 3 个；内容偏数据/榜单优先 Data，人物/场景优先 Photo-led，观点/周刊优先 Swiss editorial。
+- 每个方向写：概念、参考图、色板、字体、构图、模板、AI/手工/混合。
+- 封面常用混合：AI/摄影出主体 + HTML 标题/数据；不是默认。
 - 确认后才动手。
 
 ## Step 4 制作
 
-- 按 `workflows/make-cover.md` 或 `make-share.md` 执行。
+- 按 `workflows/make-cover.md` 或 `make-share.md` 执行；选对应模板。
+- 需要 AI 图时先读 `.agents/skills/prompt-images/SKILL.md`，最终稿用 `qwen-image-3.0`。
 - 文案只来自 Step 2 确认过的内容；不新增事实。
-- 数字卡最多 3 个数字；每个数字标注来源（可写在 `recipe.md`，不必都放图上）。
-- 渲染 → `shoot` → 看图 → 修；按 `qa-checklist.md` 验收。
+- 数据点最多 3 个；用一个大数字/一张图表承载，不默认三张卡片；每个数字标注来源（可写在 `recipe.md`，不必都放图上）。
+- 渲染 → `shoot` → `design-review.md` 评审 → 修；按 `qa-checklist.md` 验收。
 
 ## Step 5 系列化（周刊/周报）
 

@@ -6,7 +6,10 @@
 
 ## Skills
 
-本目录 `.agents/skills/` 保留 `bailian-gen` / `bailian-protocol`（已提交）；不全局安装 `bailian-*`。其余百炼 skill 按需从 `~/.bailian/skills` 复制单个。
+本目录 `.agents/skills/` 保留 `bailian-gen` / `bailian-protocol` / `prompt-images`（已提交）；不全局安装 `bailian-*`。其余百炼 skill 按需从 `~/.bailian/skills` 复制单个。
+
+- `prompt-images`：写生图/改图 prompt 前先读 `.agents/skills/prompt-images/SKILL.md`；其中 Replicate 的 `find-models` / `compare-models` 段落不适用，模型路由以 `references/provider-routing.md` 为准。
+- `skills-lock.json` 记录 `prompt-images` 的来源与 hash；更新时用 `skills update prompt-images`。
 
 ## 使用入口（重要）
 
@@ -16,7 +19,7 @@
 ```
 image-agent 能为你做什么
 
-**1. 做封面图** — 小红书 / 小程序 / 公众号 / 视频号，含标题排版、数据卡、品牌元素
+**1. 做封面图** — 小红书 / 小程序 / 公众号 / 视频号，含标题排版、主视觉、品牌元素
 　示例："给这篇 AI 周刊做一张小红书封面"
 
 **2. 做分享图** — 小程序分享卡 / OG / 朋友圈 / 社群海报，按平台尺寸和安全区设计
@@ -73,9 +76,11 @@ which sips
 **一张图 = 一个 HTML 画布 + 一个最终 PNG。**
 
 - **手工**：HTML/CSS/SVG/Canvas 直接画；适合文字、数据、Logo、UI、图表、几何/生成艺术。
-- **AI**：`bl` / `ve` 文生图、图生图；适合插画、纹理、背景、概念图。
+- **AI**：`bl` / `ve` 文生图、图生图；适合插画、有主体的场景、纹理、概念图；不默认生成抽象科技背景。
 - **摄影**：`unsplash` CLI 搜索/下载真实照片；适合办公室、人物、城市、产品场景。
-- **混合（封面默认）**：AI/摄影出背景或主体，HTML 叠精确文字、数据、Logo；解决 AI 中文字不可靠的问题。
+- **混合（封面常用，不是默认）**：AI/摄影出背景或主体，HTML 叠精确文字、数据、Logo；解决 AI 中文字不可靠的问题。
+
+**先定视觉方向，再选模板**：见 `references/art-direction.md` 的 5 个方向（Swiss editorial / Photo-led / Data / Warm humanist / Brutalist）。默认深色科技只是 fallback；不要把同一套构图套所有主题。
 
 铁律：
 
@@ -96,7 +101,7 @@ which sips                             # PNG/JPG 尺寸与压缩
 bl auth status --output json           # 阿里云百炼
 test -f ~/.volcengine/config.json      # 火山引擎已配置
 which unsplash                         # Unsplash CLI（可选）
-unsplash auth status --json | jq -r '.configured'  # Unsplash key（~/.unsplashrc / 环境变量，可选）
+unsplash auth status --json | jq -r '.configured'  # Unsplash key（macOS keychain / ~/.unsplashrc / 环境变量，可选）
 ```
 
 - `scripts/shoot.mjs` 优先使用本地 `playwright-core`；否则从全局 `openfilm` / `@playwright/cli` 解析；仍缺失时提示安装或改用 `browser-agent` 的 `playwright-cli`。
@@ -111,8 +116,8 @@ curl -L -o input/brand/fonts/MapleMono-NF-CN-Medium.ttf \
 
 - 字体上游：Maple Mono（OFL-1.1）；URL 已可用，文件约 18MB。`still.html` 通过相对路径 `../../input/brand/fonts/MapleMono-NF-CN-Medium.ttf` 引用；渲染器静态服务根为仓库根，因此 `output/` 与 `input/` 都能加载。
 - **工程目录固定为 `output/<slug>/`（两层）**，字体相对路径按这个深度写。临时目录更深时（如 `output/_smoke/x/`）要把路径改成 `../../../input/...`，否则会 404。
-- 字体缺失不阻塞排版：先用系统 `PingFang SC` / `SF Mono`；交付前若设计依赖 Maple，再下载并复验。
-- 不安装任何 `.agents/skills`；本 agent 不依赖 skill 包。
+- 字体缺失不阻塞排版：先用系统 `PingFang SC` / `SF Mono`；交付前若设计依赖 Maple，再下载并复验。模板里的 `@font-face` 若指向不存在的文件会导致 `shoot` 硬错误；未下载字体时先删掉该 `@font-face` 或改用系统字体。
+- 不在全局安装 skill；本 agent 只用本目录 `.agents/skills/` 下的已提交 skill。
 
 ## 命令
 
@@ -128,11 +133,11 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 - 常用：`--scale 2`（2x 输出）、`--format jpg --quality 90`、`--transparent`、`--selector "#still"`、`--also-jpg`。
 - 自动 QA：字体失败、图片缺失/低清、文字被裁、元素溢出、滚动、控制台/请求错误；输出 JSON，硬错误退出码非 0。
 - `--allow-animations`：默认注入 `animation: none / transition: none`；设计必须静态时不要加此参数。
-- `--allow-bleed`：允许带 `data-bleed` 的装饰层超出画幅（仍会报告警告）。
+- `data-bleed`：标记装饰层允许出血，`shoot` 仍会报告 warning；`--allow-bleed` 额外把未标记元素的溢出从 error 降为 warning。
 
 ### AI 生图
 
-- 阿里云：`bl image generate` / `bl image edit`，见 `references/provider-routing.md`；默认 `z-image-turbo` 快稿、`wan2.7-image` 改图。
+- 阿里云：`bl image generate` / `bl image edit`，见 `references/provider-routing.md`；最终稿默认 `qwen-image-3.0`，`z-image-turbo` 只做草稿/纹理，改图优先 `wan2.7-image`。
 - 火山：`node image-agent/scripts/ve-image.mjs t2i ...` 或 `i2i ...`；封装 submit / poll / download。`--dry-run` 只打印请求不扣费；`--task-id` 可恢复已提交任务。也可直接按 `references/provider-routing.md` 的 `ve cv` 命令执行。
 - **不静默重试付费调用**；失败报告用户。批量/4K/多图前先确认。
 
@@ -141,7 +146,7 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 真实摄影素材用已发布的 `unsplash` CLI（`@orangemust/unsplash-cli`，GitHub: `mack-peng/unsplash-cli`）；配置与合规见 `references/unsplash.md`。
 
 ```bash
-# 首次：安装 + 把 Access Key 写入 ~/.unsplashrc（JSON，mode 600）
+# 首次：安装 + 把 Access Key 存入 macOS keychain（或 ~/.unsplashrc / 环境变量）
 npm install -g @orangemust/unsplash-cli
 unsplash auth set
 
@@ -155,10 +160,10 @@ unsplash download Dwu85P9SOIk \
   --out output/<slug>/assets/refs/unsplash/desk.jpg --size full
 ```
 
-- key 存 `~/.unsplashrc`（JSON，mode 600，profiles）；`UNSPLASH_ACCESS_KEY` 优先于配置文件，供 CI / 非 macOS；不写 `.env`；不打印 key。`unsplash auth clear` 删除。
+- key 存 macOS keychain（service `unsplash-cli`）或 `~/.unsplashrc`（JSON，mode 600，profiles）；`UNSPLASH_ACCESS_KEY` 优先，供 CI / 非 macOS；不写 `.env`；不打印 key。`unsplash auth clear` 删除。
 - 下载同时写 `<id>.json` sidecar（作者/原图页/license/下载上报状态）并上报 download；发布保留署名。`download` 也支持 `--out-dir`（按 `<id>.<ext>` 命名）。
 - `--json` 给 agent 解析；`--size full` 默认，`--size regular` 更快。
-- 无全局 CLI 时可用零依赖备用：`node image-agent/scripts/unsplash.mjs ...`（读同一 `~/.unsplashrc` 或 `UNSPLASH_ACCESS_KEY`）。
+- 无全局 CLI 时可用零依赖备用：`node image-agent/scripts/unsplash.mjs ...`（依次读 `UNSPLASH_ACCESS_KEY`、`~/.unsplashrc`、macOS keychain）。
 - 限流/401/403/429 不自动重试，直接报错。
 
 ### 压缩与检查
@@ -186,8 +191,8 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 **Sign-off 协议**（闸门之间不自动推进）：
 
 - **闸门 1 — brief / 内容**：长文档先提炼选取表（标题、3–5 要点、数字、出处、删了什么），等用户确认。
-- **闸门 2 — 设计方向**：给 2–3 个方向（概念、色板、字体、构图、AI/手工/混合），等用户选。
-- **闸门 3 — 初稿**：渲染后展示 PNG + 设计说明 + 数字来源，等反馈。
+- **闸门 2 — 设计方向**：从 `references/art-direction.md` 的 5 个方向里选 3 个（概念、参考图、色板、字体、构图、模板、AI/手工/混合），等用户选。
+- **闸门 3 — 初稿**：先跑 `shoot` 自动 QA，再按 `references/design-review.md` 做设计评审并修正，然后展示 PNG + 设计说明 + 数字来源，等反馈。
 - **闸门 4 — 交付**：确认后才整理最终文件与发布文案。
 - 用户提修改意见 → 回到对应步骤；不跳步、不批量勾选 TODO。
 
@@ -210,10 +215,11 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 
 1. **采集**：平台/尺寸、用途、标题/副标题、3–5 个要点/数字、品牌资产、参考风格、AI/手工/混合、变体数、禁用元素。用户没给的用默认值继续，并在方案里标明假设。
 2. **内容核对**：数字与事实逐条对来源；不确定的删掉或标缺口。
-3. **方向 sign-off**：2–3 个方向 + 推荐；确认后才动手。
-4. **制作**：建 `output/<slug>/` → 拷贝素材 → （可选）生成 AI 背景 → 写 HTML → `shoot` → 修 → 再看。
-5. **验收**：自动 QA 干净 + 全尺寸看图 + 缩略图 + 安全区/裁切/对比度/品牌检查。
-6. **交付**：图片 + `recipe.md` +（封面可选）标题/正文/标签 + 可改点说明。
+3. **方向 sign-off**：从 `references/art-direction.md` 给 3 个方向（带参考图/色板/字体/构图/模板）+ 推荐；确认后才动手。
+4. **Prompt lab（需要 AI 图时）**：读 `.agents/skills/prompt-images/SKILL.md` 与 `references/prompt-recipes.md`，写 brief → prompt → negative → model → reference；默认 2 张候选，固定 seed，记录 receipt。
+5. **制作**：建 `output/<slug>/` → 拷贝素材 → 选模板 → 生成/处理素材 → 写 HTML → `shoot` → 修。
+6. **验收**：自动 QA 干净 + `references/design-review.md` 评审通过 + 全尺寸看图 + 缩略图 + 安全区/裁切/对比度/品牌检查。
+7. **交付**：图片 + `recipe.md` +（封面可选）标题/正文/标签 + 可改点说明。
 
 ## 委托规则
 
@@ -240,14 +246,16 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 | 文档/文章 → 封面/分享图 | `workflows/from-doc.md` |
 | 多方向/多尺寸/A-B | `workflows/batch-variants.md` |
 
-## 默认视觉语言
+## 默认视觉语言（fallback）
 
-未提供品牌规范时，沿用工作台现有封面语言：
+未提供品牌规范、且用户没有选方向时，才使用这套工作台 fallback：
 
 - 背景 `#0B0C0E`｜主文字 `#F5F5F0`｜次要 `#8A8F98`｜强调 `#D7FF3F`｜分割线 `rgba(245,245,240,.14)`
-- 深色底 + 单强调色 + 等宽元数据 + 大字号中文标题 + 数据卡
+- 深色底 + 单强调色 + 等宽元数据 + 大字号中文标题
 - 标题/正文：`PingFang SC`；元数据/数据/英文标签：`Maple Mono NF CN`（缺失时 `SF Mono`）
 - 没有 Logo 就不放 Logo，不编造品牌标识；有 Logo/色板后放 `input/brand/` 覆盖默认值
+- 不要默认加数据卡、chip、eyebrow；先看 `references/art-direction.md` 选方向
+- 更完整的 5 个方向见 `references/art-direction.md`，审美检查见 `references/design-review.md`
 
 ## 维护
 

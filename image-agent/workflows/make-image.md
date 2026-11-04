@@ -11,7 +11,7 @@
 - **文字**：画面里要不要字？要 → 文字最终用 HTML 叠；不要 → prompt 加负向词。
 - **参考图**：有就放 `input/`；图生图前确认可外发。
 - **数量**：默认 2 张候选；最终 1 张。批量/4K 前确认费用。
-- **供应商**：默认快稿阿里云、精修火山；用户点名则从用户。
+- **供应商**：最终稿默认 `qwen-image-3.0`；草稿用 `z-image-turbo`；需要火山审美/Seedream 时用 `ve-image.mjs`；用户点名则从用户。
 
 ## Step 1 选模式
 
@@ -25,10 +25,10 @@
 
 ## Step 2 写 prompt
 
-按 `references/prompt-recipes.md`：
+先读 `.agents/skills/prompt-images/SKILL.md` 与 `references/prompt-recipes.md`。八要素：
 
 ```
-[主体] + [动作/状态] + [环境] + [构图/取景] + [留白位置] + [光线] + [色板] + [风格/媒介] + [镜头/质感] + [情绪]
+[主体] + [构图/取景] + [光线] + [色彩] + [媒介/风格] + [氛围] + [细节/焦点] + [约束]
 ```
 
 封面背景必须写：
@@ -36,18 +36,21 @@
 - `large empty negative space on the <left/right/top/center> for a headline`
 - `no text, no letters, no typography, no watermark, no logo, no UI`
 
-负向词按场景追加；人物/产品/文字各有专项。
+负向词按场景追加；人物/产品/文字各有专项。不要用 `4k, masterpiece, ultra detailed` 这类空词。
 
 ## Step 3 出候选
 
-### 阿里云快稿
+### 阿里云最终稿
 
 ```bash
-bl image generate --prompt "<prompt>" \
-  --model z-image-turbo --size <比例或像素> --n 2 \
+bl image generate --prompt "<完整 prompt>" \
+  --model qwen-image-3.0 --size <比例或像素> --n 1 \
+  --seed 42 --prompt-extend false \
   --negative-prompt "<负向词>" --watermark false \
   --out-dir output/<slug>/assets/ai/
 ```
+
+草稿/纹理用 `z-image-turbo`，不要用它做最终主视觉。
 
 ### 火山精修
 
@@ -92,12 +95,14 @@ unsplash search "<英文关键词>" \
 选定后：
 
 - 裁切/构图用 CSS `object-fit: cover` + `object-position`；不拉伸。
-- 需要文字/Logo → 以 `templates/still.html` 做 HTML 合成，再 `shoot`。
+- 需要文字/Logo → 按 `references/art-direction.md` 选模板（`editorial-poster` / `photo-cover` / `photo-cover-light` / `data-story` / `warm-paper` / `type-poster` / `still`）做 HTML 合成，再 `shoot`。
 - 需要统一色调 → 在 HTML 加遮罩/渐变/滤镜；不要反复重生成。
 - 低清图不放大充数；重新生成或缩小展示。
 
-## Step 5 交付
+## Step 5 设计评审与交付
 
+- 按 `references/design-review.md` 打分并修正；至少做一次减法测试。
+- 再看缩略图与全尺寸图。
 - 最终图（PNG/JPG）+ `recipe.md`。
 - 如果用了 AI 文字/Logo/产品图，明确说明"未采用，已用 HTML 重排"。
 - 用户要源文件时给 HTML + assets；不要只给压扁的 PNG。
@@ -106,6 +111,8 @@ unsplash search "<英文关键词>" \
 
 - ❌ 让 AI 画中文标题、Logo、真实 UI、数据图表。
 - ❌ 画面塞满，没有文字区。
+- ❌ 默认生成 abstract dark tech texture，没有主体/场景。
+- ❌ 用 `z-image-turbo` 做最终主视觉。
 - ❌ 无脑连抽；每次抽卡都花钱。
 - ❌ 用低清图放大。
 - ❌ 把 AI 生成的乱码字当最终字。

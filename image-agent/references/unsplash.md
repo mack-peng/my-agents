@@ -1,12 +1,12 @@
 # Unsplash 素材
 
-已发布 CLI：**`@orangemust/unsplash-cli`**（npm: <https://www.npmjs.com/package/@orangemust/unsplash-cli>；GitHub: <https://github.com/mack-peng/unsplash-cli>）。本 agent 首选 `unsplash` 命令；`scripts/unsplash.mjs` 是无安装备用，读同一个 `~/.unsplashrc`（也支持 `UNSPLASH_ACCESS_KEY`）。
+已发布 CLI：**`@orangemust/unsplash-cli`**（npm: <https://www.npmjs.com/package/@orangemust/unsplash-cli>；GitHub: <https://github.com/mack-peng/unsplash-cli>）。本 agent 首选 `unsplash` 命令；`scripts/unsplash.mjs` 是无安装备用，依次读 `UNSPLASH_ACCESS_KEY`、`~/.unsplashrc`、macOS keychain（service `unsplash-cli`）。
 
 ## 安装与配置
 
 1. 打开 <https://unsplash.com/oauth/applications> → **New application**，同意 API Guidelines。
 2. 复制 **Access Key**（不是 Secret Key）。
-3. 安装 CLI 并把 key 写入 `~/.unsplashrc`（JSON，mode 600，profiles）：
+3. 安装 CLI 并把 key 存入 macOS keychain（service `unsplash-cli`）：
 
 ```bash
 npm install -g @orangemust/unsplash-cli
@@ -16,7 +16,7 @@ unsplash auth set
 pbpaste | unsplash auth set --stdin
 ```
 
-`unsplash auth status --json` 返回 `{configured, source, env, profile, access-key, config_path, permissions}`，不会打印 key。`unsplash auth clear` 删除。CI 用 `UNSPLASH_ACCESS_KEY`，优先于配置文件。不要把 key 贴进对话、日志或提交到 git。
+`unsplash auth status --json` 返回 `{configured, source, env, keychain}`（不同版本字段略有差异），不会打印 key。`unsplash auth clear` 删除 keychain 条目。CI 用 `UNSPLASH_ACCESS_KEY`；不要把 key 贴进对话、日志或提交到 git。
 
 ## 命令
 
@@ -47,7 +47,7 @@ unsplash download Dwu85P9SOIk \
 - 输出：`<id>.jpg` + `<id>.json` sidecar（作者、原图页、attribution、license、下载上报状态、下载时间）。
 - 下载接口同时支持 `--out`（精确路径）与 `--out-dir`（按 `<id>.<ext>` 命名）。
 
-无全局 CLI 时用备用脚本（参数相同，只是前缀不同；认证优先 `UNSPLASH_ACCESS_KEY`，其次 `~/.unsplashrc`）：
+无全局 CLI 时用备用脚本（参数相同，只是前缀不同；认证依次为 `UNSPLASH_ACCESS_KEY`、`~/.unsplashrc`、macOS keychain）：
 
 ```bash
 node image-agent/scripts/unsplash.mjs search "minimal desk" --json

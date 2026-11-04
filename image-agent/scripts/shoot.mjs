@@ -283,15 +283,15 @@ try {
     }
 
     const overflow = [];
+    const bleedOverflow = [];
     for (const element of document.querySelectorAll('body *')) {
-      if (element.closest('[data-bleed]')) continue;
       if (element === document.body || element === document.documentElement) continue;
       const style = getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
       const rect = element.getBoundingClientRect();
       if (rect.width < 1 || rect.height < 1) continue;
       if (rect.left < -2 || rect.top < -2 || rect.right > W + 2 || rect.bottom > H + 2) {
-        overflow.push({
+        const entry = {
           selector: label(element),
           rect: {
             left: Math.round(rect.left),
@@ -299,7 +299,13 @@ try {
             right: Math.round(rect.right),
             bottom: Math.round(rect.bottom),
           },
-        });
+        };
+        const bleedRoot = element.closest('[data-bleed]');
+        if (bleedRoot) {
+          if (bleedRoot === element) bleedOverflow.push(entry);
+        } else {
+          overflow.push(entry);
+        }
       }
     }
 
@@ -363,6 +369,7 @@ try {
       clippedText,
       clippedBoxes,
       overflow,
+      bleedOverflow,
       images,
       fontErrors,
       fontStatus: document.fonts.status,
@@ -435,6 +442,11 @@ try {
     if (opts.allowBleed) report.warnings.push(message);
     else report.errors.push(message);
   }
+  if (report.bleedOverflow.length) {
+    const names = report.bleedOverflow.map((item) => item.selector);
+    const shown = names.slice(0, 5).join('; ') + (names.length > 5 ? `; and ${names.length - 5} more` : '');
+    report.warnings.push(`bleed decorations outside the canvas: ${shown}`);
+  }
   if (report.scroll.overflowX || report.scroll.overflowY) {
     report.warnings.push(`page content is larger than the canvas: ${report.scroll.width}×${report.scroll.height}`);
   }
@@ -454,13 +466,16 @@ try {
     report.warnings.push(`output extension .${outExt} does not match --format ${opts.format}`);
   }
 
+  report.ok = report.errors.length === 0;
+
   if (opts.alsoJpg && opts.format === 'png' && report.ok) {
     const jpgPath = outPath.replace(/\.png$/i, '.jpg');
-    execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', String(Math.round(opts.quality)), outPath, '--out', jpgPath]);
-    report.jpg = { path: jpgPath, bytes: statSync(jpgPath).size };
+    if (jpgPath === outPath) report.warnings.push('--also-jpg needs a .png output path');
+    else {
+      execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', String(Math.round(opts.quality)), outPath, '--out', jpgPath]);
+      report.jpg = { path: jpgPath, bytes: statSync(jpgPath).size };
+    }
   }
-
-  report.ok = report.errors.length === 0;
 
   if (opts.json) {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);

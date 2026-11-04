@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440, height=1920">
+<title>Photo Cover</title>
+<style>
+  :root {
+    --w: 1440px;
+    --h: 1920px;
+    --pad-x: 96px;
+    --pad-y: 88px;
+    --ink: #F7F5F0;
+    --muted: rgba(247, 245, 240, 0.66);
+    --line: rgba(247, 245, 240, 0.18);
+    --accent: #F2A65A;
+    --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: var(--w);
+    height: var(--h);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #0B0C0E;
+  }
+
+  body {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .still {
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    overflow: hidden;
+    background: #0B0C0E;
+  }
+
+  .photo {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(56% 44% at 72% 34%, rgba(242, 166, 90, 0.42) 0%, rgba(242, 166, 90, 0) 68%),
+      radial-gradient(34% 28% at 18% 68%, rgba(120, 140, 255, 0.18) 0%, rgba(120, 140, 255, 0) 70%),
+      linear-gradient(135deg, #1A1B1F 0%, #101114 44%, #090A0C 100%);
+  }
+
+  .photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+      radial-gradient(90% 60% at 50% 100%, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.72) 100%);
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 12, 14, 0.16) 0%, rgba(11, 12, 14, 0.12) 44%, rgba(11, 12, 14, 0.88) 100%);
+  }
+
+  .safe {
+    position: absolute;
+    inset: 0;
+    padding: var(--pad-y) var(--pad-x);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    font: 500 18px/1.2 var(--font-mono);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .top .right {
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .hero {
+    margin-top: auto;
+    max-width: 1080px;
+  }
+
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 34px;
+    color: var(--accent);
+    font: 500 20px/1 var(--font-mono);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .kicker::before {
+    content: "";
+    width: 64px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .headline {
+    margin: 0;
+    font-size: 152px;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .headline .accent { color: var(--accent); }
+
+  .subhead {
+    margin: 40px 0 0;
+    max-width: 760px;
+    color: rgba(247, 245, 240, 0.82);
+    font-size: 38px;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 32px;
+    margin-top: 72px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font: 400 18px/1.4 var(--font-mono);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+
+  .bottom strong {
+    display: block;
+    color: var(--ink);
+    font: 500 26px/1.2 var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .bottom .right { text-align: right; }
+</style>
+</head>
+<body>
+  <main id="still" class="still">
+    <div class="photo" data-photo-slot></div>
+    <div class="scrim"></div>
+    <div class="safe">
+      <header class="top">
+        <div>AI WEEKLY / 现场</div>
+        <div class="right">FIELD NOTE<br>2026.11</div>
+      </header>
+
+      <section class="hero">
+        <div class="kicker">THE WEEKLY EDIT</div>
+        <h1 class="headline">把光留在<br><span class="accent">对的地方</span></h1>
+        <p class="subhead">一张封面只需要一个焦点：<br>让人先看见人，再看见信息。</p>
+        <footer class="bottom">
+          <div><strong>VOL.05</strong>WORKBENCH NOTES</div>
+          <div class="right"><strong>01 / 06</strong>PHOTO-LED</div>
+        </footer>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
