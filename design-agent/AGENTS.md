@@ -108,7 +108,7 @@ OpenCode 产品设计审查代理。审查现有代码库、线上页面或 CLI/
 ## Sign-off                ← 仅一段文本："Leave a comment \"Sign-off\" below to sign."
 ```
 
-存量 spec 可保持原格式；新增/重写按本结构。
+旧格式 spec 已清理；新增/重写一律按本结构。
 
 #### 需求表规则
 
@@ -116,7 +116,7 @@ OpenCode 产品设计审查代理。审查现有代码库、线上页面或 CLI/
 - `Mockup & Description` 单元格内多行用 `<br/>`；不嵌套子表。
 - `验收标准` 必须可观察/可验证（状态、文案、路径、数据、边界）。
 - 代码块/测试用例放表格外 fenced code block。
-- 存量 spec 可保持 3 列；新增/重写用 4 列。
+- 新增/重写一律用 4 列。
 - **禁止输出 YAML/DSL。**
 
 #### Part 分割规则
