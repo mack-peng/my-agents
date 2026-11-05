@@ -139,6 +139,8 @@ git rev-parse HEAD
 
 #### 3. Git 操作
 
+> **worktree 场景**：禁止直接使用 worktree 当前 HEAD。先 `git fetch origin <test-branch>`（本仓库 fetch refspec 只覆盖 `develop`，普通 `git fetch` 不会更新其他分支），再确认 `HEAD` 与 `origin/<test-branch>` 一致；不一致先 `reset` / `rebase` 到该 SHA，然后才 cherry-pick。推送后用 `git ls-remote origin <test-branch>` 复核。
+
 在 `$BOBKAT_PATH` 下执行：
 
 ```bash

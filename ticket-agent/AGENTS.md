@@ -182,6 +182,7 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 
 - **component-kit 变更**：详见 `workflows/phase4-commit.md` — 开发分支（仅源码）+ base tag 上 cherry-pick 源码 + 构建 + 测试 tag
 - **bobcat 变更**：详见 `workflows/phase4-commit.md` — 标准 git 提交流程
+- **cherry-pick 前置校验**：先 `git fetch origin <test-branch>` 并确认 HEAD 与 `origin/<test-branch>` 一致再 cherry-pick；worktree 中禁止直接使用当前 HEAD（fetch refspec 只覆盖 `develop`）
 
 ### Phase 4b: bobcat 依赖更新（仅 component-kit 变更时，用户通知后执行）
 
