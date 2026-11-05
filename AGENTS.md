@@ -45,6 +45,7 @@ No build, test, or lint at the root level.
 | `cssprobe-agent` | `cssprobe-cli` | 运行时 CSS 探针 |
 | `aliyun-agent` | `bailian-cli` / `bailian-gen` / `bailian-protocol` | 百炼主入口；从 `~/.bailian/skills` 手工复制，无 lock |
 | `image-agent` | `bailian-gen` / `bailian-protocol` / `prompt-images` | 生图 prompt 走 `prompt-images`（Replicate Apache-2.0）；百炼 skill 从 `~/.bailian/skills` 手工复制无 lock，`prompt-images` 有 `skills-lock.json` |
+| `openfilm-agent` | `scripting-and-storyboarding` / `short-form-video-script` / `explainer-video` / `narrated-product-film` / `silent-product-demo` / `technical-video-script` | 前期创作（脚本/分镜/钩子），全部 MIT、装后剔除 evals；路由见其 `references/preproduction.md`，不跑 `skills update` |
 
 `design-agent` 的 `web-design-guidelines` 为本地安装、不提交（上游未声明 license），仅提交 `design-agent/skills-lock.json`。
 
@@ -95,7 +96,7 @@ No build, test, or lint at the root level.
 - **design-agent** — produces `output/{内容}.review.md` (findings / evidence / priority) and `output/{内容}.spec.md` (confirmed requirements) in `design-agent/output/`. Spec format uses `## Context & Assumptions`, `## Problem`, `## Solution`, `## Sign-off` with table-driven requirements. Do not output implementation specs as YAML — use the design-agent `.spec.md` format instead.
 - Agents have clear boundaries: dify-builder-agent executes modifications; design-agent only reviews and outputs specs, never implements.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
-- **openfilm-agent** — 网页做片（`film.html` + Studio 人机共编）。读其 `AGENTS.md` 后按 workflow 索引执行；**默认不导出**，导出由用户在 Studio 操作；禁止 `openfilm update`（本地 fork）。
+- **openfilm-agent** — 网页做片（`film.html` + Studio 人机共编）。读其 `AGENTS.md` 后按 workflow 索引执行；写页面前先走「前期创作」（脚本/分镜，规则在其 `references/preproduction.md`，片型 skill 在其 `.agents/skills/`）；**默认不导出**，导出由用户在 Studio 操作；禁止 `openfilm update`（本地 fork）。
 - **image-agent** — 用网页做图（HTML 画布 + `scripts/shoot.mjs`）。先按 `references/art-direction.md` 选视觉方向（Swiss editorial / Photo-led / Data / Warm humanist / Brutalist），封面常用混合：AI 出背景、HTML 叠文字；真实摄影素材走 Unsplash（`unsplash` CLI / `@orangemust/unsplash-cli`，key 在系统 keychain 或 `~/.unsplashrc` / `UNSPLASH_ACCESS_KEY`）。生图 prompt 走 `.agents/skills/prompt-images/`；最终稿用 `qwen-image-3.0` / `wan2.7-image` / 即梦 Seedream，`z-image-turbo` 只做草稿。文字/Logo/数据永远 HTML。输入 `input/`，输出 `output/<slug>/`；字体按需下载到 `input/brand/fonts/`（不入 git）。
 
 ## JSON 处理约定

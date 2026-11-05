@@ -5,7 +5,7 @@
 ## 流程
 
 1. **打开在场**：`openfilm open output/<film-name>` — 让用户在 Studio 里实时看到修改过程
-2. **先读后改**：读 `film.html` + 涉及页面 + 相关 VTT。人在 Studio 可能已经改过——`overrides` 与 `locked` 轨道是人的修改，**原样保留**
+2. **先读后改**：读 `film.html` + 涉及页面 + 相关 VTT + 工程内 `preproduction/`（脚本/镜头表，若有）。人在 Studio 可能已经改过——`overrides` 与 `locked` 轨道是人的修改，**原样保留**
 3. **只改意图内**：不顺手重构、不动无关镜头
 4. **`look` 复验**：影片目录内跑，确定性 + 报错干净才算完（**不校验字幕**，字幕另抽帧）
 5. **默认不导出**：交付 = Studio 预览 + 改动说明；仅用户当次明确要求时 agent 执行（无字幕 `openfilm render`，带字幕 Studio 烧录）
@@ -23,7 +23,7 @@
 
 ## 结构性改动（先方案后动手）
 
-以下属于重建级，不能"顺手改"：**横竖互转、加/删 ≥2 镜、换片型风格、重排叙事顺序**——先给轻量方案（要点 + 新分镜表）并等用户确认，再按 `workflows/build-film.md` 的闸门执行（对齐 AGENTS.md「编排纪律」）。
+以下属于重建级，不能"顺手改"：**横竖互转、加/删 ≥2 镜、换片型风格、重排叙事顺序**——先做 **structure diagnosis**（三问，见 `references/preproduction.md`）：片子的 promise 还成立吗？逐 beat 哪里断了/重复了？cut list 该砍哪几拍？结论写给用户确认，再按 `workflows/build-film.md` 的闸门执行（对齐 AGENTS.md「编排纪律」）。
 
 ## 红线
 

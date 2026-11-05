@@ -6,6 +6,7 @@
 
 分镜表的秒数是**预算**，不是锁定值。有旁白的片子：
 
+0. **分镜阶段的秒数预算**（sign-off 前估算用）：**中文按 5.5 字/秒**（实测 5.1–6.2，均值 5.8，取偏保守值；英文按 ~2.3 词/秒）+ 每镜 0.4s 余量；校准方法：拿既有 VO 的 `ffprobe` 时长 ÷ VTT 正文字数。只用于排分镜表，不写进锁定值
 1. 内容/分镜 sign-off 后，**先生成全部 VO**（`openfilm get tts`，一镜一条）
 2. `ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 <wav>` 量每条实际时长
 3. 回填各镜时长：**镜时长 = VO 时长 + 头部提前量（0.1–0.3s）+ 尾部余量（0.2–0.5s）**；结尾镜尾部留 2.5–3s 画面淡出，避免戛然而止
@@ -90,13 +91,15 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 
 `.film/subtitles.json` 是 Studio 的领域，**禁止文本编辑器直接改**；用户明确要求调整时通过 Studio UI 或 Studio API（等同人在 Studio 操作），改前先读当前配置。
 
+**新项目默认不是基线**：Studio 竖屏默认 `pos.y=0.72`（字幕带 ~1345–1420），会压到内容。系列基线 0.80（带 ~1465–1607）必须显式应用：`PUT /api/projects/<id>/subtitles`，body 用 `{style: …}`（拿一个已用基线的工程 `.film/subtitles.json` 作模板），或 Studio UI。新片默认先应用基线，人的后续调整优先。
+
 | 字段 | 基线值 | 说明 |
 |---|---|---|
-| `pos.y` | 0.786 | 相对比例，不写死像素；距底部约 411px |
+| `pos.y` | 0.80 | 相对比例，不写死像素；距底部约 384px |
 | `font.sizePct` | 3.8 | 相对画幅高 |
-| `box.color` / `box.opacity` | `#000000` / 0.48 | 半透明黑底，亮背景可读 |
-| `box.radiusEm` | 0.18 | 圆角 |
-| `box.padXEm` / `padYEm` | 0.5 / 0.22 | 内边距 |
+| `box.color` / `box.opacity` | `#000000` / 0.62 | 半透明黑底，亮背景可读（2026-11 用户确认加深） |
+| `box.radiusEm` | 0.22 | 圆角 |
+| `box.padXEm` / `padYEm` | 0.55 / 0.24 | 内边距 |
 | `stroke` / `shadow` | null | 不加描边阴影（box 已保证对比） |
 
 - `pos.x=0.5`、`align=center`、`maxWidthPct=100` 默认不动

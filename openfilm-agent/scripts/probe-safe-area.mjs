@@ -2,7 +2,7 @@
  * 用法：node openfilm-agent/scripts/probe-safe-area.mjs output/<film-dir>
  * 依赖：playwright-core（优先 openfilm fork 的 node_modules）
  * 输出：每页 mast / src / stamp / priceRow / contentBottom 的 top/bottom（1080×1920 坐标）
- * 安全区基线（2026-10 w4 复盘）：顶部留空 0–252；内容底 ≤1400；字幕带 ~1465–1553；平台描述区 1620+
+ * 安全区基线（2026-10 w4 复盘）：顶部留空 0–252；内容底 ≤1400；字幕带 ~1465–1607（系列基线 0.80 / box 62%；Studio 默认 0.72 → ~1345–1420，先应用基线）；平台描述区 1620+
  */
 import { chromium } from '/Users/mack/Open-projects/openfilm/packages/openfilm/node_modules/playwright-core/index.mjs';
 import { readdirSync } from 'fs';

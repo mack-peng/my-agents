@@ -31,29 +31,33 @@
 
 - 推荐 1–2 个并给一句理由；用户点名片型则直接 `openfilm skill <name>`，**整篇读完照做**（技能文件夹只读，用到的文件复制进影片工程）
 - skill 是方法与质量红线（属于这个主题、用真实数字与品牌、保持可编辑），**不是现成模板**——设计仍要为这个主题现做
+- 同时读 `references/preproduction.md` 并路由到 `.agents/skills/` 的片型 skill（产品片/技术讲解/钩子规则），前期产物按其闸门走
 
 ## Step 3 方案 sign-off（未确认不动手）
 
-产出并等用户确认：
+产出并等用户确认（列定义与轻量模式见 `references/preproduction.md`）：
 
-1. 一句话**概念**（这支片子的 idea，为什么贴主题）
-2. **分镜表**：镜号 ｜ 时长（**预算值**，有旁白时最终以 VO 实际时长回填，见 `references/audio-subtitles.md`）｜ 画面内容 ｜ 动效意图 ｜ 文案（精确到字）
-3. 素材清单：用 `input/` 里哪些文件（列文件名）
-4. 假设与默认值（用户没明说的项）
+1. 一句话**promise**（看完记住什么，这支片子的 idea 为什么贴主题）
+2. **beats**：每拍职责 ｜ 新增信息 ｜ 证明画面（数字/事实来自确认过的材料）
+3. **AV 双栏脚本**：声音（口播原句精确到字 + 音效）｜ 画面（这拍屏幕上是什么）；≤60s 竖版按 `preproduction.md`「Hook」过前三秒
+4. **镜头表**：`page` ｜ `at` ｜ `duration`（**预算值**，有旁白时最终以 VO 实际时长回填，见 `references/audio-subtitles.md`）｜ 画面/构图 ｜ 动效意图 ｜ VO ｜ 屏幕字 ｜ 声音 ｜ starting state ｜ core/cut
+5. 素材清单：用 `input/` 里哪些文件（列文件名 + 可得性）
+6. 假设与默认值（用户没明说的项）
 
-确认后：分镜表**转为 TODO 清单**（每镜一项），制作中按 AGENTS.md「编排纪律」逐镜跟踪，交付前清零。
+轻量模式（≤15s 单信息）：只出 1 + 4（3–5 行镜头表），其余合并进方案说明。
+确认后：镜头表**转为 TODO 清单**（每镜一项），制作中按 AGENTS.md「编排纪律」逐镜跟踪，交付前清零。
 
 ## Step 4 制作（确认后）
 
 按 AGENTS.md「标准工作流 · 做片」执行：
 
 1. `openfilm open output/<film-name>` 建片（Studio 先在场）
-2. 写页面 + 编排 film.html（`frame(t)` 铁律；一镜一页；镜头放**同一个 section** 用 `at` 硬切；viewport 匹配画幅）
+2. 前期产物已过闸门（见 Step 3）：按镜头表逐拍写页面（`frame(0)` 即 starting state；一镜一页、同 section 用 `at` 硬切；viewport 匹配画幅）
 3. 有旁白时**音频驱动时长**：先生成全部 VO → 量实际时长 → 回填各镜 `at`/`duration` → 锁定总时长（分镜秒数是预算，不是锁定值，见 `references/audio-subtitles.md`）
 4. 影片目录内 `look` 循环校验，修到干净（同步勾 TODO）
 5. **第一版完成 → 展示接触表并等用户反馈**（"第一版完成，请确认（OK 继续 / 指出要改的）"），按反馈迭代，不自认为完成
 6. Studio 人机共编（保留 `overrides` 与 `locked` 轨道）
-7. **后期验收**：字幕抽 4 帧 + 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
+7. **后期验收**：Story QA（对照镜头表逐拍过，见 `references/preproduction.md`）+ **手机尺寸检查（缩到 390px 宽看：字够大、不贴边、一屏一信息）** + 字幕抽 4 帧（基线 y=0.80 / box 62%） + 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
 8. **默认不导出**：交付 = Studio 预览 + 交付说明；仅用户当次明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
 
 双版（横 + 竖）就建两个工程（如 `xxx` 与 `xxx-vertical`），页面同源改造、版面重排而非缩放。
@@ -61,6 +65,8 @@
 ## Step 5 交付说明
 
 - 构思与贴题理由（一两句）
+- 前期产物路径：影片工程 `preproduction/` 的 `script.md` / `shotlist.md`（用户要改文案从这里改）
+- Story QA 结果（逐拍过的结果，不凭印象）
 - 每个数字 / 事实的来源
 - 用户下一步能提供什么让片子更好（logo、真实截图、定稿文案）
 - 可改点：哪些文字 / 数字在页面里可直接改
@@ -72,7 +78,8 @@
 
 - ❌ 用可套任何公司的泛化动画（skill 红线：必须属于这个主题）
 - ❌ 编数字 / 编引用；用 logo 时重画而不是原样使用
-- ❌ 未 sign-off 就动手；跳过 `look` 直接交付
+- ❌ 未 sign-off 就动手；没出 AV 脚本与镜头表就写页面（轻量模式也要 promise + 镜头表）；跳过 `look` 直接交付
+- ❌ 镜头表缺 starting state / core-cut 就开工；没有真实素材就用假界面顶替（新闻类硬门槛）
 - ❌ 动 `locked` 轨道 / `overrides`；重编码媒体文件
 - ❌ 擅自下载大文件；声音服务未配 key 就假装能用
 - ❌ 把分镜秒数当锁定值直接开工（有旁白时以 VO 实际时长为准）；为凑时长硬裁内容

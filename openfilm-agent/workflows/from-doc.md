@@ -40,10 +40,11 @@
 - 或按用户要求：精简版（1 条主线讲透）/ 完整版（分镜对应章节，秒数按内容分配）
 - 产出**内容选取表**并展示给用户：
 
-  | 选取 | 来源章节 | 一句话摘要 | 用哪张图/数据 | 预估秒数 |
-  |---|---|---|---|---|
+  | 选取 | 来源章节 | 一句话摘要 | 用哪张图/数据 | 素材可得性 | 预估秒数 |
+  |---|---|---|---|---|---|
 
   同表列出**删掉了什么、为什么**（跑题 / 内部 / 重复 / 时长不够）
+- **素材可得性**：新闻类按 `references/preproduction.md`「真实素材硬门槛」标注（官方截图 / 报道页 / 真实产品界面 / 图库 / 无）；标"无"的条目在闸门就换题，不带进制作
 - 限制检查：逐条过一遍"可对外"范围，剔除敏感项
 - 选取表中的秒数是**预估**；最终时长以 VO 实际时长回填（见 Step 4）
 - **等用户确认（增删/排序/时长）后才进入设计**
@@ -53,13 +54,15 @@
 - **选片型**（读 `openfilm skill <name>` 整篇照做）：
   - 信息类周刊 / 数据故事 → `motion-graphics`（首选）
   - 发布感 / 产品向 → `keynote`；讲解向 → `whiteboard`
-- **分镜表**：镜号 ｜ 时长（预算值，VO 后回填）｜ 画面内容 ｜ 动效意图 ｜ 文案（精确到字；文案只来自 Step 2 确认过的内容）
+- **前期产物按 `references/preproduction.md` 闸门走**：beats → AV 双栏脚本 → 镜头表（列定义、轻量模式见该文件）；≤60s 竖版过「Hook」三条
+- **新闻类制作规则**（4–5 条上限、真实素材硬门槛、每条异构视觉、短开头无片尾）→ `references/preproduction.md`「新闻类制作规则」
+- **claims not sections**：分镜与口播按"源材料证明了什么"组织，不按文档章节搬（`technical-video-script` 的转置原则）
 - **口播稿生成 TTS 前完成口语自检**（整稿念一遍、读音改写表套用——见 `references/audio-subtitles.md`「口播稿自检」「读音改写表」）：重录是全链返工，别把书面语带进录音棚
 - 确认后才动手（对齐 `workflows/build-film.md` Step 3 的 sign-off 要求）
 
 ## Step 4 制作
 
-按 AGENTS.md「标准工作流 · 做片」：`open output/<film-name>` → 写页面 → **音频驱动时长**（先生成全部 VO → 量实际时长 → 回填 `at`/`duration` → 锁定总时长，详见 `references/audio-subtitles.md`）→ `look` 循环 → Studio 人机共编 → 后期验收（字幕抽 4 帧 + 混音对基线 + 封面）→ **默认不导出**（用户在 Studio 操作；有旁白/字幕成片走 Studio 烧录导出，`render` 不含字幕）。
+按 AGENTS.md「标准工作流 · 做片」：`open output/<film-name>` → 按已 sign-off 的镜头表写页面（`frame(0)` 即 starting state）→ **音频驱动时长**（先生成全部 VO → 量实际时长 → 回填 `at`/`duration` → 锁定总时长，详见 `references/audio-subtitles.md`）→ `look` 循环 → Studio 人机共编 → 后期验收（Story QA + 字幕抽 4 帧 + 混音对基线 + 封面）→ **默认不导出**（用户在 Studio 操作；有旁白/字幕成片走 Studio 烧录导出，`render` 不含字幕）。
 
 **系列化（周刊复用）**：如果是周期性内容，首期按"可复用模板"做——
 - 固定结构：`content.js` 纯数据（文案/数字/时长）｜ `scene.js` 共享渲染器 ｜ `styles.css` 共用样式 ｜ `scene-NN.html` 一镜一页（只有 `data-scene` 差异）｜ `cover-3x4.html` 封面

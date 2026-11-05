@@ -69,6 +69,7 @@ git --version                     # Studio 版本保存需要（本机 ✅）
 - 下载失败手动补：`npx playwright-core install chromium-headless-shell`
 - 桌面 app 兜底（自带 ffmpeg + 浏览器，免 CLI 依赖）：<https://openfilm.dev>
 - 不安装官方 skill（`npx skills add openfilm/openfilm` 只有 462B 指针，内容已在本文件）；内置片型技能随 CLI 动态读取，无需安装、不 vendor。
+- 第三方前期创作 skill 装在 `.agents/skills/`（6 个、MIT、已剔除 evals 等非运行时文件；路由与边界见 `references/preproduction.md`）：只装点名 skill、禁止 `--all`/`-g`、不跑 `skills update`。
 
 ## 入口与命令（`openfilm <命令>`）
 
@@ -121,10 +122,19 @@ window.film = {
 - VTT 是字幕源；`get asr` 只提供时间轴，文字必须以口播稿校正（专名、版本号、英文缩写常被听错）。
 - `openfilm look` 看不到字幕；字幕要在 Studio 预览或烧录导出后抽帧验收。
 - 当前 `openfilm render` 只出画面+混音，**不烧字幕**；带字幕成片用 Studio 导出中心勾选「烧录字幕」（自动化可用导出 API 的 `burnSubtitles: true`）。
-- 竖屏字幕基线（1080×1920）：`y≈0.786`、字号 `3.8%`、黑色 box `48%`、圆角 `.18em`、padding `.5/.22em`、无描边无阴影；位置用相对比例，不写死像素。若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
+- 竖屏字幕基线（1080×1920）：`y≈0.80`、字号 `3.8%`、黑色 box `62%`、圆角 `.22em`、padding `.55/.24em`、无描边无阴影；位置用相对比例，不写死像素。**新项目默认 y=0.72（带 ~1345–1420），新片先经 Studio API 应用基线，否则压内容。**若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
 - **竖屏全片安全区**（2026-10 复盘入档）：顶部 0–252、字幕带 ~1465–1553、平台描述区 1620 以下留空，内容底边 ≤1400；量边界用 `openfilm-agent/scripts/probe-safe-area.mjs`。细则与实测教训见 `references/visual-qa.md`。
 - 字幕位置/样式属于人（`.film/subtitles.json`），**禁止文本编辑器直接改 JSON**；用户明确要求调整时，通过 Studio UI 或 Studio API 操作（等同于人在 Studio 改），改前先读当前配置。交付前抽 4 帧：开头、首个内容镜、密集信息镜、结尾。
 - **TTS 输入稿 ≠ 字幕显示稿**（读音改写表、"1M 读一兆"约定）与**口播稿自检** → `references/audio-subtitles.md`；画面/图表类 QA 教训（图表诚实、SVG 指针映射、look 高发问题）→ `references/visual-qa.md`
+
+## 前期创作（pre-production）
+
+写页面之前先出脚本与分镜，规则、路由与闸门见 `references/preproduction.md`：
+
+- **路由**：产品片 → `narrated-product-film`（有口播）/ `silent-product-demo`（无口播）+ `explainer-video`（30–90s 解释型）；技术讲解 → `technical-video-script`；通用双栏 AV 脚本与镜头表 → `scripting-and-storyboarding`；≤60s 竖版钩子 → `short-form-video-script`；新闻类 → `preproduction.md`「新闻类制作规则」
+- skill 在 `.agents/skills/`，**整篇读完照做**；与本文件或 openfilm 铁律冲突时以本文件/铁律为准
+- **闸门**：brief → beats → AV 脚本+镜头表，sign-off 后才写页面；≤15s 单信息走轻量模式（promise + 3–5 行镜头表）
+- 上游缺失的兄弟 skill（brand-profile 等）用本 agent 的输入替代，见 `preproduction.md`「skill 边界」
 
 ## 人机协作规则（重要）
 
@@ -159,17 +169,19 @@ window.film = {
 **做片**：
 
 1. 仓库根执行 `openfilm open output/<film-name>` — 建片并先让 Studio 在场（用户在浏览器里实时看变化、可随时手动编辑）
-2. 写页面 + 编排 film.html（需要片型参考时 `openfilm skill <name>`；有旁白时**音频驱动时长**——先生成 VO、量实际时长、再回填镜头 `at`/`duration`，详见 `references/audio-subtitles.md`）
-3. 在影片目录内 `openfilm look` 校验（确定性 + 报错 + 响度；不校验字幕层），修 → look → 修，直到干净
-4. **后期验收**：字幕抽 4 帧（开头/首个内容镜/密集信息镜/结尾）+ 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
-5. 交付 = Studio 预览 + 交付说明；**默认不导出**——用户在 Studio 操作；仅用户明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
-6. 需要生成的素材 → `get`（先引导用户在 Studio 配好服务商 key）
+2. **前期创作**：读 `references/preproduction.md` + 路由到的片型 skill，出 brief → beats → AV 双栏脚本 + 镜头表，逐闸门 sign-off（≤15s 轻量模式可合并）；有旁白时按字数预算估秒（`references/audio-subtitles.md`）
+3. 写页面 + 编排 film.html（按已确认的镜头表逐拍落：`frame(0)` 即 starting state；一镜一页、同 section 顺序 `at`；viewport 匹配画幅）
+4. 有旁白时**音频驱动时长**：先生成全部 VO、量实际时长、回填镜头 `at`/`duration`，详见 `references/audio-subtitles.md`
+5. 在影片目录内 `openfilm look` 校验（确定性 + 报错 + 响度；不校验字幕层），修 → look → 修，直到干净
+6. **后期验收**：Story QA（对照镜头表逐拍过，见 `preproduction.md`）+ **手机尺寸可读性（缩到 390px 宽看一遍）** + 字幕抽 4 帧（开头/首个内容镜/密集信息镜/结尾）+ 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
+7. 交付 = Studio 预览 + 交付说明（含脚本/镜头表路径与 QA 结果）；**默认不导出**——用户在 Studio 操作；仅用户明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
+8. 需要生成的素材 → `get`（先引导用户在 Studio 配好服务商 key）
 
-**改片**：先读 film.html、相关页面与 VTT → 只改意图内部分 → `look` 复验。
+**改片**：先读 film.html、相关页面与 VTT → 只改意图内部分 → `look` 复验（结构性改动先按 `references/preproduction.md` 做 structure diagnosis，再走闸门）。
 
 ## 输入输出
 
-- 影片工程（目录）→ 仓库根 `output/<film-name>/`（gitignored）；`open` 相对路径按 cwd 解析，从仓库根传 `output/<film-name>`，或 `cd output` 后 `open <film-name>`
+- 影片工程（目录）→ 仓库根 `output/<film-name>/`（gitignored）；`open` 相对路径按 cwd 解析，从仓库根传 `output/<film-name>`，或 `cd output` 后 `open <film-name>`；定稿的脚本与镜头表放工程内 `preproduction/`（闸门中间稿先落 `input/`，见 `references/preproduction.md`）
 - 用户素材 → 仓库根 `input/`：图片 / logo（PNG·SVG）/ 视频（mp4·mov）/ 音频（mp3·wav）/ 文案·数据 / 字体（.ttf/.woff2）。**只把影片用到的拷贝进 `output/<片名>/assets/`**（Studio 媒体池可见、可编辑），其余不动；语义化英文命名；不重编码（裁只改 `#t=`、快慢只改 `speed`）
 - 示例片（可直接当起点）：`openfilm open https://github.com/openfilm/examples/tree/main/one-prompt`
 
@@ -190,4 +202,5 @@ window.film = {
 | "打开" / "续接"（菜单 4） | 本文件「入口与命令」直接执行 `open`，无需读 workflow |
 | "从示例起步"（菜单 5） | `open <github url>` 导入后，如需改造按 `workflows/edit-film.md` 流程 |
 | "校验" / "检查" / "交付"（菜单 6） | 本文件「入口与命令」执行 `look` + 后期验收；导出默认用户在 Studio 操作，仅显式要求时 agent 执行 |
+| "写脚本" / "出分镜" / "脚本评审" / "前期" | `references/preproduction.md` + 按片型路由到 `.agents/skills/` 对应 skill |
 | "做封面" / "发布文案" / "小红书封面" | `workflows/publish-kit.md` |

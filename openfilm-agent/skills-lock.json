@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "explainer-video": {
+      "source": "iart-ai/explainer-video-skills",
+      "sourceType": "github",
+      "skillPath": "skills/explainer-video/SKILL.md",
+      "computedHash": "0f3d42fcad7f775d0f05cfbd28e23ec8f81a097848b617335ffb943f5aa3d1b9",
+      "installMode": "copy"
+    },
+    "narrated-product-film": {
+      "source": "adamperlis/video-skills",
+      "sourceType": "github",
+      "skillPath": "skills/narrated-product-film/SKILL.md",
+      "computedHash": "2201111f2e6815f566fd955d91ab5d3666d1fe092fa8171602182130d05d6d58",
+      "installMode": "copy"
+    },
+    "scripting-and-storyboarding": {
+      "source": "social-media-skills/skills",
+      "sourceType": "github",
+      "skillPath": "skills/scripting-and-storyboarding/SKILL.md",
+      "computedHash": "5465e9553a353727b1f5bf9e72cd23d7b3d8e6078fc7f0b1393ad07626eefa46",
+      "installMode": "copy"
+    },
+    "short-form-video-script": {
+      "source": "social-media-skills/skills",
+      "sourceType": "github",
+      "skillPath": "skills/short-form-video-script/SKILL.md",
+      "computedHash": "8f53f76095576de5355341d05f32af7a381a6f3e6b82f5b7be67a6fcecedb712",
+      "installMode": "copy"
+    },
+    "silent-product-demo": {
+      "source": "adamperlis/video-skills",
+      "sourceType": "github",
+      "skillPath": "skills/silent-product-demo/SKILL.md",
+      "computedHash": "a2857ccbd9940718027adcb6150f31ba94b524a31fb0fa575b11a2fb809ca5bf",
+      "installMode": "copy"
+    },
+    "technical-video-script": {
+      "source": "samber/developer-relations-skills",
+      "sourceType": "github",
+      "skillPath": "skills/technical-video-script/SKILL.md",
+      "computedHash": "d4295494e3a1ea321ae628abbe2faf16fec4f70c38f7d283389380c92e12f0bc",
+      "installMode": "copy"
+    }
+  }
+}
