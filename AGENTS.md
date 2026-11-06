@@ -7,8 +7,8 @@ No build, test, or lint at the root level.
 
 ## Directory conventions
 
-- **31 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
-- All 32 agent directories on disk have a reference doc (31 × `AGENTS.md` + 1 × `AGENT.md`); the former `test-agent/` (undocumented) no longer exists.
+- **32 directories use `AGENTS.md`**, **1 uses `AGENT.md`** (singular): `dify-agent/`.
+- All 33 agent directories on disk have a reference doc (32 × `AGENTS.md` + 1 × `AGENT.md`); the former `test-agent/` (undocumented) no longer exists.
 - Most agents are CLI-tool wrappers — the CLI is installed globally, not per-directory. Commands and auth are documented inside each agent's markdown.
 - No `package.json`, root workspace config, or shared dependency management.
 - **No `opencode.json`** anywhere in the repo.
@@ -25,6 +25,7 @@ No build, test, or lint at the root level.
 - **`cssprobe-agent/`** — runtime CSS probe for layout/scroll/overflow inspection. Uses `cssprobe-cli` to analyze live pages in a browser. Supports iframe targeting (`--frame`), timeline sampling (`sample` / `wait-stable`), and JSON scenario regression suites (`scenario run`). Produces structured reports with DEFINITE/INDEFINITE/UNVERIFIABLE confidence levels.
 - **`seo-agent/`** — OpenCode-native SEO review & design agent. Five workflows: SEO audit / fix design (file-level change groups for code-agent) / page-purpose blueprint / AI-visibility sampling / keyword-intent research. **只出设计不改代码**；抓取委托 firecrawl-agent / browser-agent。Knowledge base in `seo-agent/references/`（含 `google-currency.md` 时效账本），skill 包移植自 yao-geo-skills（MIT，见 `seo-agent/.agents/skills/README.md`）。输出落 `seo-agent/output/`（gitignored）。
 - **`image-agent/`** — OpenCode-native still-image agent。封面 / 分享图 / 自由图 / 改图 / 从文档出图；手工排版用 HTML/CSS/SVG 经 Playwright 截图（`scripts/shoot.mjs`），AI 生图/改图委托 aliyun-agent（`bl`）/ volcengine-agent（`ve`），真实摄影素材用已发布的 `unsplash` CLI（`@orangemust/unsplash-cli`，key 存系统 keychain 或 `~/.unsplashrc` / `UNSPLASH_ACCESS_KEY`；备用脚本 `scripts/unsplash.mjs` 依次读环境变量 / `~/.unsplashrc` / 系统 keychain）。输入 `input/`，输出 `output/<slug>/`；字体只保留 URL，按需下载到 `input/brand/fonts/`（不入 git）。
+- **`xhs-agent/`** — OpenCode-native 小红书小工具全流程 agent。5+1 工作流：打包合规 zip（平台 skill `minitool-zip-builder` 离线 12 步 + 审计脚本）/ 上架素材（委托 image-agent）/ 推广笔记（骨架池 + 数字回溯）/ 竞品监测 / 数据回流 / Agent 托管（`.agents/skills/redapp-cli/` 登录 / 上传 / 预览 / 送审 / 审核状态，CLI 渐进引导，**不主动装 npm 依赖**）。产物落 `xhs-agent/output/`（gitignored）；token 存 `~/.skillhub-upload/`（自身管理，不入库）。
 - **`browser-use-agent/`** was deleted — check git history (`main.py`, `pyproject.toml`, `uv.lock`, `DEEPSEEK_API_KEY` in `.env`) if referenced.
 - **`bugsnag-agent/`** — bugsnag-cli wrapper，**默认只读、显式写** 的 BugSnag 错误分析 agent（全景 / 深度分析 / 项目健康 / 发布回归 / 性能排查 / 报告归档）。命令真值在 `bugsnag-agent/.agents/skills/bugsnag-cli/`（`bugsnag-cli skill-install --target opencode --local` 生成，勿手抄）；报告落 `bugsnag-agent/output/`（gitignored），飞书归档按 `bugsnag-agent/.env` 开关。triage 写操作仅允许 `error-update` / `error-bulk-update` 且必须带 `--write`。
 
@@ -45,6 +46,7 @@ No build, test, or lint at the root level.
 | `cssprobe-agent` | `cssprobe-cli` | 运行时 CSS 探针 |
 | `aliyun-agent` | `bailian-cli` / `bailian-gen` / `bailian-protocol` | 百炼主入口；从 `~/.bailian/skills` 手工复制，无 lock |
 | `image-agent` | `bailian-gen` / `bailian-protocol` / `prompt-images` | 生图 prompt 走 `prompt-images`（Replicate Apache-2.0）；百炼 skill 从 `~/.bailian/skills` 手工复制无 lock，`prompt-images` 有 `skills-lock.json` |
+| `xhs-agent` | `minitool-zip-builder`（平台分发） / `redapp-cli`（平台分发） | 两个平台 skill 本体均已提交；对应 CLI（audit 的 Node / Python、redapp 的 npm 包 `redskillhub-upload`）按需使用，不预装 |
 | `openfilm-agent` | `scripting-and-storyboarding` / `short-form-video-script` / `explainer-video` / `narrated-product-film` / `silent-product-demo` / `technical-video-script` | 前期创作（脚本/分镜/钩子），全部 MIT、装后剔除 evals；路由见其 `references/preproduction.md`，不跑 `skills update` |
 
 `design-agent` 的 `web-design-guidelines` 为本地安装、不提交（上游未声明 license），仅提交 `design-agent/skills-lock.json`。
@@ -98,6 +100,7 @@ No build, test, or lint at the root level.
 - **develop-agent** — 需求研发入口。输入需求描述，自动串联全流程。协调器本身不执行具体操作，只分派给子 agent 并逐阶段等待 sign-off。
 - **openfilm-agent** — 网页做片（`film.html` + Studio 人机共编）。读其 `AGENTS.md` 后按 workflow 索引执行；写页面前先走「前期创作」（脚本/分镜，规则在其 `references/preproduction.md`，片型 skill 在其 `.agents/skills/`）；**默认不导出**，导出由用户在 Studio 操作；禁止 `openfilm update`（本地 fork）。
 - **image-agent** — 用网页做图（HTML 画布 + `scripts/shoot.mjs`）。先按 `references/art-direction.md` 选视觉方向（Swiss editorial / Photo-led / Data / Warm humanist / Brutalist），封面常用混合：AI 出背景、HTML 叠文字；真实摄影素材走 Unsplash（`unsplash` CLI / `@orangemust/unsplash-cli`，key 在系统 keychain 或 `~/.unsplashrc` / `UNSPLASH_ACCESS_KEY`）。生图 prompt 走 `.agents/skills/prompt-images/`；最终稿用 `qwen-image-3.0` / `wan2.7-image` / 即梦 Seedream，`z-image-turbo` 只做草稿。文字/Logo/数据永远 HTML。输入 `input/`，输出 `output/<slug>/`；字体按需下载到 `input/brand/fonts/`（不入 git）。
+- **xhs-agent** — 小红书小工具工作台入口。读其 AGENTS.md 后按 workflow 索引执行；打包合规件走平台 skill（`minitool-zip-builder`，含在线文档比对 + 双审计脚本）；Agent 托管走 `redapp-cli`（登录 / 上传 / 预览 / 送审 / 状态，渐进引导）。上线素材与推广图委托 `use image-agent`。产物落 `xhs-agent/output/`；`redapp` CLI 的 npm 包不主动装，只在用户显式触发时 ensure-cli。
 
 ## JSON 处理约定
 

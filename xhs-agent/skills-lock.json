@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "minitool-zip-builder": {
+      "source": "https://fe-static.xhscdn.com/minitool/20261105143522/minitool-zip-builder-1.10.0.skill",
+      "sourceType": "url-skill-zip",
+      "skillPath": "SKILL.md",
+      "localCopy": "~/Projects/minesweeper/.skill/minitool-zip-builder",
+      "version": "1.10.0",
+      "format": "cursor-skill-zip-v1",
+      "computedHash": "b79d7daafe04b420b721ad790d5bd1072d787b0040d70e1115b8529c50c75442",
+      "installMode": "copy",
+      "fetchedAt": "2026-11-06",
+      "archivedRefs": [
+        {
+          "note": "管理指令给出的 beta 版本（未下载，仅记录）",
+          "source": "https://fe-static.xhscdn.com/minitool/test/20261023/dist/minitool-zip-builder-1.9.0-beta.20261023.1.skill",
+          "version": "1.9.0-beta.20261023.1"
+        }
+      ]
+    }
+  }
+}

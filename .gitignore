@@ -53,3 +53,9 @@ strk-agent/.env
 
 # design-agent: upstream skill license not declared; keep local, restore via skills-lock.json
 design-agent/.agents/skills/web-design-guidelines/
+
+# xhs-agent outbound artifacts
+xhs-agent/output/
+
+# redapp-cli login state (managed by the XHS CLI, never commit)
+.skillhub-upload/
