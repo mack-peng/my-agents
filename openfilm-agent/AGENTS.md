@@ -109,6 +109,7 @@ window.film = {
 ```
 
 - **铁律：同一 `t` 永远画出同一画面**——帧会乱序、并行、插帧（运动模糊）调用，不得依赖上一次绘制结果
+- **家具建一次、状态每帧重设**：页眉/周带/出处栏在页面加载时构建，`frame(t)` 只更新它们的位置数值；显隐/样式（display/visibility/cssText/innerHTML）必须每帧显式设回目标值——乱序绘制下单向下 `if (t > x)` 会残留状态（细则见 `references/visual-qa.md`「纯函数两条硬规则」）
 - 页面 `<head>` 的 `<meta name="viewport" content="width=<W>, height=<H>">` 必须与影片尺寸一致（竖版 1080×1920 就写 `width=1080, height=1920`）
 - 页面必须提供时长：`window.film.duration`（推荐，一镜一页时每页各自设置），否则 iframe 需要 `#t=0,长度`；两者都没有时 clip 时长不确定
 - 页面不滚动：不加 `scrolling` 属性，版面按完整画幅设计，内容切换用硬切/页面内动画
@@ -117,7 +118,7 @@ window.film = {
 - 页面 t 从 0 起是页面自己的时间；在影片中的位置/时长由 film.html 决定
 - 一镜一页（五镜 = 五个页面），人才能单镜裁剪/重排/替换；共享的字体/颜色/logo 写成公共文件加载
 
-**字幕**：媒体旁同名 `.vtt`（`vo/1.wav` → `vo/1.vtt`），Studio 据此生成影片字幕；**不要在页面里画字幕**。VO/VTT/混音/字幕 QA 细则见 `references/audio-subtitles.md`。
+**字幕**：媒体旁同名 `.vtt`（`vo/1.wav` → `vo/1.vtt`），Studio 据此生成影片字幕；**不要在页面里画字幕**。Studio 字幕按词块逐组同声渲染，VTT 必须保留 `get asr` 的词级时间标记（只改文字不动标签）。VO/VTT/混音/字幕 QA 细则见 `references/audio-subtitles.md`。
 
 - VTT 是字幕源；`get asr` 只提供时间轴，文字必须以口播稿校正（专名、版本号、英文缩写常被听错）。
 - `openfilm look` 看不到字幕；字幕要在 Studio 预览或烧录导出后抽帧验收。

@@ -68,6 +68,7 @@
 - 固定结构：`content.js` 纯数据（文案/数字/时长）｜ `scene.js` 共享渲染器 ｜ `styles.css` 共用样式 ｜ `scene-NN.html` 一镜一页（只有 `data-scene` 差异）｜ `cover-3x4.html` 封面
 - 后续每期：**复制上一期工程**（命名 `<series>-YYYY-MM-DD`）→ 替换 `content.js` / 素材 / VTT / 封面 → 重新对时（VO 时长会变，总时长随之变）→ 清理旧 assets → `look` 复验
 - 不直接改归档期工程；在交付说明里写清"下期改哪个文件哪几行"
+- **recipe 记录本期基线参数**：字幕 `pos.y / box(透明度,padding,radius)`、内容左右留白、封面尺寸与主题、总时长——下期照抄再改内容，避免每期重新调
 
 ## Step 5 交付说明
 

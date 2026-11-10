@@ -173,7 +173,7 @@ ReAct 模式的深度研究代理：LLM 驱动搜索决策，每轮根据已累�
 - 反馈：飞书文档链接 + 配图清单（每张图位置/内容）
 
 **飞书发布踩坑记录（已实测，避免重新摸索）：**
-1. **`--content @file` 只接受相对路径**：`@/tmp/xxx.md` 报 `invalid file path`——先 `cd` 到文件所在目录，用 `@./xxx.md`
+1. **`--content @file` 走文件白名单**：允许的根是当前工作目录、`/tmp`、`~/files`（版本相关，报错信息会列出）；工程目录在仓库里时先 `cd` 到文件目录用 `@./xxx.md`，或直接 `cat file | lark-cli … --content -`（stdin 最稳）。整篇重写用 `--command overwrite`（本次实测可用，保留同一文档链接）
 2. **markdown 写入 `$` 必须转义**：`$0.75` 之类会触发数学公式渲染——写入前 `sed 's/\$/\\$/g'` 预处理（`\$`）
 3. **block 定位完整链路**：
    - `docs +fetch --api-version v2 --doc <doc_id> --detail with-ids` 输出含各标题的 `block_id`（如 `<h1 id="doxcn…">`）

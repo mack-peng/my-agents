@@ -44,7 +44,35 @@
 - **溢出/被裁文本**：look 会报（clippedText / overflow），重点自查 chips 行、绝对定位的 stamp
 - **组件样式误伤嵌套数字**：说明文字选择器写 `.fact span` 会命中数值里的嵌套 `<span>`（被当说明渲染成小字并强制换行）——组件 caption 一律用直接子选择器 `.fact > span`
 - **出字早于旁白结束**：结尾大字/落版在最后一条字幕 cue 结束之后才 reveal（镜内时刻 ≥ VO 时长），否则与字幕同屏互压
+- **接触表缩略图会误判**：300px 缩略里"卡片消失/文字脏"可能只是压缩所致（实测把三卡看成两卡）——可疑帧用 `openfilm look <t>` 出单帧全尺寸再判，别凭缩略图改代码
 
 ## 改口播后的画面返工
 
 口播稿 v2 落定重录 VO 后：各镜内心时刻常数表全部按新 ASR cue 重算（页内时刻 = cue + 0.35），页面 `duration` 与 film.html `at` 链同步回填——只改音频不动页面时刻表，会出现"图不达意"（字说到数字，数字还没进来）。
+
+## 共享家具与状态：两条纯函数硬规则（Nº06 实测）
+
+- **家具只在页面加载时建一次**：页眉 / 周带 / 出处栏（furniture）在脚本顶层构建；`frame(t)` 只更新它们的位置与数值。把 `furniture()` 放进 `frame()` 会让每个被绘制的帧再 append 一套 DOM——同一 t 两次绘制画面不同，`look` 直接报 "same t drew two different pictures"
+- **一切显隐/样式的变更必须是 t 的纯函数**：每帧都把 `display` / `visibility` / `cssText` / `innerHTML` 显式设回目标状态；`if (t > x) el.style.display = "block"` 这类单向变更是坑——帧会乱序绘制，先画晚帧再画早帧时残留状态会漏进早帧（实测：印章/徽标在 t<出现时刻被"提前"画出）
+- 图片页必须 `ready: window.__brief.readyImages()`（等 `img.decode()` settle），否则 "media still seeking" 会造成双绘不一致
+
+## 截图证据卡（shot-card）规范
+
+- **页面实拍优先全宽**（= 内容宽，如 920/888）：把宽 1440 的页面塞进 500 宽卡片会横向切掉标题中段，看起来像排版事故（实测：TNW 卡 "GPT-6 Cyb…" 被横切）
+- **竖向裁切终点必须落在干净边界**：标题区结束后的留白、hero 图边界、或 Credit 行之后、正文之前；切在段落行中间会露出半行字，观感被判"内容重叠"
+- 卡宽变化时**同步换算 img 宽度**（如 1102→1058）保持同一裁切比例，不要只改卡宽
+- **日期口径**：榜单/数据页截图日期可能与稿内数据日期不同（AA 截图 11/10、稿内引用 11/6 刷新）——卡面标注截图日期，正文仍按稿内口径；同页多档位（high/max）时自绘图形按"同家族取最高档"并标注，别让截图里的中间档和自绘条形打架
+- 抓完必须**目检图片本体**（Read 截图）：空页/404/Cloudflare 拦截页体积异常小，肉眼一眼能排掉
+
+## 窄列卡片布局（防重叠）
+
+- 窄列（≤380px）卡片一律 **flex column**：标题 → 指标行（`nowrap`）→ chip **静态定位 + `margin-top:auto`**；绝对定位 chip 只有宽卡才安全
+- 指标行「大数字 + 说明」估宽：中文 ≈ 字号 × 字数，西文 ≈ 0.55 × 字号 × 字符数。宽度不够时**降说明字号**（如 380 宽：56 数字 + 22 说明；284 宽：52 + 17），不要让它自己换行
+- 多枚 chip / 需要"后出现"的元素：容器 `flex-wrap`，元素用 `visibility` 占位（hidden→visible），不要用 `display`（出现时推挤布局）
+- 出现时机的状态切换照「纯函数硬规则」处理
+
+## 素材获取 failsafe（截不到官方页时）
+
+- OpenAI 官网、The Hacker News、Google/DDG/Bing 等会出 Cloudflare / 人机验证（"Verify you are human" / "Just a moment" / 选图验证）——**不绕过**，改用同主题的可靠报道页（TNW、MLQ、TechNode、benchlm、CyberSecurityNews 等）
+- URL slug 别手拼：版本号/品牌常带连字符（`ling-3-2` vs `ling-32`），抓到前先用搜索结果核对；404 页截进卡是最尴尬的事故
+- 截图固定流程：open → resize 1440×1000 → 需要时 `scrollTo` 到标题区 → screenshot → Read 目检 → 关闭会话
