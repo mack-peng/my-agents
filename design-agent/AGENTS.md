@@ -69,7 +69,7 @@ OpenCode 产品设计审查代理。审查现有代码库、线上页面或 CLI/
 
 ## 输出方式
 
-所有输出落本目录，`output/` 与 `projects/` 已加入 `.gitignore`：
+审查报告与 Spec 落工作台根 `output/`（裸 `output/` 均指工作台根），认知档案落本目录 `projects/`；两者均已加入 `.gitignore`：
 
 | 类型 | 路径 | 用途 |
 | --- | --- | --- |

@@ -42,7 +42,7 @@ bugsnag-agent 能为你做什么
 
 - bugsnag-cli：✅ 就绪（v0.2.0）/ ❌ 未安装
 - BugSnag token：✅ 已配置 / ❌ 未配置（执行查询时由用户自行 config-set）
-- 报告目录 bugsnag-agent/output/：✅ 就绪
+- 报告目录工作台根 `output/`：✅ 就绪
 - 飞书归档：⬜ 未启用（本地模式）/ ✅ 已启用
 
 回复 **1 / 2 / 3 / 4 / 5 / 6 / 7**，或直接描述你的任务。

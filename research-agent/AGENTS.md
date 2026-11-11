@@ -38,7 +38,7 @@ which lark-cli >/dev/null 2>&1 && echo "lark-cli: present" || echo "lark-cli: mi
 which bl >/dev/null 2>&1 && echo "aliyun-bl: present" || echo "aliyun-bl: missing"
 which officecli >/dev/null 2>&1 && echo "officecli: present" || echo "officecli: missing"
 # 报告输出目录（自动创建，避免首次运行报错）
-mkdir -p research-agent/output
+mkdir -p output
 # 结果解析依赖（firecrawl --json 结果统一用 jq 解析，禁止手写 python 脚本）
 which jq >/dev/null 2>&1 && echo "jq: present" || echo "jq: missing (brew install jq)"
 ```
@@ -95,7 +95,7 @@ research-agent 能为你做什么
 | `DEFAULT_DEPTH` | 3 | 深度调研**最少**搜索轮数（每轮后 LLM 评估是否继续，信息不足则追加搜索，无硬性上限） |
 | `MAX_RESULTS_PER_QUERY` | 5 | 每轮搜索**至少**抓取 5 篇文章 |
 | `SEARCH_ENGINE_URL` | `https://www.google.com` | 搜索引擎首页 |
-| `REPORT_OUTPUT_DIR` | `output` | 报告本地输出目录（相对于 research-agent/，飞书模式下仍保留）；封面/插图直接存本目录、与 `.md`/`.docx` 同级别 |
+| `REPORT_OUTPUT_DIR` | `output` | 报告本地输出目录（工作台根，裸 `output/` 均指工作台根；飞书模式下仍保留）；封面/插图直接存本目录、与 `.md`/`.docx` 同级别 |
 | `USE_FEISHU` | 空（关闭） | 飞书模式：`true` 时调研报告须在 `FEISHU_WIKI_ID` 知识库内**建立为飞书文档**；空 = 关闭，走本地分支 |
 | `FEISHU_WIKI_ID` | 空 | 飞书知识库（空间）ID，`USE_FEISHU=true` 时报告文档的落点 |
 | `USE_FIRECRAWL` | `true` | 执行方选择：`true` 委托 firecrawl-agent，`false` 委托 browser-agent |

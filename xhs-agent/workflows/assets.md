@@ -5,7 +5,7 @@
 ## Step 0 目标解析（通用入口；规则详见 AGENTS.md）
 
 1. 用户点名工具 → 用之；
-2. 未点名 → `ls xhs-agent/output/*/` 列 manifest 候选让用户选；
+2. 未点名 → `ls output/*/` 列 manifest 候选让用户选；
 3. 无记录 → 一次集中问：小工具名称（当场报 n/14）+ 简介意向（可用一句话素材让 agent 起草）。
 
 禁止从会话上下文静默代入历史工具；想用上下文推断必须显式声明并给纠正机会。
@@ -14,7 +14,7 @@
 
 1. 名称 = 小工具名（尽量 ≤4 字，实测「扫雷」2/14 通过——仅作实测案例，非默认值）
 2. 简介 ≤14 字；对齐产品的核心表达与 XHS 平台口吻；示例：「经典扫雷，一局上头」（9/14）
-3. 命名格式用 `{YYYY-MM-DD}-{slug}`，产物落 `xhs-agent/output/{YYYY-MM-DD}-{slug}/`，含 manifest.md
+3. 命名格式用 `{YYYY-MM-DD}-{slug}`，产物落 `output/{YYYY-MM-DD}-{slug}/`，含 manifest.md
 
 ## Step 2 委托 image-agent 出图（或用户自备图）
 

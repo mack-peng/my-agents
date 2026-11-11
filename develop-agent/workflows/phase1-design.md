@@ -26,7 +26,7 @@
 design-agent 按自身 AGENTS.md 执行：
 1. 入场澄清业务上下文
 2. 建立项目认知档案（`projects/{name}.cognition.md`）
-3. 输出 Spec 到 `design-agent/output/{name}.spec.md`
+3. 输出 Spec 到 `output/{name}.spec.md`
 4. 逐项与用户确认需求
 
 ### 4. 协调器确认流程
@@ -47,12 +47,12 @@ design-agent 按自身 AGENTS.md 执行：
 
 ## Sign-off 条件
 
-- [ ] Spec 文件已保存到 `design-agent/output/`
+- [ ] Spec 文件已保存到 `output/`
 - [ ] 所有 Requirement 用户已确认（含修改/取消/补充的）
 - [ ] 飞书模式：Spec 已上传到 Spec 知识库
 - [ ] 飞书模式：Develop 文档已追加 Phase 1 章节
 
 ## 产出
 
-- `design-agent/output/{name}.spec.md` — 结构化需求文档
+- `output/{name}.spec.md` — 结构化需求文档
 - 飞书模式：Spec 知识库中的文档链接

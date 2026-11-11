@@ -228,7 +228,7 @@ fs.writeFileSync("output.yml", dsl.toYAML());
 ## Input/output conventions
 
 - `input/` — source DSL YAML files (gitignored)
-- `output/` — generated/patched DSL YAML files (gitignored)
+- `output/` — 工作台根，generated/patched DSL YAML files (gitignored)
 - `patches/` — project-specific YAML patch files (gitignored, node IDs are DSL-specific)
 - `tmp/` — TypeScript manipulation scripts (gitignored)
 

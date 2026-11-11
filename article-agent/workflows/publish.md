@@ -26,7 +26,7 @@
 
 ### 2. 终稿落盘
 
-- 写入 `article-agent/output/{YYYYMMDD}-{slug}.md`（目录不存在先创建）
+- 写入工作台根 `output/{YYYYMMDD}-{slug}.md`（目录不存在先创建）
 - 格式见 `templates/deliverable.md`：标题候选 / 封面文案 / 配图建议 / 长文正文 / 描述 / 标签 + @ / 发布备注
 
 ### 3. 飞书归档（仅飞书模式）

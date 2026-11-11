@@ -31,7 +31,7 @@
 ```bash
 grep -q '^USE_FEISHU=true' article-agent/.env 2>/dev/null && echo "USE_FEISHU: on" || echo "USE_FEISHU: off"
 which lark-cli >/dev/null 2>&1 && echo "lark-cli: present" || echo "lark-cli: missing"
-mkdir -p article-agent/output
+mkdir -p output
 ```
 
 **`.env` 已存在** → 展示能力示例（见下方模板），用户选了或直接给了任务就开工。
@@ -107,7 +107,7 @@ article-agent 能为你做什么
 3. **成稿** — 按 `templates/deliverable.md` 产出：标题候选 + 封面文案 + 配图建议 + 长文正文 + 描述 + 标签
 4. **审校** — 按 `references/xhs-spec.md` 自检（事实、合规、字数、符号、引流话术）
 5. **终稿** — 交付终稿 → **等用户确认** → 进入发布
-6. **配图（可选）** — 终稿确认后**先询问**「要不要把配图也做了？」→ 同意则按文章内容节点逐张生成**横版文章插画**（委托 aliyun-agent：默认 `z-image-turbo`，需要图中中文准确时用 `qwen-image-3.0`；尺寸 16:9；逐张读图自检）→ 交付到 `output/{日期}-{slug}-配图/`，并附进终稿文档
+6. **配图（可选）** — 终稿确认后**先询问**「要不要把配图也做了？」→ 同意则按文章内容节点逐张生成**横版文章插画**（委托 aliyun-agent：默认 `z-image-turbo`，需要图中中文准确时用 `qwen-image-3.0`；尺寸 16:9；逐张读图自检）→ 交付到工作台根 `output/{日期}-{slug}-配图/`，并附进终稿文档
 
 ## 委托规则
 
@@ -214,11 +214,11 @@ article-agent 能为你做什么
 - **描述**：约 100 字，出现在标题下方；承担引流（收藏/点赞/评论/分发/转化）
 - **长文正文**：平台会转成图片。**禁止 markdown 符号**（不渲染，会露星号）；引号统一「」；结构用空行、序号、emoji 表达
 - **配图**：默认交付**横版文章插画**（16:9，一图对应一个内容节点，画面不出现文字）；小红书竖版封面文字卡仅在用户要求时另做
-- **落盘**：`output/{YYYYMMDD}-{slug}.md`，格式见 `templates/deliverable.md`
+- **落盘**：工作台根 `output/{YYYYMMDD}-{slug}.md`，格式见 `templates/deliverable.md`
 
 ## 注意事项
 
 - 不主动改动本 agent 自身文件；**用户提出优化时**才把新流程整理成工作流写入 `workflows/`（写入前展示确认）
 - 事实与数据：能核实就核实，不能核实就标注待补，不编造
-- 输出目录 `article-agent/output/` 不存在时先创建
+- 输出目录工作台根 `output/` 不存在时先创建
 - 每次交付后主动提示下一步：改稿 / 定稿发布 / 再写一篇

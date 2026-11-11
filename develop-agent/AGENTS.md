@@ -158,7 +158,7 @@ Develop Agent 已加载。模式：Session 模式
 
 流程：
 1. 将用户需求 + 目标项目传递给 design-agent
-2. design-agent 按审查模式 / Spec 输出模式输出 Spec 到 `design-agent/output/`
+2. design-agent 按审查模式 / Spec 输出模式输出 Spec 到 `output/`
 3. Spec 标准结构：`## Problem` / `## Related Spec` / `## Solution` / `## Sign-off`
 4. 协调器向用户逐项确认 Spec 中的需求条目
 5. 用户全部确认后 sign-off

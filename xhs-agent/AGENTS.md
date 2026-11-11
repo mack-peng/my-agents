@@ -69,7 +69,7 @@ xhs-agent 能为你做什么
 Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具静默代入新任务**。进入任何 workflow 前先解析目标：
 
 1. **用户点名**（小工具名 / 项目路径 / appId）→ 直接用，不重复询问
-2. **未点名但有过往记录** → `ls xhs-agent/output/*/` 读各任务目录的 `manifest.md`（脑内清单：slug / 项目根 / 已产素材 / app 状态），列候选让用户选
+2. **未点名但有过往记录** → `ls output/*/` 读各任务目录的 `manifest.md`（脑内清单：slug / 项目根 / 已产素材 / app 状态），列候选让用户选
 3. **无往期记录** → 一次集中询问缺项：小工具名称（当场按 JS length 计数报 n/14）+ 项目路径（打包需要）或素材意向（上架需要）；不挤牙膏式分多轮问
 
 需要借用会话上下文推断目标时，**显式声明依据并请求纠正**：
@@ -147,7 +147,7 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 
 ## 输出规范
 
-- 落盘目录：`xhs-agent/output/{YYYY-MM-DD}-{slug}/`（不存在先创建）
+- 落盘目录：`output/{YYYY-MM-DD}-{slug}/`（不存在先创建）
 - 每个任务目录必含 `manifest.md`：slug / 项目根 / 已产产物 / 状态 / 下一步入口——它是跨会话续接与目标解析的登记册，不依赖任何会话记忆
 - 命名：产物文件名 `{YYYY-MM-DD}-{slug}-{类型}.{zip|png|md|json}`
   - `…-minitool-v{version}.zip` ｜`…-audit.json` ｜`…-icon-1024x1024.png` ｜`…-xhs-cover-1440x1920.png` ｜`…-note-copy.md` ｜`…-competitor.md` ｜`…-data-review.md` ｜`…-session.json` / `…-preview-qr.png`

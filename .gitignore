@@ -24,8 +24,7 @@ acli-agent/login-confluence.sh
 .env.local
 .env.production
 
-# design-agent output and cognition
-design-agent/output/
+# design-agent cognition
 design-agent/projects/
 
 # Input/output directories

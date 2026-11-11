@@ -6,7 +6,7 @@
 
 | 来源 | 传递方式 | 适用场景 |
 |------|----------|----------|
-| 本地文件 | `design-agent/output/{name}.spec.md` 路径 | Session 模式 / 飞书模式本地有文件 |
+| 本地文件 | `output/{name}.spec.md` 路径 | Session 模式 / 飞书模式本地有文件 |
 | 飞书文档 URL | Spec 文档链接 | 飞书模式仅在线时，通过 feishu-agent 读取 |
 
 ## 跳过条件

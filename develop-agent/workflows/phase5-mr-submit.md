@@ -8,7 +8,7 @@
 ### 1. 收集上下文
 
 从 Phase 1 获取：
-- Spec 文件路径（`design-agent/output/{name}.spec.md`）— 必需
+- Spec 文件路径（`output/{name}.spec.md`）— 必需
 - 飞书 Spec 链接
 
 从 Phase 2 获取（如有）：

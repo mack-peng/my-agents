@@ -26,7 +26,7 @@ which jq >/dev/null 2>&1 && echo "jq: present" || echo "jq: missing"
 # firecrawl 运行模式（自托管/云端；只输模式，不回显敏感值）
 rg '^USE_SELF_HOST=' firecrawl-agent/.env 2>/dev/null || echo "firecrawl-agent/.env: missing"
 # 输出目录
-mkdir -p seo-agent/output
+mkdir -p output
 ```
 
 - `firecrawl-cli` 缺失 → read `firecrawl-agent/AGENTS.md`，按其安装/登录引导
@@ -118,7 +118,7 @@ seo-agent 能为你做什么
 
 ## 输出规范
 
-- 落盘目录：`seo-agent/output/`（不存在先创建）
+- 落盘目录：工作台根 `output/`（不存在先创建；裸 `output/` 均指工作台根）
 - 命名：`{YYYY-MM-DD}-{目标}-{类型}.md`
   - `…-seo-audit.md`（审查）｜`…-seo-fix-design.md`（修改设计）｜`…-page-blueprint.md`（页面方案）｜`…-ai-visibility.md` + `-raw/`（采样）｜`…-intent-research.md`（意图）
 - 语言：中文交付；表格 ≤5 列（超宽拆表）；来源用短链接文字，裸露长 URL 不入正文

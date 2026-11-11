@@ -51,7 +51,7 @@ bl auth login --api-key <key> --base-url https://llm-xxxxx.cn-beijing.maas.aliyu
 bl image generate --prompt "描述词"
 
 # 多张 + 指定尺寸
-bl image generate --prompt "描述词" --n 3 --size 1024*1024 --out-dir ./output/
+bl image generate --prompt "描述词" --n 3 --size 1024*1024 --out-dir output   # 工作台根 output/
 
 # 无水印
 bl image generate --prompt "描述词" --watermark false
@@ -84,7 +84,7 @@ bl image edit \
   --size "1200*630" \
   --watermark false \
   --model wan2.7-image \
-  --out-dir ./output/
+  --out-dir output   # 工作台根 output/
 ```
 
 ### PNG → JPG 压缩
