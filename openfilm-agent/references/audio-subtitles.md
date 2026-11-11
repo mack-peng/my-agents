@@ -66,13 +66,14 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 - 每条 VO 生成后统一 loudnorm 到基线，再进 film.html。**重新生成/改文案 = 新文件，必须重新 norm**。**用两遍法**（单遍 dynamic 模式会在语音停顿处抽动）；zsh 内联拼 `measured_*` 参数会被 ffmpeg 进度符的 `\r` 干坏，必须先 `tr '\r' '\n'` 清洗——实测可跑脚本：
 
   ```bash
+  mkdir -p tmp   # 中间文件落工作台 tmp/（见根 AGENTS.md，禁止系统 /tmp/）
   for f in 1 2 3 4 5 6 7 8; do
     src="assets/audio/vo/$f.wav"; tmp="assets/audio/vo/.norm-$f.wav"
     ffmpeg -y -v info -i "$src" -af "loudnorm=I=-19:TP=-3.6:LRA=11:print_format=json" -f null /dev/null 2>&1 \
-      | tr '\r' '\n' | awk '/^\{$/{flag=1} flag{print} flag && /^\}$/{exit}' > /tmp/ln-$f.json
-    MI=$(jq -r '."input_i"' /tmp/ln-$f.json);   MT=$(jq -r '."input_tp"' /tmp/ln-$f.json)
-    ML=$(jq -r '."input_lra"' /tmp/ln-$f.json); MTH=$(jq -r '."input_thresh"' /tmp/ln-$f.json)
-    MO=$(jq -r '."target_offset"' /tmp/ln-$f.json)
+      | tr '\r' '\n' | awk '/^\{$/{flag=1} flag{print} flag && /^\}$/{exit}' > tmp/ln-$f.json
+    MI=$(jq -r '."input_i"' tmp/ln-$f.json);   MT=$(jq -r '."input_tp"' tmp/ln-$f.json)
+    ML=$(jq -r '."input_lra"' tmp/ln-$f.json); MTH=$(jq -r '."input_thresh"' tmp/ln-$f.json)
+    MO=$(jq -r '."target_offset"' tmp/ln-$f.json)
     ffmpeg -y -v error -i "$src" \
       -af "loudnorm=I=-19:TP=-3.6:LRA=11:measured_I=${MI}:measured_TP=${MT}:measured_LRA=${ML}:measured_thresh=${MTH}:offset=${MO}:linear=true" \
       -ac 1 -ar 48000 "$tmp" && mv "$tmp" "$src"
@@ -84,10 +85,11 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 
   ```bash
   # 1) VO 混合轨（侧链键）：每条 adelay 到各自 at（毫秒），amix 不归一
+  mkdir -p tmp   # 中间文件落工作台 tmp/
   ffmpeg -y -v error -i vo1.wav -i vo2.wav … \
-    -filter_complex "[0]adelay=150|150[a0];[1]adelay=6550|6550[a1];…;[a0][a1]…amix=inputs=N:normalize=0" /tmp/vo-mix.wav
+    -filter_complex "[0]adelay=150|150[a0];[1]adelay=6550|6550[a1];…;[a0][a1]…amix=inputs=N:normalize=0" tmp/vo-mix.wav
   # 2) 音乐床：截到总时长、-5dB（volume 0.56）、淡入淡出、按 VO 闪避
-  ffmpeg -y -v error -i close-up.mp3 -i /tmp/vo-mix.wav \
+  ffmpeg -y -v error -i close-up.mp3 -i tmp/vo-mix.wav \
     -filter_complex "[0:a]atrim=0:<总时长>,asetpts=PTS-STARTPTS,volume=0.56,afade=t=in:d=1.5,afade=t=out:st=<总时长-2>:d=2[bed];[1:a]volume=1.6,apad=whole_dur=<总时长>[duck];[bed][duck]sidechaincompress=threshold=0.02:ratio=6:attack=80:release=600" \
     -ac 2 -ar 48000 assets/audio/music/music-bed.wav
   ```

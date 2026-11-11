@@ -45,7 +45,7 @@ gitee-agent 执行：
   3. 与 Code Design 存在差异时：先在 MR 评论中列出差异说明（满足「marked them out and added comments」），再勾选对应项
   4. References 表：Spec 填飞书链接；Code Design Doc 填飞书链接或 `not applicable`（Phase 2 跳过时）；Jira / Zendesk / TL / Reviewer 无实际值时填 `not applicable`
   5. FE Bugfix 模板的 Problem Solving Process（Description / Reason / Solution / Scope Of Impact / Test Result）**用中文填写**，取自 Phase 1 Problem 与 Phase 3/4 结论
-  6. 描述写入临时文件（如 `/tmp/develop-mr-<repo>.md`），`gitee-cli pr create --body "$(cat ...)"`
+  6. 描述写入临时文件（写入工作台 `tmp/develop-mr-<repo>.md`，禁止系统 `/tmp/`），`gitee-cli pr create --body "$(cat ...)"`
 
 - 创建后 **PR 保鲜**（多流并行时 master 可能已在分支切出后前进，导致 PR 创建即 `mergeable=false`）：
   - `git fetch origin && git merge origin/master` 入开发分支并 push（禁止 rebase / force push）

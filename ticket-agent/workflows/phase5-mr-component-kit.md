@@ -32,18 +32,19 @@ git log --oneline -3 <branch-name>
 
 #### A3. 生成 MR 描述
 
-使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入 `/tmp/component-kit-mr-desc.md`。
+使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入工作台 `tmp/component-kit-mr-desc.md`（禁止系统 `/tmp/`）。
 
 #### A4. 创建 MR
 
 ```bash
+DESC="$(cat tmp/component-kit-mr-desc.md)"   # cwd=工作台，先读入变量（glab 需在目标仓库目录执行）
 cd $COMPONENT_KIT_PATH
 glab mr create \
   --source-branch <branch-name> \
   --target-branch develop \
   --title "<title>" \
   --reviewer <reviewer-username> \
-  --description "$(cat /tmp/component-kit-mr-desc.md)"
+  --description "$DESC"
 ```
 
 #### A5. 输出总结
@@ -193,7 +194,7 @@ cd $BOBKAT_PATH && NODENV_VERSION=12.16.1 yarn
 
 #### B13. 询问 Reviewer 并生成 MR 描述
 
-使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入 `/tmp/bobcat-dep-mr-desc.md`。
+使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入工作台 `tmp/bobcat-dep-mr-desc.md`（禁止系统 `/tmp/`）。
 
 #### B14. 提交
 
@@ -209,13 +210,14 @@ git push origin <branch-name>
 ```
 
 ```bash
+DESC="$(cat tmp/bobcat-dep-mr-desc.md)"   # cwd=工作台，先读入变量
 cd $BOBKAT_PATH
 glab mr create \
   --source-branch <branch-name> \
   --target-branch develop \
   --title "feat(component-kit): update component kit version for v<production-version>" \
   --reviewer <reviewer-username> \
-  --description "$(cat /tmp/bobcat-dep-mr-desc.md)"
+  --description "$DESC"
 ```
 
 #### B16. 等待 Sign-off

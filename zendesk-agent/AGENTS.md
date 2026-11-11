@@ -351,7 +351,7 @@ zcli-ticket ticket-update <id> --private-comment "需要升级"
 
 ```bash
 # 内部备注（推荐）
-zcli-ticket -p <profile> comment-create <ticket-id> "$(cat /tmp/opencode/note.md)" --private
+zcli-ticket -p <profile> comment-create <ticket-id> "$(cat tmp/opencode/note.md)" --private
 
 # 公开回复客户（comment-create 默认 public，不加 --private 即对外可见）
 zcli-ticket -p <profile> comment-create <ticket-id> "<body>"

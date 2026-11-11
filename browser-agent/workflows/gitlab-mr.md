@@ -40,7 +40,7 @@
 
 **由于 shell 转义问题（内容含 `$`、反引号、中文等），必须用 Python subprocess 传参**，不能直接在 bash 中调 `playwright-cli eval`。
 
-方法：写一个临时 Python 脚本 `/tmp/fill_mr.py`，内容如下（替换所有 `<...>` 占位符为实际值），然后 `python3 /tmp/fill_mr.py`：
+方法：写一个临时 Python 脚本 `tmp/fill_mr.py`，内容如下（替换所有 `<...>` 占位符为实际值），然后 `python3 tmp/fill_mr.py`：
 
 ```python
 import subprocess

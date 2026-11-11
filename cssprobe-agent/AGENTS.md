@@ -105,7 +105,7 @@ cssprobe-cli layout <selector>                     # ASCII 布局图
 cssprobe-cli tree <selector> --depth 3             # DOM 树结构（深度默认自动，最大 20）
 cssprobe-cli inspect <selector>                    # 运行时 CSS（--brief 只看告警，--layout 附带布局图）
 cssprobe-cli findings <selector>                   # 只看问题（推荐先跑）
-cssprobe-cli screenshot --out /tmp/page.png        # 截图留证（--full-page 整页）
+cssprobe-cli screenshot --out tmp/page.png        # 截图留证（--full-page 整页）
 ```
 
 ### 滚动检查
@@ -215,8 +215,8 @@ cssprobe-cli inspect <selector>
 ```bash
 cssprobe-cli scenario run suites/modal-crop.json \
   --state ~/.cssprobe-cli/states/mysite.json \
-  --artifacts /tmp/modal-crop \
-  --junit /tmp/modal-crop/junit.xml
+  --artifacts tmp/modal-crop \
+  --junit tmp/modal-crop/junit.xml
 ```
 
 `scenario run` 支持 `--bail`（首个失败即停），每个 run 会写 `summary.json`、逐 case 的 `case.json`、采样序列和失败截图。

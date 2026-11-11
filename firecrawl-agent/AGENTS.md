@@ -263,8 +263,8 @@ firecrawl https://example.com --format links --json | jq -r '.links[]'
 firecrawl map https://example.com | wc -l
 
 # 搜索 + 抓取全文，落盘后用 jq 解析（推荐写法，避免截断）
-firecrawl search "<关键词>" --limit 3 --scrape --scrape-formats markdown --json -o /tmp/opencode/search.json
-jq -r '.data.web[] | "### \(.title)\nURL: \(.url)\n\(.description)\n"' /tmp/opencode/search.json
+firecrawl search "<关键词>" --limit 3 --scrape --scrape-formats markdown --json -o tmp/opencode/search.json
+jq -r '.data.web[] | "### \(.title)\nURL: \(.url)\n\(.description)\n"' tmp/opencode/search.json
 ```
 
 - 关闭匿名遥测：`export FIRECRAWL_NO_TELEMETRY=1`（遥测只含 CLI 版本/OS/Node 版本/开发工具，不含 URL 与文件内容）。

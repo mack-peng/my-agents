@@ -550,7 +550,7 @@ glab release create v1.0.0
 glab mr create --source-branch <branch> --target-branch develop --title "<title>"
 
 # 补充 description（内容较多时写文件后用 API）
-glab api projects/strikingly%2FBobcat/merge_requests/<iid> -X PUT -f description="$(cat /tmp/desc.md)"
+glab api projects/strikingly%2FBobcat/merge_requests/<iid> -X PUT -f description="$(cat tmp/desc.md)"
 ```
 
 BoBCat Bugfix-FE 模板：`../references/bobcat-mr-bugfix-fe-template.md`

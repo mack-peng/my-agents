@@ -45,12 +45,12 @@
 
 ```bash
 # 站点 URL 发现（样本选择依据）
-firecrawl map <url> --limit 200 --json -o /tmp/opencode/seo-map.json
-jq -r '.data.links[].url' /tmp/opencode/seo-map.json | head -50
+firecrawl map <url> --limit 200 --json -o tmp/opencode/seo-map.json
+jq -r '.data.links[].url' tmp/opencode/seo-map.json | head -50
 
 # 样本页抓取
-firecrawl scrape <url> --only-main-content -o /tmp/opencode/seo-home.md   # 正文（内容检查）
-curl -s <url> -o /tmp/opencode/seo-home.html                              # 原始 HTML（head 检查，见下方备注）
+firecrawl scrape <url> --only-main-content -o tmp/opencode/seo-home.md   # 正文（内容检查）
+curl -s <url> -o tmp/opencode/seo-home.html                              # 原始 HTML（head 检查，见下方备注）
 
 # robots / sitemap
 curl -s <origin>/robots.txt
@@ -65,7 +65,7 @@ curl -s <origin>/sitemap.xml | head -100
 - **SERP/排名相关**（如用户要求）→ browser-agent 搜索，或 firecrawl search；注明"第三方观测，非官方数据"
 - 大输出一律 `-o` 落盘 + `jq`/grep 解析，不堆在对话里
 
-**抓取产出清单**（落到 `/tmp/opencode/seo-audit-<date>/`）：
+**抓取产出清单**（落到 `tmp/opencode/seo-audit-<date>/`）：
 - 样本页原始 HTML + 正文 markdown
 - robots.txt / sitemap.xml
 - head 要素提取（title/meta/canonical/hreflang/robots/JSON-LD/OG）

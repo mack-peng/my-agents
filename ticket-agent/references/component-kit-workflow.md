@@ -154,13 +154,14 @@ git push origin <test-branch>
 从开发分支（`fix-component-kit-*`）向 develop 提交 MR：
 
 ```bash
+DESC="$(cat tmp/component-kit-mr-desc.md)"   # cwd=工作台，先读入变量
 cd $COMPONENT_KIT_PATH
 glab mr create \
   --source-branch <branch-name> \
   --target-branch develop \
   --title "<title>" \
   --reviewer <reviewer-username> \
-  --description "$(cat /tmp/component-kit-mr-desc.md)"
+  --description "$DESC"
 ```
 
 等待 review 通过后进入 Phase 5b。

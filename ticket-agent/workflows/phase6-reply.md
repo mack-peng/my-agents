@@ -26,7 +26,7 @@
 - 成功截图内嵌在 `* Please provide screenshots to show that it's resolved` 行下方
 - 解决方案写在 MR 链接行下方：如何解决（动作 + 注释掉的用户代码块）+ `user reference`（系统现有实现/参考代码）
 - `Submitted by` 填 `zendesk-agent/.env` 中的 `SUBMITTED_BY`
-- 语言英文；草稿落盘 `/tmp/opencode/ticket-<id>-note.txt`（评审）与 `-note.html`（发送）
+- 语言英文；草稿落盘 `tmp/opencode/ticket-<id>-note.txt`（评审）与 `-note.html`（发送）
 
 ## 流程
 
@@ -64,11 +64,11 @@ curl -s -X POST "https://<subdomain>.zendesk.com/api/v2/uploads?filename=<name>"
 CLI `comment-create` 不支持 `html_body`，无法内嵌图片 → 用 curl PUT：
 
 ```bash
-jq -n --rawfile html /tmp/opencode/ticket-<id>-note.html --arg t "<upload-token>" \
-  '{ticket:{comment:{html_body:$html, uploads:[$t], public:false}}}' > /tmp/opencode/payload.json
+jq -n --rawfile html tmp/opencode/ticket-<id>-note.html --arg t "<upload-token>" \
+  '{ticket:{comment:{html_body:$html, uploads:[$t], public:false}}}' > tmp/opencode/payload.json
 curl -s -X PUT "https://<subdomain>.zendesk.com/api/v2/tickets/<id>.json" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d @/tmp/opencode/payload.json
+  -d @tmp/opencode/payload.json
 ```
 
 - **`public:false` 必须显式携带**：curl 请求漏掉即可能落为公开回复
@@ -95,7 +95,7 @@ curl -s -X PUT "https://<subdomain>.zendesk.com/api/v2/tickets/<id>.json" \
 
 ```markdown
 ## Phase 6 TODO
-- [x] 起草 RESOLUTION NOTE。结果：/tmp/opencode/ticket-<id>-note.txt
+- [x] 起草 RESOLUTION NOTE。结果：tmp/opencode/ticket-<id>-note.txt
 - [x] 截图上传。结果：token / content_url
 - [x] 用户 sign-off
 - [x] 发送内部备注。结果：comment <id>, public=false

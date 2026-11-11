@@ -80,7 +80,8 @@ No build, test, or lint at the root level.
 
 ## Non-agent directories
 
-- `tmp/` — temporary working scripts and test artifacts. Gitignored.
+- `tmp/` — temporary working scripts, probe scripts, captured HTML/JSON, MR body drafts and test artifacts. Gitignored.
+  - **所有临时文件一律写入本仓库（AGENTS.md 所在目录）下的 `tmp/`，禁止使用系统 `/tmp/`**；产生的中间文件及时归位到 `tmp/`，避免散落。
 
 ## Working assets (do not commit)
 
