@@ -38,13 +38,15 @@ ReAct 模式的深度研究代理：LLM 驱动搜索决策，每轮根据已累�
 
 **若 `USE_FIRECRAWL=true`（Firecrawl 模式）：**
 委托 firecrawl-agent 执行：read `firecrawl-agent/AGENTS.md`，按「Search（网页搜索）」快捷命令一条完成搜索 + 抓取全文（带 `--scrape --scrape-formats markdown`，`--limit $MAX_RESULTS_PER_QUERY`，`--json`）。每轮**至少抓取 `MAX_RESULTS_PER_QUERY`（默认 5）篇**。从结果中提取每条结果的标题、URL、markdown 正文，将正文追加到 `findings[]`，将 URL 追加到 `urls[]`，`round += 1`。直接进入 Phase 2。
-- **结果解析统一用 `jq`，禁止手写 python 脚本**（大输出用 `-o <文件>` 落盘再解析）：
+- **结果解析统一用 `jq`，禁止手写 python 脚本**（大输出用 `-o <文件>` 落盘再解析）。中间产物统一落**工作台目录下的 `tmp/`**（gitignored），不要写 `/tmp`：
   ```bash
-  firecrawl search "<关键词>" --limit 5 --scrape --scrape-formats markdown --json -o /tmp/fc_round1.json
+  # TMP_DIR 取调用方工作台根目录，如 ~/Agents；子目录用主题 slug 隔离
+  mkdir -p "$TMP_DIR/<slug>"
+  firecrawl search "<关键词>" --limit 5 --scrape --scrape-formats markdown --json -o "$TMP_DIR/<slug>/fc_round1.json"
   # 清点结果（标题 | URL | 正文长度）
-  jq -r '.data.web[] | "\(.title) | \(.url) | md=\(.markdown // "" | length)"' /tmp/fc_round1.json
+  jq -r '.data.web[] | "\(.title) | \(.url) | md=\(.markdown // "" | length)"' "$TMP_DIR/<slug>/fc_round1.json"
   # 落盘全文供报告阶段细读
-  jq -r '.data.web[] | "===== TITLE: \(.title)\nURL: \(.url)\n\n\(.markdown // "")"' /tmp/fc_round1.json > /tmp/fc_findings/round1.txt
+  jq -r '.data.web[] | "===== TITLE: \(.title)\nURL: \(.url)\n\n\(.markdown // "")"' "$TMP_DIR/<slug>/fc_round1.json" > "$TMP_DIR/<slug>/round1.txt"
   ```
 - **抓取兜底**：若某条结果正文为空（scrape 被反爬拦截或页面加载失败），用 webfetch 抓取该 URL 作为替代；webfetch 也失败则委托 browser-agent goto + snapshot 兜底。
 
