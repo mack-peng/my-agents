@@ -1,14 +1,16 @@
 # ① 打包改造（monitor → audit → zip）
 
-进入条件：给出项目路径或产物目录（`~/Projects/<slug>`），想要「打包 / zip / 上传前检查」。项目侧产物形态可任选：
+进入条件：用户要「打包 / zip / 上传前检查」。产出合规 zip + audit JSON + 验证提醒。
 
-| 形态 | 处理 |
-| --- | --- |
-| 已有现成 H5 三件套 | 直接进 ref-guide 十一步 |
-| Vite / Webpack 有构建链 | 先跑项目自身 build；产物目录为目标 |
-| Codex / Claude Code / Cursor 项目 | 按相应 agent 的 conventional 目录找 |
+## Step 0 目标解析（通用入口；规则详见 AGENTS.md）
 
-## 监管链
+1. 用户点名项目路径/产物目录 → 用之；
+2. 未点名 → `ls xhs-agent/output/*/` 列 manifest 候选（按含 dist 的项目根优先）让用户选；
+3. 无记录 → 一次集中问：项目路径 + 构建方式（已有构建链 / 纯三件套）。
+
+禁止从会话上下文静默代入历史项目；想用推断必须显式声明并给纠正机会。
+
+## Step 1 监管链
 
 1. 读 `.agents/skills/minitool-zip-builder/SKILL.md` 十一/十二节指南；
 2. 在线文档比对：`webfetch https://miniapp-sandbox.xiaohongshu.com/minitool/doc`，与本地基线（`.agents/skills/minitool-zip-builder/references/js-api.md`）做语义对比，产出「新增能力 / 能力更新」摘要；比值规则见 `references/online-doc-audit.md`；8 秒超时则用本地基线兜底并标注「未核验在线契约」；
