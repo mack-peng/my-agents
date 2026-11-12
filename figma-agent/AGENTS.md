@@ -78,11 +78,24 @@ node --version
 ## 环境
 
 - 需要 `npx`（本机 npm 11.3.0 / Node v24.1.0 ✅）
-- **读路径**：`figma-developer-mcp`（Framelink MCP CLI）— 用 `npx figma-developer-mcp ...` 免装，文档见 `references/Framelink-MCP-Figma-Use-Doc.md`
+- **读路径**：`figma-developer-mcp`（Framelink MCP CLI）— 用 `npx figma-developer-mcp ...` 免装；文档缺失时以 `npx figma-developer-mcp --help` 为准
 - **写路径**：figwright MCP（`@figwright/mcp`）— 需 Figma Desktop + 插件 + opencode MCP 配置（按需引导，见 workflows）
 - **图片解析**：由 opencode 当前会话模型完成（需支持图片输入）；不支持的模型退化到 image-to-slice（路线B）
 - **SVG 处理**：优先用现成库（`rsvg-convert` 渲染、`lxml`/`svgpathtools` 解析），避免手写 SVG 解析代码；figwright 导入大 SVG 需用户手动 Place，详见 `workflows/image-to-figma.md` 路线 C
 - 写路径需要 Figma Desktop（已装）。若本机未装，在引导时给出下载指引。
+
+## figwright 实战约定（必读）
+
+详细踩坑见 `references/figwright-pitfalls.md`。高频规则：
+
+- **批量**：`create_text` 每批 ≤3；`set_fills` / `set_strokes` / `resize_nodes` 可 10+；超时可能部分生效/重复，先截图再补/删，不要假设原子回滚。
+- **字体**：中文用 PingFang SC（Bold 不存在，用 Semibold）；每个文本显式给 `fontName` / `fontSize` / `fills`。
+- **文本尺寸**：`create_text` 无 width/height；固定宽度、居中、右对齐要创建后 `resize_nodes`。
+- **默认填充**：`create_ellipse` 默认有填充；只描边时 `fills: []`。
+- **多 case 组织**：默认一 case 一 Frame + Section，间距 ≥100px；Section 名称不会出现在截图里。
+- **主题色**：优先用 Figma Variables / Styles；没有变量时按「节点 id → 颜色角色」清单批量改，避免漏改。
+- **验证**：每完成一组截图验证；大页面用 Frame/Section 截图，不用整页截图查细节。
+- **对比度**：`#FF6600` 上白字约 2.9:1，不达标；橙色承载白字用 `#C2410C`（约 5.2:1）。
 
 ## Workflow 索引
 
