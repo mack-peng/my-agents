@@ -76,3 +76,11 @@
 - OpenAI 官网、The Hacker News、Google/DDG/Bing 等会出 Cloudflare / 人机验证（"Verify you are human" / "Just a moment" / 选图验证）——**不绕过**，改用同主题的可靠报道页（TNW、MLQ、TechNode、benchlm、CyberSecurityNews 等）
 - URL slug 别手拼：版本号/品牌常带连字符（`ling-3-2` vs `ling-32`），抓到前先用搜索结果核对；404 页截进卡是最尴尬的事故
 - 截图固定流程：open → resize 1440×1000 → 需要时 `scrollTo` 到标题区 → screenshot → Read 目检 → 关闭会话
+
+## 黑帧与「对不上」（2026-11 蜂蜜片复盘）
+
+- 画面变黑就两种原因：一是 iframe 的 `#t=0,秒数` 被裁得比页面本身短（人在 Studio 裁过 24s，页面实际 27.1s，最后 3 秒全黑）；二是前一个镜头的结束时间和后一个镜头的开始时间没接上（S4 到 68.5 就没了，S5 却 68.7 才来，中间 0.2 秒黑）。人在 Studio 动过时间线后，把每个镜头的「终点 = 下一起点」对齐，再全片 look 一遍。
+- 修 trim / 起点别手工猜，用 Studio 接口改，人的其他改动不会丢。先 `GET /api/projects/<id>` 拿到 `rev`，再 `POST /api/projects/<id>/edit`，body 写 `{base: rev, ops:[{op:'set', clip:'<镜头id>', field:'time', value:[0,27.1]}]}`（改起点用 `field:'at'`）。
+- 查「画面和旁白对不对得上」：`GET /api/projects/<id>/captions` 拿到每句字幕的时间和内容，逐句看画面该出什么（差 0.3 秒内正常）。最容易犯的错是一行字塞两个数字、口播只说到前一个——把后一个数字拆出来单独设出现时间。
+- 卡片/清单没讲到的部分，整块空着会被说「空白」，留 0.28 的幽灵行更糟。两个好用的做法：三张卡的标题先以半透明出现，内容等口播补；或者清单常亮 0.7，讲到哪条就给哪条打勾。另外画面底部一大片空是留给字幕和平台的，不是 bug。
+- look 单帧里元素「不见了」，先别改代码，可能是 look 偶发。起个本地 http.server + openfilm 自带的 playwright-core 打开页面，直接调 `window.film.frame(t)` 看 DOM 里到底显不显示，确认了再动手。
