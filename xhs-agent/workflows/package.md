@@ -13,14 +13,24 @@
 ## Step 1 监管链
 
 1. 读 `.agents/skills/minitool-zip-builder/SKILL.md` 十一/十二节指南；
-2. 在线文档比对：`webfetch https://miniapp-sandbox.xiaohongshu.com/minitool/doc`，与本地基线（`.agents/skills/minitool-zip-builder/references/js-api.md`）做语义对比，产出「新增能力 / 能力更新」摘要；比值规则见 `references/online-doc-audit.md`；8 秒超时则用本地基线兜底并标注「未核验在线契约」；
+2. 在线文档比对：`webfetch https://miniapp-sandbox.xiaohongshu.com/minitool/doc`，记录 `last-updated`；与本地基线（`.agents/skills/minitool-zip-builder/references/js-api.md`）及 `references/online-capabilities-2026-11-10.md` 做语义对比，产出「新增能力 / 能力更新」摘要；比值规则见 `references/online-doc-audit.md`；8 秒超时则用本地基线 + 增量文档兜底并标注「未核验在线契约」；
 3. 按在线文档改写禁用 API / 行为（若改写的是别人项目，只替换禁用模式，不碰业务逻辑）；
-4. 产出 zip 前跑 audit：
+4. **能力合规扫描**（产物调用 `window.xhs` 时必做）：
+   - 每个调用都有 `window.xhs && miniTool && typeof fn === "function"` + 版本门禁 + 失败降级；
+   - 内测能力（排行榜 / AI / 赞赏）不是核心玩法唯一路径；不可用时隐藏入口；
+   - 排行榜使用 `submitScore` 时，记录「用户头像昵称授权」送审前置；
+   - AI 内测能力默认不进入第三方 Agent 上传构建；
+   - 不在游戏循环 / 高频定时器调用排行榜、AI、云存储；
+5. 产出 zip 前跑 audit：
    - `node .agents/skills/minitool-zip-builder/scripts/audit_artifact.mjs <dist|zip>`
    - `python3 .agents/skills/minitool-zip-builder/scripts/audit_artifact.py <dist|zip>`
    - audit 报 ERROR 必须修；不因运行时缺失跳过审计门禁（Node 或 Python 任一即可，全缺则人工审计并明确标注）；
-5. `cd <dist> && zip -r ../<slug>-v<version>.zip . -x '*.DS_Store'`；解压顶层直接 index.html，不多套目录；
-6. 产物落 `output/{YYYY-MM-DD}-{slug}-minitool-v{version}.zip`，配 `output/{...}-audit.json` 与「未核验」标记。
+6. **§2.7 静态资源布局**：
+   - 入口 `index.html`、入口 JS / CSS 放 zip 根目录，**不放进 `assets/`**；
+   - 图片 / 字体等可优化资源放 `assets/`，相对路径引用；可优化资源不要 base64 内联；
+   - 入口文件与首屏强依赖的小资源可留在 `assets/` 之外随主包下发；
+7. `cd <dist> && zip -r ../<slug>-v<version>.zip . -x '*.DS_Store'`；解压顶层直接 index.html，不多套目录；
+8. 产物落 `output/{YYYY-MM-DD}-{slug}-minitool-v{version}.zip`，配 `output/{...}-audit.json` 与「未核验」标记；交付附能力接入状态（已接 / 降级 / 未接原因 / 未实测）。
 
 ## 交付
 
@@ -42,3 +52,4 @@
 ## 修改记录
 
 - 2026-11-06 初版
+- 2026-11-17 补在线文档 `last-updated` 记录、能力合规扫描、§2.7 入口 JS/CSS 位置与交付能力状态

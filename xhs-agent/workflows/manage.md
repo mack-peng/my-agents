@@ -85,6 +85,11 @@ redapp submit --source thirdAgent <ENV_ARGS> --file "./submit.json" --confirm "<
 ```
 
 - submit.json 必填：`appName`、`slogan`、`iconFileId`、`coverFileId`、`version`（三段整数）、`pkgFileId`、`md5`、`categories: [1 个 code]`、`authorizations: []`
+- **能力相关送审前置**（在线文档口径，平台字段以实际后台 / CLI 回执为准）：
+  - 使用 `submitScore` 的版本，上传时必须勾选「用户头像昵称授权」；未勾选时排行榜会 1005，应隐藏排行榜入口或改回无排行版本；
+  - 使用 `window.xhs.AI` 的版本，内测 AI 能力暂不能通过第三方 Agent 上传，需提示用户手动上传或移除 AI 入口；
+  - 使用 `share` 的版本，分享仅全屏容器可用；半屏容器不展示分享入口；
+  - `authorizations` 不要硬编码空数组；按本轮实际能力与平台当前字段填写，并在 dry-run 前人工核对。
 - `appName` / `slogan` ≤14 字符（JS `.length`），**CLI 不查字数上限**，Agent 前置检查
 - 回执 `RESULT_JSON.status=submitted` 才算发送成功（不是审核通过）；记录返回 appId
 - 后续 `status / history` 查询：
@@ -125,7 +130,10 @@ redapp dev --dir "./dist" <ENV_ARGS> --agent
 - 所有 dry-run 未通过必须先修；`planHash` 一旦变化不得复用
 - HTTP 200 ≠ 业务成功，以 `RESULT_JSON` 内业务 code 为准
 - `submitted` 只代表接收送审，不等于审核通过 / 发布成功
+- 使用 `submitScore` 但平台未勾选「用户头像昵称授权」→ 不送审；先隐藏排行榜或改无排行版本
+- 使用内测 AI 能力的构建 → 不走第三方 Agent 上传；改手动上传 / 加白构建，或移除 AI 入口
 
 ## 修改记录
 
 - 2026-11-06 初版：CLI 全量读 `.agents/skills/redapp-cli/{SKILL.md, references/*, scripts/ensure-cli.mjs}` 提取；尚未实测发命令，用户首次使用时按实际输出更新本页（特别是 source 默认值、错误码扩展、preview JSON 字段名）
+- 2026-11-17 补能力相关送审前置：排行榜头像昵称授权、AI 第三方上传限制、分享全屏限制

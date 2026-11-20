@@ -47,6 +47,8 @@ xhs-agent 能为你做什么
 　示例："我完局率 35%，留存 20%，什么概念"
 **6. Agent 托管小工具** — redapp-cli 上传 / PC 模拟器预览 / 真机预览 / 送审 / 审核状态 / 改名简介
 　示例："帮我上传这个 zip 到创服平台" / "给已上线小工具出个新版本"
+**7. 能力接入** — 按在线契约接入震动 / 安全区 / 分享 / 关注 / 排行榜 / AI 等能力，提升可玩性、分享性、社交性
+　示例："给 flappy-bird 接分享和排行榜" / "把平台能力都接上"
 
 ---
 
@@ -56,7 +58,7 @@ xhs-agent 能为你做什么
 - sips / jq：✅ / ❌
 - 登录态：✅ 已存在 / ⬜ 未登录（真实接口触发时引导）
 
-回复 1-6，或直接描述你的任务。
+回复 1-7，或直接描述你的任务。
 ```
 
 ## 首次使用判定
@@ -88,6 +90,7 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 | "同类 / 竞品 / 同品类对比" | ④ 竞品监测 | `workflows/competitor.md` |
 | "数据 / 复盘 / 分析指标" | ⑤ 数据回流 | `workflows/data-review.md` |
 | "上传 / 预览 / 送审 / 审核 / 改名 / 改简介" | ⑥ Agent 托管 | `workflows/manage.md` |
+| "能力 / 分享 / 关注 / 排行榜 / 震动 / 安全区 / AI / 接平台能力" | ⑦ 能力接入 | `workflows/capabilities.md` |
 | 产物要继续改 / 已有 output 继续 | 续接 | 读 `output/{task}/session.json` 或上一次产物，再按意图回到 ①/②/⑥ |
 
 ## 工作流总览
@@ -100,6 +103,7 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 | ④ | 竞品监测 | 品类关键词 | 公开资料横向对比报告 |
 | ⑤ | 数据回流 | 用户提供的后台指标 | 指标表 + 交叉结论 + 建议清单 |
 | ⑥ | Agent 托管 | 合规产物 + 用户的显式授权 | 登录回执 / 上传 fileId / 预览链 / appId / 审核状态 |
+| ⑦ | 能力接入 | 在线能力清单 + 产品定位 | 能力接入 spec（能力矩阵 / 入口时机 / 降级 / 验收）+ 代码实施交接 |
 
 衔接：① 产物 → ② 需素材 → ⑥ 上传送审；③ 转发需配图 → `use image-agent`；⑤ 产结论 → ① 迭代 / ③ 调文案 / ⑥ 送审新版本。
 
@@ -113,6 +117,8 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 | 站外同品类资料抓取 | `use firecrawl-agent` |
 | 登录页 / JS 重页面验证（模拟器渲染） | `use browser-agent` |
 | 实施修改 / 新功能 | `use code-agent`（所以 workflow 只出设计与产物，不改产品源码） |
+| 能力接入设计 / 优先级 / 降级 | 本 agent（⑦，产出 capabilities.spec.md） |
+| 能力接入代码实施 | `use code-agent`（本 agent 不改 `src/`） |
 | 六阶段全流程协调 | `use develop-agent` |
 
 **不在本 agent 委托范围内**：`redapp-cli` 不是委托目标，是本 agent 管辖的 skill（全文见 `.agents/skills/redapp-cli/SKILL.md` + `workflows/manage.md`）。CSP / 端能力 / 兼容基线不是知识委托，直接读 `.agents/skills/minitool-zip-builder/references/*`。
@@ -128,6 +134,7 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
    - 状态查询是只读，无需单独 sign-off
 3. 用户改意见 → 回到对应步重做，不靠记忆重放
 4. **报告复审**：交付后用户执行了修复，在同一 session 的产物记录里更新条目状态，不新建报告
+5. **能力接入 sign-off**：⑦ 的能力矩阵、入口、文案、构建开关确认后才交 `use code-agent`；未确认不实施
 
 ## Hard Stop
 
@@ -140,6 +147,11 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 - **同一轮不跨 workflow 串行**：archive（①）完工 → 交付提醒下一步（②/⑥），等下轮
 - 审核状态里，`submitted` 只表示送审已接收，不代表审核通过 / 已发布
 - **不编数据**：推广数字（战绩 / 完成 NP / 次日留存）若无来源即留占位符，文本里写明
+- **能力接入不绑死内测**：排行榜 / AI / 赞赏默认 P2/P3 入口；版本 / 方法 / 运行不可用时隐藏，核心玩法不得依赖
+- **受限能力必须有构建开关**：`CAP_AI` 默认关（第三方 Agent 上传限制）；`CAP_REWARD` 确认开通后再开；关闭挽留默认不启用
+- **能力调用必须可降级**：`window.xhs && miniTool && typeof fn === "function"` + 版本门禁；不采集 / 不落库用户昵称
+- **不在游戏循环调用平台写接口**：排行榜 / AI / 云存储禁止高频调用；排行榜缓存 30–60 秒
+- **能力接入代码实施走 `use code-agent`**：本 agent 只出 capabilities.spec.md，不改 `src/`
 
 ## 授权边界（redapp-cli skill 声明）
 
@@ -150,7 +162,7 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 - 落盘目录：`output/{YYYY-MM-DD}-{slug}/`（不存在先创建）
 - 每个任务目录必含 `manifest.md`：slug / 项目根 / 已产产物 / 状态 / 下一步入口——它是跨会话续接与目标解析的登记册，不依赖任何会话记忆
 - 命名：产物文件名 `{YYYY-MM-DD}-{slug}-{类型}.{zip|png|md|json}`
-  - `…-minitool-v{version}.zip` ｜`…-audit.json` ｜`…-icon-1024x1024.png` ｜`…-xhs-cover-1440x1920.png` ｜`…-note-copy.md` ｜`…-competitor.md` ｜`…-data-review.md` ｜`…-session.json` / `…-preview-qr.png`
+  - `…-minitool-v{version}.zip` ｜`…-audit.json` ｜`…-icon-1024x1024.png` ｜`…-xhs-cover-1440x1920.png` ｜`…-note-copy.md` ｜`…-competitor.md` ｜`…-data-review.md` ｜`…-capabilities.spec.md` ｜`…-session.json` / `…-preview-qr.png`
 - 表格 ≤ 5 列（超宽拆表）；来源用短链接文字；不把敏感 / 全能 URL 塞正文
 - 报告保留「无法判断 / 未验证」章节，不猜测填充
 - 语言：中文交付
@@ -170,9 +182,11 @@ Agent 是跨项目通用的，**不得把当前会话上下文中的历史工具
 | `.agents/skills/redapp-cli/references/dev.md` | ⑥ 启 PC 模拟器（不登成功也可以跑） |
 | `references/creator-platform-forms.md` | ② 表单字段实测口径 |
 | `references/online-doc-audit.md` | ① 在线契约异步抓取策略 |
+| `references/online-capabilities-2026-11-10.md` | ①/⑦ 在线契约增量、版本门禁、本地 skill 基线冲突、定位矩阵 |
 | `references/xhs-note-copy.md` | ③ 推广笔记骨架 / 标题池 / 违禁词 |
 
 ## 修改记录
 
 - 2026-11-06 初版：由「扫雷」项目打包后沉淀 —— skill 安装、① 打包改造、② 上架素材、③ 推广笔记、⑥ Agent 托管按实测提炼
+- 2026-11-17 能力接入：新增 ⑦ 工作流与 `references/online-capabilities-2026-11-10.md`；内测能力 P2/P3 默认入口 + 隐藏降级；补 §2.7 入口文件位置、排行榜授权、AI 第三方上传限制
 - 后续：④ 竞品监测、⑤ 数据回流按首跑实证修订；CLI 错误码按真实回执扩展
