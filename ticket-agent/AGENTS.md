@@ -8,7 +8,8 @@
 
 - **先想再做**。调研阶段先向用户陈述策略再执行，不确定的根因、约束、影响面先举证再下结论。
 - **歧义先澄清**。用户描述中的歧义点（如"其他浏览器不出现"指其他站点还是其他浏览器）先向用户确认再执行，避免基于错误假设调研。
-- **外科手术式修改**。只修改与工单根因直接相关的文件和行。不夹带重构、格式化变更、无关清理。发现无关问题时只提出来，不静默修掉。
+- **外科手术式修改**。只修改与工单根因直接相关的文件和行。**不得自动重构**——AI 自发发现的不整洁只列出，不动手。用户明确要求整理写法时，按工作台根 `references/refactor-admission.md` 执行：先列改动前代码分支清单，再列改动后分支清单并逐条对上，删除分支必须有不可达证明。不夹带格式化变更、无关清理。
+- **重构与修复分离**。重构不强制新开分支，建议新开；在当前任务分支时用独立 `refactor:` commit，禁止与 `fix:` / `feat:` 混提交。
 - **贴合现有风格**。写代码前先学习并模仿目标文件的 import 风格、命名、文件组织、错误处理模式。
 - **可验证的结果**。修完后运行 typecheck / lint，可行时手动验证或让用户验证。不能验证时记录确切阻塞原因。
 
@@ -173,8 +174,9 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 - **复用优先**：先检查现有 helper、component、hook、service 是否可以复用。评估复用候选时必须检查实际实现和调用上下文，禁止仅凭名称或签名判断。
 - **项目 Heuristics**：颜色优先 `colors.less` 变量、基础控件优先 `component-kit`、LESS `calc()` 用 `~'calc(...)'` 转义、不新增 Angular/Haml legacy 代码——详见 `workflows/phase3-write.md`
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
+- **重构准入**：仅在用户明确要求时执行，读工作台根 `references/refactor-admission.md`；动手前产出「改动前代码分支清单 → 改动后分支清单映射 → 等价性矩阵」，经用户确认；禁止用三元 / `&&` / optional chaining 吞掉 early-return 守卫。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。
-- **不写注释**：用自描述的命名和结构表达意图。
+- **不写注释**：用自描述的命名和结构表达意图；防御分支例外，需一行注释说明触发输入。
 
 ### Phase 4: 代码提交
 
@@ -183,6 +185,7 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 - **component-kit 变更**：详见 `workflows/phase4-commit.md` — 开发分支（仅源码）+ base tag 上 cherry-pick 源码 + 构建 + 测试 tag
 - **bobcat 变更**：详见 `workflows/phase4-commit.md` — 标准 git 提交流程
 - **cherry-pick 前置校验**：先 `git fetch origin <test-branch>` 并确认 HEAD 与 `origin/<test-branch>` 一致再 cherry-pick；worktree 中禁止直接使用当前 HEAD（fetch refspec 只覆盖 `develop`）
+- **重构 commit**：`refactor:` 前缀独立提交，body 附分支清单映射与等价性矩阵结论；建议新开分支，当前任务分支亦可，但不得与 fix/feat 混合。
 
 ### Phase 4b: bobcat 依赖更新（仅 component-kit 变更时，用户通知后执行）
 
@@ -207,6 +210,11 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 - Bobcat MR：从 develop 切分支 → 更新 package.json 为生产 tag → **用户手动 `yarn`**（agent 不执行，yarn.lock 同步后）→ commit → push → `glab mr create`
 
 详见 `workflows/phase5-mr-component-kit.md`。
+
+### MR 增量与重构
+
+- 分支包含 `refactor:` commit 时，MR 描述的 Solution / Scope Of Impact 单列「重构范围 / 旧→新代码分支清单映射 / 删除分支证明」。
+- 追加 commit（尤其重构）后必须重新请求 review，并提示 reviewer 对比 version diff、核对分支清单。
 
 ### TODO 执行纪律
 
@@ -311,6 +319,24 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 文档 URL 由 Phase 1 创建后记录，后续 Phase 复用。
 
+### 备注区
+
+工单过程中不属于 Phase 产出、但需要留痕的信息（外部邮件 / 支持工单往来、数据来源、用户口头结论、临时决定等）统一记录在文档末尾的 `## 备注` 章节：
+
+```markdown
+## 备注
+
+### 外部通信记录
+- 2026-11-18 11:27｜邮件｜Peng He → Wei Huang：说明问题，附 300 条样本 CSV
+- 2026-11-18 12:20｜邮件｜Miles (hCaptcha 支持 / ticket 367482) → Wei Huang：要求 P1 令牌、建议 error callback
+- 2026-11-18｜邮件｜Wei Huang → hCaptcha 支持（已发送）：说明 P1 令牌不可得，请对方反查服务端状态码
+```
+
+规则：
+- Phase 章节只放各阶段产出与 sign-off；备注区不参与阶段识别，不写 sign-off
+- 外部通信记录格式：`日期 时间｜渠道｜参与方：摘要`，发送内容链接本地草稿或原文引用
+- 备注区按时间正序追加，新记录追加在末尾
+
 ## Sign-off 协议
 
 每个 Phase 完成后：
@@ -348,3 +374,4 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - **Session 模式**：不使用 feishu-agent。跨 session 不保留状态
 - **CSS 布局取证**：委托 cssprobe-agent 交互式完成运行时取证，cssprobe-cli 自带 `open --headed`、`inspect`、`findings`、`inject-css`、`eval`、`state-import` 命令，不依赖 playwright-cli
 - **浏览器会话收尾**：每轮验证结束后必须执行 `cssprobe-cli close`。如确需跨步骤保留会话（如等待部署后复测），先告知用户保留原因，并在复测结束后立即关闭
+- **重构相关** → 先读 `references/refactor-admission.md`（工作台根）

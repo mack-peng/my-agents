@@ -30,6 +30,8 @@ git log --oneline -3 <branch-name>
 
 使用 `references/mr-template.md` 模板生成 MR 描述：**严格保持模板结构不变**，将各 section 的占位提示替换为实际内容，勾选 checklist，表中 `Reviewer` 栏位填入 reviewer username。**Description、Reason、Solution、Scope Of Impact 部分使用中文填写。** 写入工作台 `tmp/bobcat-mr-desc.md`（禁止系统 `/tmp/`）。
 
+分支包含 `refactor:` commit 时，在 Solution / Scope Of Impact 中单列「重构范围 / 旧→新代码分支清单映射 / 删除分支证明」。
+
 ### 4. 创建 MR
 
 ```bash
@@ -78,4 +80,6 @@ glab mr create \
 1. 在开发分支上修改代码
 2. 推送新 commit（不 squash，不 force push）
 3. 在 MR 中回复 Reviewer
-4. Review 通过后 sign-off 结束
+4. 追加 commit 后重新请求 review（`glab mr update --reviewer <reviewer>` 或评论 @reviewer），提示对比 version diff
+5. 若追加的是 `refactor:` commit，reviewer 必须核对旧/新代码分支清单映射，确认没有未映射的删除分支
+6. Review 通过后 sign-off 结束

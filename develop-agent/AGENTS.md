@@ -11,6 +11,7 @@
 - **逐项确认**。每个 Phase 完成后必须等待用户 sign-off，不闭门造车。
 - **可验证的结果**。Phase 4 必须在用户确认的验证路径上完成验证（ci-lite 线上验证或本地浏览器回归），不能验证时记录阻塞原因。
 - **止损点**。同一模块连续 ≥3 个修复轮未收敛（或每次修复需新增同步 / 补偿 / 开关类机制才能成立）→ 停手，主动提请用户做模型级复盘（状态表 + 操作表 + 不变量三问），按结论重构或显式接受限制，不再排下一个补丁。
+- **重构准入**。不自动重构；用户明确要求或需求条目本身是重构时，按工作台根 `references/refactor-admission.md` 执行：改动前代码分支清单 → 意图考古 → 改动后分支清单映射 → 等价性矩阵，经用户确认后动手。重构建议新开分支，当前任务分支亦可，但必须独立 `refactor:` commit，不与 `fix:` / `feat:` 混提交。
 
 ## 运行模式
 
@@ -177,6 +178,8 @@ Develop Agent 已加载。模式：Session 模式
 4. **评论 sign-off**：用户在飞书文档逐条评论 → 协调器读取评论（`lark-cli drive file.comments list`）→ 修订 → sign-off
 5. 飞书模式：更新 Develop 文档，挂两份文档链接
 
+> 重构类需求：Code Design 必须包含「行为不变量 / 旧→新代码分支清单映射 / 等价性矩阵 / 删除分支证明」，作为独立变更组（C-refactor）；跳过 Code Design 时在 Phase 3 补产。
+
 详见 `workflows/phase2-code-design.md`。
 
 ### Phase 3: Code
@@ -194,6 +197,13 @@ Develop Agent 已加载。模式：Session 模式
 5. **协调器确认当前在开发分支上**（`git branch --show-current` 非 test-preprod 或 master），再继续
 6. 协调器向用户展示 diff 摘要
 7. 用户确认后 sign-off
+
+**重构类需求额外步骤**：
+
+1. 产出改动前代码分支清单 → 意图考古（`git log -L` / `git blame`）→ 改动后分支清单映射 → 等价性矩阵，经用户确认
+2. 先补 characterization 测试锁定现状，再重构；无测试时记录可复现的输入/输出证据
+3. `refactor:` commit 独立，禁止与 `fix:` / `feat:` 混提交；建议新开分支
+4. 验证阶段跑等价矩阵；diff 摘要单列重构范围与删除分支证明
 
 详见 `workflows/phase3-code.md`。
 
@@ -214,6 +224,8 @@ Develop Agent 已加载。模式：Session 模式
 5. 验证：ci-lite 路径做线上验证（页面可访问、关键变更、OG/JSON-LD 等）；本地路径做浏览器回归（清单见 workflow）
 6. 记录验证结果；用户确认后 sign-off
 
+> 重构类变更：按旧/新代码分支清单逐项回归；SSR / 预渲染项目额外覆盖 payload 字段缺失、空值、早退分支。
+
 详见 `workflows/phase4-verify.md`。
 
 ### Phase 5: MR 提交
@@ -226,6 +238,8 @@ Develop Agent 已加载。模式：Session 模式
 3. PR 保鲜：`git fetch origin && git merge origin/master` 入开发分支并 push（禁止 rebase / force push），`gitee-cli pr view --json` 确认 `mergeable=true`
 4. 输出 MR 链接 + 外部 review 指引：用户在另一 agent（新 session）中 `use code-review-agent` 评审（项目方向：Spec + MR），review.md 在外部 session 产出，结论带回本 session
 5. 用户确认已接收链接后 sign-off，**本 session 停止，等待外部 review 结论**
+
+> 含重构时：MR body 单列「重构范围 / 旧→新代码分支清单映射 / 等价性证明」；外部 review 指引要求 reviewer 核对分支清单与 version diff；追加 commit 后走 round 2 重新 review。
 
 外部 review 发现 P1/P2 `[must]` blocking issue → 回本 session 修复（走 Phase 3/4 修复轮）→ 追加 commit 并 push 更新 MR → 用户在外部再次 review（round 2，增量走 `review-round-delta.md`）。
 

@@ -46,6 +46,7 @@ gitee-agent 执行：
   4. References 表：Spec 填飞书链接；Code Design Doc 填飞书链接或 `not applicable`（Phase 2 跳过时）；Jira / Zendesk / TL / Reviewer 无实际值时填 `not applicable`
   5. FE Bugfix 模板的 Problem Solving Process（Description / Reason / Solution / Scope Of Impact / Test Result）**用中文填写**，取自 Phase 1 Problem 与 Phase 3/4 结论
   6. 描述写入临时文件（写入工作台 `tmp/develop-mr-<repo>.md`，禁止系统 `/tmp/`），`gitee-cli pr create --body "$(cat ...)"`
+  7. 含 `refactor:` commit 时：在 Problem Solving Process 后单列「Refactor Scope」段，包含重构范围、旧→新代码分支清单映射、删除分支证明、等价性矩阵结论；Self-checklist 增加人工核对项（无自动重构、清单已对上）
 
 - 创建后 **PR 保鲜**（多流并行时 master 可能已在分支切出后前进，导致 PR 创建即 `mergeable=false`）：
   - `git fetch origin && git merge origin/master` 入开发分支并 push（禁止 rebase / force push）
@@ -60,6 +61,7 @@ gitee-agent 执行：
   > `use code-review-agent`
   > 项目方向输入：Spec（飞书链接 / 本地路径）+ MR 链接
   > 评审产出 `output/code-review/{project}-{branch}/review.md`，结论带回本 session
+  > 若 MR 含重构：请重点核对旧→新代码分支清单映射，确认没有未映射的删除分支。
 
 - 用户确认已接收链接后 sign-off
 - **本 session 停止**，等待用户带回外部 review 结论（Phase 6 入口）
@@ -72,12 +74,14 @@ gitee-agent 执行：
 2. 重跑 Phase 4 验证（构建部署 + 线上验证）
 3. 追加 commit 并 push（禁止 force push），MR 自动更新
 4. 请用户在外部再次 review（round 2，增量走 `review-round-delta.md`，issue 状态更新而非删除）
+5. 追加 `refactor:` commit 后，重新走外部 review（round 2），提示 reviewer 对比 version diff 并核对分支清单
 
 ## Sign-off 条件
 
 - [ ] PR 已创建，body 按模板填充且 Self-checklist 已勾选
 - [ ] `mergeable=true`（PR 保鲜完成）
 - [ ] MR 链接已交付，用户确认接收
+- [ ] 若含重构：MR body 已包含重构范围 / 分支清单映射 / 等价性证明
 - [ ] 飞书模式：Develop 文档已更新 Phase 5 章节
 
 ## 产出

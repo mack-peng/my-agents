@@ -38,6 +38,17 @@
 - FE Code Design（UI/组件 · 样式/CSS · 数据/Store · 接口调用）
 - BE Code Design（Controller · Service · Mapper/SQL · 配置变更 · 数据库迁移 · 第三方依赖）
 
+### 2b. 重构类需求的额外要求
+
+若需求包含重构（用户明确要求整理写法，或需求本身是重构），Code Design 必须包含：
+
+- **独立变更组** `C-refactor`，不混入功能变更组
+- **行为不变量**：输入域、早退/守卫分支、SSR/CSR 差异、副作用
+- **改动前代码分支清单**（文件:行 / 条件 / 返回或行为）
+- **改动后分支清单映射**（每条旧分支 → 新分支；删除项附输入不可达证明）
+- **等价性矩阵**（正常值 / `undefined` / `null` / `''` / SSR / CSR / 特殊页 / 普通页）
+- 待确认项 Q 中列出所有拟删除分支，用户逐条确认后才可进入 Phase 3
+
 ### 3. 上传飞书（两份独立文档）
 
 1. 在 Code Design 知识库（`FEISHU_CODE_DESIGN_WIKI_ID`）创建两个独立节点：
@@ -67,6 +78,7 @@
 - [ ] FE / BE Code Design 均已产出并自检（Self-checklist 全绿）
 - [ ] 两份文档已上传 Code Design 知识库（独立节点）
 - [ ] 用户逐条评论/sign-off 完成，待确认项闭环
+- [ ] 重构类需求：分支清单映射 / 等价性矩阵 / 删除分支证明已产出并确认
 - [ ] 飞书模式：Develop 文档已追加 Phase 2 章节
 
 ## 产出

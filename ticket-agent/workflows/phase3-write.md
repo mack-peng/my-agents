@@ -37,11 +37,35 @@
 
 结果纳入修改方案的影响面说明。注意 `cssgraph_impact` 仅追踪 FTS5 第一匹配，多文件同名 class 需手动补充。
 
+### 3c. 重构准入（仅用户明确要求整理代码时）
+
+**AI 不得自动重构**。用户明确要求时，先读 `references/refactor-admission.md`，并在动手前完成：
+
+1. **范围与非目标**：复述"写法乱"具体指什么（命名 / 结构 / 去重 / 死代码），列出不改的语义与文件
+2. **改动前代码分支清单**（代码条件分支，不是 git 分支）：
+
+   | # | 文件:行 | 条件 | 返回/行为 |
+   |---|---------|------|-----------|
+
+3. **意图考古**：对每个将被删除/合并的分支执行 `git log -L <start>,<end>:<file>` / `git blame`；24 小时内新增的防御代码默认保留
+4. **改动后分支清单与映射**：
+
+   | # | 旧分支 | 新分支对应 | 处理（保留/合并/删除） | 证据 |
+   |---|--------|------------|------------------------|------|
+
+   旧清单每条必须有映射；删除项必须给出输入不可达证明；新清单不得出现清单外的新行为
+5. **等价性矩阵**：至少覆盖正常值 / `undefined` / `null` / `''` / SSR / CSR / 特殊页 / 普通页
+6. **用户确认后动手**；commit 用 `refactor:` 前缀，建议新开分支，当前任务分支亦可但不得与 fix/feat 混合
+
+禁止：三元 / `&&` / optional chaining 吞掉 early-return 守卫；合并语义不同的分支；以"看起来冗余"为由删除无注释判空。
+
 ### 4. 编写代码
 
 注意事项：
 
 - **遵循项目代码风格**：阅读周边代码，保持一致的命名、缩进、模式
+  - 普通 TS/Jest 测试模块命名用 snake_case（如 `is_section_hidden.test.ts`）；Jest `__tests__/**/*.test.ts?(x)` 仍匹配，生产模块路径无需改动
+  - 模块命名空间 import 用 lowerCamelCase（如 `import * as editorStore`），不用 PascalCase；`jest.mock` 路径保持不变，引用同步改小驼峰
 - **应用项目 Heuristics**：对照 `phase2-investigate.md` 的「项目 Heuristics」全表，编写前逐条判断适用性
   - 颜色优先 `fe/styles/strikingly_shared/colors.less` 现有变量，不新增硬编码色值
   - 基础控件（Input / Tab / CheckBox / Radio / Button / Card / Carousel / Tag）先查 `component-kit` 复用
@@ -54,6 +78,12 @@
 ### 5. 自检清单
 
 - [ ] diff 是否只包含必要改动
+- [ ] 是否存在自动重构 / 顺手清理（应为 0）
+- [ ] 若含重构：改动前代码分支清单已确认
+- [ ] 若含重构：旧/新分支清单逐条对上，删除项有不可达证明
+- [ ] 若含重构：等价性矩阵已执行（含 undefined / null / '' / SSR / CSR）
+- [ ] "No behavior change" 是否有证据支撑
+- [ ] SSR 改动是否列出 payload 字段缺失时的行为
 - [ ] 样式是否兼容移动端
 - [ ] 颜色是否复用 `colors.less` 变量（无新增硬编码色值）
 - [ ] 基础控件是否检查过 `component-kit` 复用

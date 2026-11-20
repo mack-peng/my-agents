@@ -10,6 +10,13 @@ Phase 3 sign-off 后，根据修改目标自动选择路径：
 | bobcat 源码 | `$BOBKAT_PATH` | 本流程（bobcat 路径） |
 | 两者都改了 | 各自处理 | 先 component-kit，再 bobcat |
 
+## 重构 commit 规则（所有路径通用）
+
+- **不自动重构**：仅在用户明确要求时执行；AI 自发发现的不整洁只记录。
+- **分支**：建议新开分支；也可留在当前任务分支。
+- **独立提交**：重构必须使用独立 `refactor:` commit，禁止与 `fix:` / `feat:` 混提交。
+- **body 证据**：commit body 附 `references/refactor-admission.md` 要求的「旧→新代码分支清单映射」与「等价性矩阵」结论；无证据不得写 "No behavior change"。
+
 ---
 
 ## component-kit 路径
