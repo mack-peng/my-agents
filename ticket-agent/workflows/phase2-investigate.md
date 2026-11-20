@@ -19,7 +19,7 @@
 
 按 `[~]` → `[x]` 规则实时更新。Phase 2 sign-off 前确认 `[ ]` 和 `[~]` 已全部清零。
 
-Phase 2 TODO 至少包含：陈述调研策略并获确认 / 项目 heuristics 适用性判断 / 符号定位 / 根因分析。
+Phase 2 TODO 至少包含：陈述调研策略并获确认 / 项目 heuristics 适用性判断 / 符号定位 / 根因分析。BugSnag 来源工单还必须包含：完整堆栈落表 / 同族变体拆分 / 趋势与发布基线 / 服务端核对。
 
 ## 差异对比策略
 
@@ -104,7 +104,11 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 **布局类工单** → **必须**进入 Phase 2b（详见 `workflows/phase2b-css-forensics.md`）。Phase 2b 包含 cssprobe-agent 运行时取证（必须步骤），完成后回到步骤 4（分析根因）。
 
-**非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。工单描述含 **BugSnag 项目名 / Dashboard 链接 / 错误 id** 时，**必须先执行下方「Bugsnag 数据取证」节**，根因分析（步骤 5）以取证产物为基准。
+**非布局类工单**（逻辑 bug / API 问题 / 功能缺失）→ 跳过 Phase 2b，直接步骤 3。
+
+**BugSnag 来源工单**（描述含 BugSnag 项目名 / Dashboard 链接 / error id，或由 BugSnag 自动归档）→ 进入代码调研前**必须先执行 `workflows/phase2-bugsnag.md`（Phase 2-BN）**：完成错误身份/变体、完整堆栈、影响面、趋势/发布基线、服务端核对与代码定位后，再回到步骤 4。堆栈未落盘不得开始代码调研；无法定位时标 UNVERIFIABLE，禁止只凭错误类名 / Job 名推断。
+
+**网络/CDN 类工单**（某地区/某运营商访问慢、CDN 节点异常、静态资源 404/403/加载失败）→ 先执行步骤 3b 外部多节点验证，再进入步骤 4。
 
 ### 3. 打开 Livesite（如有）
 
@@ -114,6 +118,25 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 2. cssprobe-agent 引导用户打开页面、完成登录、执行复现步骤
 3. cssprobe-agent 执行检查并用通俗中文解读结果
 4. 等待用户确认诊断结果
+
+### 3b. 网络节点 / CDN 链路测试（按需）
+
+工单涉及「某地区/某运营商访问慢、CDN 节点异常、静态资源加载失败、跨网延迟」时，先用外部多节点工具验证，再进入代码调研。必须测完整 URL（含路径），不能只测域名根：根路径 403/301 不代表资源异常。只测域名根的工具（如 SpeedCE）不能用于本场景，它返回的 301/403 可能只是根路径状态。
+
+| 工具 | 用途 | 地址 | 特点 |
+|------|------|------|------|
+| 17CE | 网站测速 / CDN 检测 / Ping | https://www.17ce.com/ ｜CDN 检测：https://www.17ce.com/cdn ｜Ping：https://www.17ce.com/ping | 综合首选：完整 URL、三网分省、指标最全、无广告免登录 |
+| TCPING.CN | 网站测速 / Ping / TCPing | https://www.tcping.cn/http ｜Ping：https://www.tcping.cn/ping | 速度快：实测 217 节点约 21 秒出完整结果；免登录，仅 1 个广告位 |
+| FB4 | 网站测速 / Ping | https://fb4.com/http/ ｜Ping：https://fb4.com/ping/ | 轻量：实测 48 节点，无广告免登录；适合快速巡检 |
+
+> 实测参考（2026-11）：17CE 单次调度约 94–104 节点；TCPING 217 节点约 21 秒；FB4 48 节点约 42 秒。节点数与广告状态会变化，以页面为准。
+
+执行规则：
+
+1. **17CE** 取全量指标（状态码、解析 IP、三网延迟、丢包、文件大小、下载速度、HttpHead）。
+2. **TCPING.CN** 复核完整性与速度；**FB4** 做快速巡检/交叉验证。
+3. 至少两家交叉验证；记录测试时间、节点数、三网分布、状态码、异常节点。
+4. 结果写入 Phase 2 输出的「取证结果」；仅作外部佐证，根因仍需结合日志、代码、监控。
 
 ### 4. 代码调研 — 搜索策略（必须遵守）
 
@@ -185,9 +208,10 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 | apps/.../file.tsx:123 | 问题根因所在 |
 | apps/.../style.less:45 | 样式问题 |
 
-### 取证结果（如有 Phase 2b）
-- 引用 Phase 2b 的根因结论
-- 修复方向: ...
+### 取证结果（如有 Phase 2b / Phase 2-BN / 网络测试）
+- Phase 2b: 引用根因结论与修复方向
+- Phase 2-BN: 错误身份/变体、堆栈帧、趋势/发布基线、服务端核对、置信度
+- 网络测试: 工具、节点数、三网分布、状态码、异常节点
 
 ### 根因
 （完整的根因分析）
@@ -212,35 +236,6 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 - Sign-off 前确认该 Phase TODO 中 `[ ]` 和 `[~]` 已清零
 - 如果 context compression 已开始，先落盘（飞书模式写文档 / Session 模式记录摘要）再停止
 
-## Bugsnag 数据取证（工单含 BugSnag 错误时）
+## BugSnag 来源工单
 
-工单描述中含 BugSnag 项目名、Dashboard 链接（`app.bugsnag.com/<org>/<slug>/errors/<errorId>`）或 error id 时，根因分析不能只靠代码静态推断。**先读 `bugsnag-agent/AGENTS.md`**（能力 + 预检命令 + 大输出纪律），并完成预检（bugsnag-cli 存在、token 状态），再按其「单错误深度分析链」取数。
-
-### 触发
-
-- 工单提及 BugSnag 项目 / Dashboard 链接 / error id（如 SI-863 类工单）
-- 需要确认错误影响面（变体数、事件与用户量、时间跨度）
-- 需要判断报错与部署 / release / 升级的相关性
-
-### 链路（对每个相关 error id；大输出先落盘再 jq）
-
-```bash
-bugsnag-cli --json error-show <errorId> --project <slug>        # first/last seen、severity、status
-bugsnag-cli --json error-latest-event <errorId>                 # 堆栈 + 上下文（输出大，必落盘）
-bugsnag-cli --json error-trend <errorId> --resolution 2h --project <slug>   # 按天 jq 聚合
-bugsnag-cli --json error-pivots <errorId> --summary-size 5 --project <slug> # 维度基数
-bugsnag-cli --json error-events <errorId> --limit 5 --project <slug>        # 事件对比（按需）
-```
-
-### 取数要点
-
-1. **部署基线确认**：first seen 日期 ↔ 相关修复 commit / release 对照；`release.seen_in` 基数是否恒一（同一 release 持续报错 → 修复未生效或未部署）
-2. **趋势相位对比**：多错误变体各自按天聚合（jq `group_by(.from[0:10])` + `events_count` 求和）；同步 → 同因，不同步 → 独立抛错路径
-3. **维度归因**：pivots 的 release / 设备 / OS / 浏览器 / context 分布；latest-event 的 request url / context 与工单叙事对照（报错页面可能不止工单描述的场景）
-4. **堆栈核对**：latest-event 关键帧与本地源码逐字符对照（压缩变量名模式级比对），佐证产线运行的代码形态
-
-### 边界（必读）
-
-- `bugsnag-cli` **只读**：无 resolve / discard / update——状态操作引导用户去 Dashboard，不代做
-- BugSnag **不提供请求延迟指标**：p95 / 超时率等 APM 数据本 agent 拿不到 → 标注「外部依赖」，需要时向用户或服务端同学索取，禁止以事件数冒充延迟数据
-- 数字一律来自 jq 聚合结果，不凭原始 JSON 记忆转述
+见 `workflows/phase2-bugsnag.md`（Phase 2-BN）。该文件是 BugSnag 取证的唯一事实源；本流程只保留触发与交接。

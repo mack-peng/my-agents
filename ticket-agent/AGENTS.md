@@ -148,6 +148,10 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 
 工单提供了 className 时，**优先使用 cssgraph**（`cssgraph_explore` / `cssgraph_callers`）定位组件代码文件，再用 codegraph 追踪逻辑。cssgraph 是 className → 组件文件的最短路径，避免盲目 grep。
 
+**BugSnag 来源工单**（描述含 BugSnag 项目名 / Dashboard 链接 / error id，或由 BugSnag 自动归档）→ 先执行 Phase 2-BN（`workflows/phase2-bugsnag.md`），完成取证后再进入代码调研。
+
+**网络/CDN 类工单**（某地区/某运营商访问慢、CDN 节点异常、静态资源加载失败）→ 按 `workflows/phase2-investigate.md` 的「3b. 网络节点 / CDN 链路测试」用 17CE / TCPING.CN / FB4 做外部多节点验证，再进入代码调研。
+
 详见 `workflows/phase2-investigate.md`。
 
 调研遵循该文档的「项目 Heuristics」（提炼自 STRK 共享代码指南）：
@@ -168,6 +172,10 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 6. 浏览器注入验证修复方案（使用 `cssprobe-cli inject-css` / `cssprobe-cli eval`，不使用 playwright-cli）
 
 详见 `workflows/phase2b-css-forensics.md`。
+
+### Phase 2-BN: BugSnag 取证（仅 BugSnag 来源工单，Phase 2 判断后触发）
+
+Phase 2 步骤 2 判断为 BugSnag 来源工单时，**必须**先读 `workflows/phase2-bugsnag.md`，按「错误身份/变体 → 完整堆栈 → 影响面 → 趋势/发布基线 → 服务端核对 → 代码定位/复现」执行。未取得完整堆栈不得进入代码调研；无法定位时标 UNVERIFIABLE 并列出阻塞，不得猜根因。
 
 ### Phase 3: 代码编写原则
 
