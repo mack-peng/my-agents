@@ -23,8 +23,9 @@ git log --oneline -3 <branch-name>
 |----------|
 | `@chaipengrong` |
 | `@walter.huang` |
+| `@lixiang.ding` |
 
-> **"请选择 Reviewer：1. @chaipengrong  2. @walter.huang"**
+> **"请选择 Reviewer：1. @chaipengrong  2. @walter.huang  3. @lixiang.ding"**
 
 ### 3. 生成 MR 描述
 

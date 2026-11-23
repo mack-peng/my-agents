@@ -18,6 +18,7 @@
 |----------|
 | `@chaipengrong` |
 | `@walter.huang` |
+| `@lixiang.ding` |
 
 > 创建 MR 前必须询问用户选择 reviewer。
 
