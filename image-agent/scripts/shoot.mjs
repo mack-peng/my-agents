@@ -39,6 +39,7 @@ const opts = {
   alsoJpg: false,
   json: false,
   minFont: undefined,
+  coverQa: false,
 };
 const positional = [];
 
@@ -60,6 +61,7 @@ for (let i = 0; i < argv.length; i += 1) {
   else if (key === 'root') opts.root = value;
   else if (key === 'width') opts.width = Number(value);
   else if (key === 'min-font') opts.minFont = Number(value);
+  else if (key === 'cover-qa') opts.coverQa = true;
   else if (key === 'height') opts.height = Number(value);
   else if (key === 'scale') opts.scale = Number(value);
   else if (key === 'format') opts.format = String(value).toLowerCase();
@@ -230,7 +232,7 @@ try {
   );
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
 
-  const report = await page.evaluate(({ canvasWidth, canvasHeight, minFont }) => {
+  const report = await page.evaluate(({ canvasWidth, canvasHeight, minFont, coverQa }) => {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const label = (element) => {
@@ -334,7 +336,8 @@ try {
     }
 
     const smallText = [];
-    if (minFont > 0) {
+    const allText = [];
+    if (minFont > 0 || coverQa) {
       const seenSmall = new Set();
       const smallWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       for (let node = smallWalker.nextNode(); node && smallText.length < 30; node = smallWalker.nextNode()) {
@@ -344,12 +347,30 @@ try {
         seenSmall.add(element);
         if (!visible(element)) continue;
         const size = parseFloat(getComputedStyle(element).fontSize) || 0;
-        if (size < minFont) {
+        if (minFont > 0 && size < minFont) {
           smallText.push({ selector: label(element), text: node.textContent.trim().slice(0, 30), size: Math.round(size) });
         }
+        if (coverQa) allText.push({ selector: label(element), text: node.textContent.trim().slice(0, 30), size: Math.round(size) });
       }
     }
 
+    const mastheadInfo = coverQa ? (() => {
+      const mh = document.querySelector('[data-masthead]');
+      if (!mh) return null;
+      const r = mh.getBoundingClientRect();
+      const fs = parseFloat(getComputedStyle(mh).fontSize) || 0;
+      return { selector: label(mh), fontSize: Math.round(fs), height: Math.round(r.height) };
+    })() : null;
+    const keyElements = coverQa ? [...document.querySelectorAll('[data-key]')].map((el) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return {
+        selector: label(el), text: el.textContent.trim().slice(0, 30),
+        fontSize: Math.round(parseFloat(cs.fontSize) || 0),
+        top: Math.round(r.top), bottom: Math.round(r.bottom),
+        right: Math.round(r.right), left: Math.round(r.left),
+      };
+    }) : [];
     const images = Array.from(document.images).map((image) => {
       const rect = image.getBoundingClientRect();
       return {
@@ -376,6 +397,32 @@ try {
       }
     }
 
+    let coverQaResult = null;
+    if (coverQa) {
+      const W = window.innerWidth;
+      const feedH = Math.min(W, H);
+      const feedCut = Math.round(feedH);
+      const keyOob = keyElements.filter((k) => k.bottom > feedCut || k.right > W);
+      const allTextSizes = allText.map((t) => t.size);
+      const minFontSize = allTextSizes.length ? Math.min(...allTextSizes) : null;
+      const mastheadOk = !mastheadInfo || mastheadInfo.fontSize >= 120;
+      const keyOk = keyElements.length === 0 || keyOob.length === 0;
+      const imgUpscaled = images.some((i) => i.upscaled);
+      coverQaResult = {
+        minFontSize: minFontSize ? Math.round(minFontSize) : null,
+        minFontThreshold: minFont || 90,
+        masthead: mastheadInfo,
+        mastheadOk,
+        keyElementCount: keyElements.length,
+        keyOutOfFeed: keyOob.length,
+        keyOk,
+        imageUpscaled: imgUpscaled,
+        allText: allText.map((t) => ({ selector: t.selector, size: t.size, text: t.text })),
+        keyElements,
+        mastheadInfo,
+      };
+    }
+
     const scroll = {
       width: document.documentElement.scrollWidth,
       height: document.documentElement.scrollHeight,
@@ -395,8 +442,9 @@ try {
       fontStatus: document.fonts.status,
       fontChecks,
       scroll,
+      coverQa: coverQaResult,
     };
-  }, { canvasWidth: width, canvasHeight: height, minFont: opts.minFont ?? 0 });
+  }, { canvasWidth: width, canvasHeight: height, minFont: opts.minFont ?? 0, coverQa: opts.coverQa ?? false });
 
   if (opts.selector) {
     const element = await page.$(opts.selector);
@@ -488,6 +536,40 @@ try {
   const outExt = extname(outPath).toLowerCase().replace('.', '');
   if ((opts.format === 'jpeg' && outExt === 'png') || (opts.format === 'png' && outExt === 'jpg')) {
     report.warnings.push(`output extension .${outExt} does not match --format ${opts.format}`);
+  }
+
+  // cover-qa.json
+  if (opts.coverQa) {
+    report.coverQa = report.coverQa || {};
+    const cq = report.coverQa;
+    const cqErrors = [];
+    if (cq.minFontSize !== null && cq.minFontSize < (opts.minFont ?? 90)) {
+      cqErrors.push(`min font ${cq.minFontSize}px < ${opts.minFont ?? 90}px`);
+    }
+    if (cq.masthead && !cq.mastheadOk) {
+      cqErrors.push(`masthead ${cq.masthead.fontSize}px < 120px`);
+    }
+    if (!cq.keyOk) {
+      cqErrors.push(`${cq.keyOutOfFeed} of ${cq.keyElementCount} key elements outside feed 1:1 zone`);
+    }
+    if (cq.imageUpscaled) {
+      cqErrors.push('an image is lower than its display size');
+    }
+    const qaOk = cqErrors.length === 0;
+    const qaPath = outPath.replace(/\.\w+$/, '.cover-qa.json');
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(qaPath, JSON.stringify({
+      ok: qaOk, errors: cqErrors,
+      minFont: { fontSize: cq.minFontSize, threshold: cq.minFontThreshold },
+      masthead: cq.masthead, mastheadOk: cq.mastheadOk,
+      keyElements: cq.keyElements, keyOk: cq.keyOk,
+      imageUpscaled: cq.imageUpscaled,
+      textSizes: cq.allText,
+      canvas: { width, height },
+    }, null, 2));
+    report.coverQaFile = qaPath;
+    report.coverQaOk = qaOk;
+    report.coverQaErrors = cqErrors;
   }
 
   report.ok = report.errors.length === 0;

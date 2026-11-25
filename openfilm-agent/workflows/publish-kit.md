@@ -27,7 +27,7 @@
 - **关键信息压进 feed 1:1 可见区**：3:4 封面在 feed 被顶部锚定裁切为 ~1:1；1440×1920 封面的关键信息必须在 y0–1440 内
 - **封面实拍 + 大字**：Unsplash / AI 出图做满幅背景 + 左侧纸白渐变 scrim 压大字（文字全部 HTML，图只做视觉）；实拍署名写正文末尾，不占封面小字
 - **feed 1:1 预览必做**：`node image-agent/scripts/feed-preview.mjs <cover.png>` → `feed-1x1.png` + `feed-1x1-320.png`，看 feed 里实际显示效果
-- **封面双落点**：工程（HTML / assets / recipe.md）留在 image-agent 侧 `output/<slug>/`；成品 PNG 拷贝到**影片工程根** `cover-3x4.png`
+- **封面双落点**：工程（HTML / assets / recipe.md）留在 image-agent 侧 `output/<slug>/`；成品 PNG 拷贝到**影片工程根** `cover-3x4.png`；验收读 `cover-qa.json`（`shoot --cover-qa` 产出），缺文件按未交付处理
 
 ## 封面制作
 

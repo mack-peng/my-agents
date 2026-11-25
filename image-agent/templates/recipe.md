@@ -71,3 +71,21 @@
 - 改哪几行 / 哪个变量：
 - 可替换素材：
 - 可复用部分：
+
+## Status
+
+- phase: <1-brief | 2-direction | 3-produce | 4-deliver>
+- brief: <pending | signed>
+- direction: <pending | signed: A/B/C>
+- draft: <pending | signed>
+- delivery: <pending | signed>
+- updated: <YYYY-MM-DD HH:mm>
+
+## Handoff
+
+- caller: <openfilm-agent / xhs-agent / 用户>
+- brief: <cover-brief.md 路径>
+- outputs: <PNG / JPG / feed-1x1 / cover-qa.json / note-copy>
+- credits: <Photo by ... on Unsplash / provider>
+- qa: <ok | errors>
+- notes: <默认假设 / 待补来源>

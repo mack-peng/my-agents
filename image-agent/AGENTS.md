@@ -131,9 +131,21 @@ node image-agent/scripts/shoot.mjs output/<slug>/still.html \
 
 - 尺寸默认读 `<meta name="viewport" content="width=..., height=...">`；可 `--width 1440 --height 1920` 覆盖。
 - 常用：`--scale 2`（2x 输出）、`--format jpg --quality 90`、`--transparent`、`--selector "#still"`、`--also-jpg`。
+- 封面专用：`--min-font 90`（强制最小字号）、`--cover-qa`（输出 `cover-qa.json`：字号/刊名/feed 1:1 区/图片放大检查，配合 `data-masthead`、`data-key` 标记）。
 - 自动 QA：字体失败、图片缺失/低清、文字被裁、元素溢出、滚动、控制台/请求错误；输出 JSON，硬错误退出码非 0。
 - `--allow-animations`：默认注入 `animation: none / transition: none`；设计必须静态时不要加此参数。
 - `data-bleed`：标记装饰层允许出血，`shoot` 仍会报告 warning；`--allow-bleed` 额外把未标记元素的溢出从 error 降为 warning。
+
+### 封面链路脚本（2026-11 入档）
+
+```bash
+# 校验 cover-brief.md（必填字段/字数/事实来源）
+node image-agent/scripts/check-cover-brief.mjs output/<slug>/cover-brief.md
+
+# feed 1:1 顶部裁切预览（信息流实际显示效果）
+node image-agent/scripts/feed-preview.mjs output/<slug>/xhs-cover-1440x1920.png
+# → feed-1x1.png + feed-1x1-320.png
+```
 
 ### AI 生图
 
@@ -195,6 +207,7 @@ sips -Z 320 output/<slug>/xhs-cover-1440x1920.png --out tmp/thumb.png
 - **闸门 3 — 初稿**：先跑 `shoot` 自动 QA，再按 `references/design-review.md` 做设计评审并修正，然后展示 PNG + 设计说明 + 数字来源，等反馈。
 - **闸门 4 — 交付**：确认后才整理最终文件与发布文案。
 - 用户提修改意见 → 回到对应步骤；不跳步、不批量勾选 TODO。
+- **闸门豁免（仅两种）**：① 快速档跳过闸门 2（方向按内容类型默认），② 被其他 agent 调用且 brief 已指定方向时跳过闸门 2。豁免必须在方案/交付摘要中标注「方向按默认/按调用方指定」，不能静默跳过。
 
 **Hard Stop**：
 
