@@ -16,14 +16,14 @@
 - **配色 / 字体**：改页面 `<style>` 里的颜色变量；品牌色集中在公共处，方便统一换
 - **节奏**：改页面动效的时间参数（`frame(t)` 里的起点/时长/缓动），或 film.html 的 `at` / `#t=` / `speed`
 - **换素材**：新文件拷贝进 `assets/`，改 `src` 引用（保持 `#t=` 语义不变则时机不乱）；旧素材确认无人用再删
-- **换音色 / 重生成配音**：重生成全部 TTS clip（同名覆盖旧 take，旧转写/字幕失效）→ 量新时长 → 回填各镜 `at`/`duration`（VO 时长变了总时长就变，不硬凑旧时长）→ 调 `speed` 防重叠 → 校正 VTT → `look` → 字幕抽 4 帧 + 混音对基线验收（见 `references/audio-subtitles.md`）
-- **加 / 改字幕**：每条配音旁放同名 `.vtt`；ASR 只取时间，文字按口播稿校正；改 `speed` 字幕后随，换音频/音色要重做 VTT；竖屏基线 `y≈0.786`（见 `references/audio-subtitles.md`），压住正文/下一章/结尾大字时经 **Studio UI/API** 调位置（禁止文本编辑器改 `.film/subtitles.json`）；交付走 Studio 烧录，默认不由 agent `render`
+- **换音色 / 重生成配音**：重生成全部 TTS clip（同名覆盖旧 take，旧转写/字幕失效）→ 量新时长 → **重建各镜 cue 表** → 回填 `at`/`duration`（VO 时长变了总时长就变，不硬凑旧时长）→ 调 `speed` 防重叠 → 校正 VTT → `look` → 字幕抽 4 帧 + 混音对基线验收（见 `references/audio-subtitles.md`）
+- **加 / 改字幕**：每条配音旁放同名 `.vtt`；ASR 只取时间，文字按口播稿校正；改 `speed` 字幕后随，换音频/音色要重做 VTT；竖屏字幕基线见 `references/audio-subtitles.md`（**数值以该文件为准，勿凭记忆写**），压住正文/下一章/结尾大字时经 **Studio UI/API** 调位置（禁止文本编辑器改 `.film/subtitles.json`）；交付走 Studio 烧录，默认不由 agent `render`
 - **加 / 删镜头**：一镜一页。删除是**全链操作**（实测教训）：film.html 移除 clip + 删页面文件 + 删对应音频 clip 与 `.vtt` + 前后 `at` 链整体重排 + 总时长重标，一次做完再 `look`；镜号文件名允许不连续（scene-4 直接跟在 scene-2 后没问题），**不为了好看批量改名**（引用易断）。加/删 ≥2 镜走「结构性改动」
 - **横竖互转**：新建竖/横工程，页面**版面重排**（字号、留白、构图按新版面重新设计），不是整体缩放
 
 ## 结构性改动（先方案后动手）
 
-以下属于重建级，不能"顺手改"：**横竖互转、加/删 ≥2 镜、换片型风格、重排叙事顺序**——先做 **structure diagnosis**（三问，见 `references/preproduction.md`）：片子的 promise 还成立吗？逐 beat 哪里断了/重复了？cut list 该砍哪几拍？结论写给用户确认，再按 `workflows/build-film.md` 的闸门执行（对齐 AGENTS.md「编排纪律」）。
+以下属于重建级，不能"顺手改"：**横竖互转、加/删 ≥2 镜、换片型风格、重排叙事顺序**——先做 **structure diagnosis**（三问，见 `references/preproduction.md`）：片子的 promise 还成立吗？逐 beat 哪里断了/重复了？cut list 该砍哪几拍？结论写给用户确认，再按 `workflows/build-film.md` 声明的确认点执行（对齐 AGENTS.md「编排纪律」）。
 
 ## 红线
 

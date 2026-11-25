@@ -33,6 +33,8 @@
 
 ## Step 2 提炼与裁剪 → 闸门 1（必须用户确认）
 
+**本流程两个确认点**：闸门 1 = brief + 提炼选取（对应 `references/preproduction.md` 闸门 1–2）；闸门 2 = 编排（对应闸门 2–3）。闸门定义以 preproduction 为准。
+
 长文（周刊通常很长）**不搬运全文**，按目标时长提炼：
 
 - 默认产出「**精选 3–5 条**」：每条 = 标题（一句）+ 摘要（一到两句）+ 原文数字/出处
@@ -58,11 +60,19 @@
 - **新闻类制作规则**（4–5 条上限、真实素材硬门槛、每条异构视觉、短开头无片尾）→ `references/preproduction.md`「新闻类制作规则」
 - **claims not sections**：分镜与口播按"源材料证明了什么"组织，不按文档章节搬（`technical-video-script` 的转置原则）
 - **口播稿生成 TTS 前完成口语自检**（整稿念一遍、读音改写表套用——见 `references/audio-subtitles.md`「口播稿自检」「读音改写表」）：重录是全链返工，别把书面语带进录音棚
+- **写页面 Pre-flight（Step 4 前必做，与 `build-film.md` 对齐）**：读 `references/visual-qa.md`（安全区 / 手机可读 / shot-card / 纯函数两条硬规则）；有字幕时先应用基线（`references/audio-subtitles.md`）；按 VO cue 表写页面；第一版写完跑 `probe-safe-area.mjs`——缺一步不得动手
 - 确认后才动手（对齐 `workflows/build-film.md` Step 3 的 sign-off 要求）
 
 ## Step 4 制作
 
-按 AGENTS.md「标准工作流 · 做片」：`open output/<film-name>` → 按已 sign-off 的镜头表写页面（`frame(0)` 即 starting state）→ **音频驱动时长**（先生成全部 VO → 量实际时长 → 回填 `at`/`duration` → 锁定总时长，详见 `references/audio-subtitles.md`）→ `look` 循环 → Studio 人机共编 → 后期验收（Story QA + 字幕抽 4 帧 + 混音对基线 + 封面）→ **默认不导出**（用户在 Studio 操作；有旁白/字幕成片走 Studio 烧录导出，`render` 不含字幕）。
+按 AGENTS.md「标准工作流 · 做片」（顺序固定：VO → 页面）：
+
+1. `open output/<film-name>` 建片
+2. **有旁白先出全部 VO**：`get tts` → loudnorm → `ffprobe` 量时长 → `get asr` → 建各镜 cue 表 → 回填 `at`/`duration`（见 `references/audio-subtitles.md`）
+3. 写页面 Pre-flight（见 Step 3）→ 按 cue 表逐拍写页面（`frame(0)` 即 starting state）→ `probe-safe-area.mjs` 量边界
+4. `look` 循环 → Studio 人机共编 → 按 `workflows/delivery-check.md` 验收交付
+
+**默认不导出**（用户在 Studio 操作；有旁白/字幕成片走 Studio 烧录导出，`render` 不含字幕）。
 
 **系列化（周刊复用）**：如果是周期性内容，首期按"可复用模板"做——
 - 固定结构：`content.js` 纯数据（文案/数字/时长）｜ `scene.js` 共享渲染器 ｜ `styles.css` 共用样式 ｜ `scene-NN.html` 一镜一页（只有 `data-scene` 差异）｜ `cover-3x4.html` 封面
@@ -72,13 +82,10 @@
 
 ## Step 5 交付说明
 
+按 `workflows/delivery-check.md` 输出交付说明。本流程补充：
 - 内容选取与裁剪记录（可回溯：选了什么、删了什么）
 - 每个数字 / 引用标注原文出处（章节）
-- 系列化：下期最快复用路径
-- 字幕：有旁白时，带字幕成片走 Studio 导出「烧录字幕」；`render` 不含字幕；交付前抽 4 帧确认不压字
-- 混音：记录 `look` 输出的 integrated LUFS / true peak，与基线比对（`references/audio-subtitles.md`）
-- 封面与发布文案：小红书默认 3:4（`workflows/publish-kit.md`）
-- 可改点：哪些文案在 Studio / 文件里可直接改
+- 系列化：下期最快复用路径（模板文件与 recipe）
 
 ## 红线
 

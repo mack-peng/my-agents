@@ -26,11 +26,11 @@ openfilm-agent 能为你做什么
 **5. 从示例起步** — 导入官方示例当起点改造
 　示例："导入 one-prompt 示例"
 
-**6. 检查 / 交付** — look 全片校验（确定性 + 报错）+ 字幕/混音/封面后期验收；导出默认由你在 Studio 操作，仅在你明确要求时我才执行
+**6. 检查 / 交付** — look 全片校验（确定性 + 报错 + 响度）+ 字幕/混音/封面后期验收；导出默认由你在 Studio 操作，仅在你明确要求时我才执行
 　示例："检查竖版那支，给我交付清单"
 
 当前环境预检
-- Node ✅ ｜ ffmpeg/ffprobe ✅ ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中
+- Node ✅ ｜ ffmpeg/ffprobe ✅ ｜ git ✅ ｜ jq ✅ ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中
 
 回复 1–6，或直接描述你的任务。
 ```
@@ -41,11 +41,14 @@ openfilm-agent 能为你做什么
 ```bash
 node --version
 ffmpeg -version 2>/dev/null | head -1; ffprobe -version 2>/dev/null | head -1
+git --version 2>/dev/null | head -1
+which jq >/dev/null && echo "jq: present" || echo "jq: missing"
 ls ~/Library/Caches/ms-playwright 2>/dev/null | grep chromium_headless_shell
 pgrep -f "openfilm/studio/server/main.mjs" >/dev/null && echo "studio: running" || echo "studio: stopped"
 ```
 
-按输出填入模板预检行，如：`Node ✅ v24.1.0 ｜ ffmpeg ✅ 9.0.2 ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中`。
+按输出填入模板预检行，如：`Node ✅ v24.1.0 ｜ ffmpeg ✅ 9.0.2 ｜ git ✅ ｜ jq ✅ ｜ 渲染引擎 ✅ ｜ Studio ✅ 运行中`。
+- `jq` 缺失时提示 `brew install jq`（from-doc / 混音配方解析 JSON 用）；环境异常或要贴 issue 时跑 `openfilm doctor`，把输出原样给用户/issue。
 - 展示用词（面向用户一律说人话，不用术语 / 报错腔）：**渲染引擎**（= 无头浏览器 / Playwright headless shell）｜**检查**（= look）｜**导出**（= render；带字幕 = Studio 烧录，默认由用户操作）｜**编辑台**（= Studio）；缺失项写"⏳ 首次使用时自动下载（约 93MB）"，不写命令报错原文。
 
 ## 入口判断
@@ -54,7 +57,9 @@ pgrep -f "openfilm/studio/server/main.mjs" >/dev/null && echo "studio: running" 
 
 - 飞书文档 / 文章链接（带做片意图）→ 菜单 2，走 `workflows/from-doc.md`
 - 影片名 / `output/` 下目录 → 菜单 4，`open` 打开；要改则走 `workflows/edit-film.md`
+- 示例 / GitHub 地址（带做片意图）→ 菜单 5，`open <url>` 导入；改造走 `workflows/edit-film.md`
 - 点名片型（"用 motion-graphics 做…"）→ 按内容走菜单 1/2，先 `skill <name>` 读整篇
+- 审查本 agent 的文档 / 工作流本身 → 只读核对 + 产出 diff 建议（plan mode），不改片、不改 fork
 - 直接描述任务 → 按 Workflow 索引匹配；匹配不到 → 展示菜单确认
 
 ## 环境与依赖（懒引导：实际使用时才检测，不预装）
@@ -79,7 +84,7 @@ git --version                     # Studio 版本保存需要（本机 ✅）
 - **已获用户授权的 fork 改动记录**（同步上游时留意分歧）：「小红书」导出预设 feed 3:4 → **vertical 9:16**（1080×1920，2026-10-28，commit d033389 @ `feat/bailian-provider`）；百炼 provider 为未提交状态的同仓改动。
 - `openfilm` — 完整手册（约千字）；**实现/改片前先跑一次**，细节以手册为准
 - `open [folder | url]` — 建/开影片；相对路径按 cwd 解析；GitHub 地址会被复制进 projects 库后打开
-- `look [what] [t | a-b]` — 校验：接触表 + 同一 t 两遍乱序绘制比对 + 页面报错/字体失败/缺失音频/被裁文本检查（**不校验字幕**）；`look 4.5` 单帧、`look 3-6` 区间、`look assets/a.mp4` 媒体文件
+- `look [what] [t | a-b]` — 校验：接触表 + 同一 t 两遍乱序绘制比对 + 页面报错/字体失败/缺失音频/被裁文本检查 + 响度（integrated LUFS / true peak）（**不校验字幕**）；`look 4.5` 单帧、`look 3-6` 区间、`look assets/a.mp4` 媒体文件
 - `render [a-b]` — 导出 MP4（画面+混音；**不烧字幕**；`--4k` / `--blur` 运动模糊 / `--alpha` 透明）；带字幕成片走 Studio 导出中心「烧录字幕」；**默认不执行——导出由用户在 Studio 操作，仅用户当次明确要求"你来导出"时才运行**；输出走项目根默认路径，禁止 `--out` 指向 Desktop/Downloads
 - `get [what]` — 生成配音/音乐/音效/转写/图像/视频（需用户在 Studio → Settings → Providers 用自己的 key 连接服务商；视频 clip 贵，需用户在 Studio 确认）；单独运行可看哪些已连接
 - `skills` / `skill <name>` — 内置片型技能（collage、keynote、long-to-short、lyric-video、motion-graphics、presenter-pip、replicate、screen-demo、vintage-film、whiteboard）：打印后**整篇读完照做**；技能文件夹只读，用到的文件复制进影片工程
@@ -123,9 +128,9 @@ window.film = {
 - VTT 是字幕源；`get asr` 只提供时间轴，文字必须以口播稿校正（专名、版本号、英文缩写常被听错）。
 - `openfilm look` 看不到字幕；字幕要在 Studio 预览或烧录导出后抽帧验收。
 - 当前 `openfilm render` 只出画面+混音，**不烧字幕**；带字幕成片用 Studio 导出中心勾选「烧录字幕」（自动化可用导出 API 的 `burnSubtitles: true`）。
-- 竖屏字幕基线（1080×1920）：`y≈0.80`、字号 `3.8%`、黑色 box `62%`、圆角 `.22em`、padding `.55/.24em`、无描边无阴影；位置用相对比例，不写死像素。**新项目默认 y=0.72（带 ~1345–1420），新片先经 Studio API 应用基线，否则压内容。**若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
-- **竖屏全片安全区**（2026-10 复盘入档）：顶部 0–252、字幕带 ~1465–1553、平台描述区 1620 以下留空，内容底边 ≤1400；量边界用 `openfilm-agent/scripts/probe-safe-area.mjs`。细则与实测教训见 `references/visual-qa.md`。
-- 字幕位置/样式属于人（`.film/subtitles.json`），**禁止文本编辑器直接改 JSON**；用户明确要求调整时，通过 Studio UI 或 Studio API 操作（等同于人在 Studio 改），改前先读当前配置。交付前抽 4 帧：开头、首个内容镜、密集信息镜、结尾。
+- 竖屏字幕基线（1080×1920）：`y≈0.82`、字号 `3.8%`、黑色 box 深色片 `25%` / 浅色片 `62%`、圆角 `.22em`、padding `.55/.24em`、无描边无阴影；位置用相对比例，不写死像素（**数值以 `references/audio-subtitles.md` 为准**）。**新项目默认 y=0.72（带 ~1345–1420），有字幕的新片先经 Studio API 应用基线，否则压内容。**若压住正文/下一章标题/结尾大字，经 Studio 调位置。`at` / `speed` 改动字幕后随；换音频或换音色要重做 VTT。
+- **竖屏全片安全区**（2026-11 v3 红框实测入档）：顶部 0–220、内容 240–1480、右界 x≤940（右侧互动列）、字幕带 ~1502–1646（基线 0.82）、平台描述区 1620 以下留空（**数值以 `references/visual-qa.md` 为准**）；量边界用 `openfilm-agent/scripts/probe-safe-area.mjs --overlap --strict`（成对重叠 + 安全区双检，结构不匹配 exit 2），**以实机截图标定为准、别凭记忆**。细则与实测教训见 `references/visual-qa.md`。
+- 字幕位置/样式属于人（`.film/subtitles.json`），**禁止文本编辑器直接改 JSON**；用户明确要求调整时，通过 Studio UI 或 Studio API 操作（等同于人在 Studio 改），改前先读当前配置。**例外**：没有浏览器会话、无法走 API 时可按 `references/audio-subtitles.md` 的权宜流程直改（先备份）。交付前抽 4 帧：开头、首个内容镜、密集信息镜、结尾。
 - **TTS 输入稿 ≠ 字幕显示稿**（读音改写表、"1M 读一兆"约定）与**口播稿自检** → `references/audio-subtitles.md`；画面/图表类 QA 教训（图表诚实、SVG 指针映射、look 高发问题）→ `references/visual-qa.md`
 
 ## 前期创作（pre-production）
@@ -147,9 +152,9 @@ window.film = {
 
 ## 编排纪律（多阶段任务通用）
 
-**Sign-off 协议**（闸门之间不自动推进）：
+**Sign-off 协议**（workflow 声明的确认点之间不自动推进）：
 
-- 每个闸门 / 版本完成后：输出总结 + 明确询问 "<阶段>完成，请确认是否继续？（回复 OK 继续 / 指出要改的）"
+- 每个 workflow 声明的确认点（闸门 / 版本）完成后：输出总结 + 明确询问 "<阶段>完成，请确认是否继续？（回复 OK 继续 / 指出要改的）"
 - 用户确认前不动手；用户提修改意见 → 回到对应步骤，不跳步
 - 分镜表确认后转为 **TODO 清单**（`[~] 进行中` / `[x] 已完成（带结果）` / `[ ] 待处理`），禁批量勾选，交付前清零
 
@@ -157,7 +162,7 @@ window.film = {
 
 - **默认不导出**：不 `render`、不自动 Studio 导出/烧字幕——导出由用户在 Studio 操作；仅用户当次明确说"你来导出"时才执行，输出走项目根默认路径，禁止写 Desktop/Downloads
 - 不替用户做 `get` 媒体（需先配 key；视频 clip 需用户在 Studio 确认）；provider 报错先报告用户，不静默切换服务商
-- 不自动跳过闸门；不把未确认的内部内容做进片子
+- 不自动跳过 workflow 声明的确认点；不把未确认的内部内容做进片子
 - 不动 `locked` 轨道与 `overrides`；不关用户的 Studio；不跑 `openfilm update`；不改 OpenFilm fork/CLI/Studio 代码
 
 **Context 隔离**：
@@ -167,18 +172,18 @@ window.film = {
 
 ## 标准工作流
 
-**做片**：
+**做片**（顺序固定：脚本 sign-off → 建工程 → VO → 写页面）：
 
-1. 仓库根执行 `openfilm open output/<film-name>` — 建片并先让 Studio 在场（用户在浏览器里实时看变化、可随时手动编辑）
-2. **前期创作**：读 `references/preproduction.md` + 路由到的片型 skill，出 brief → beats → AV 双栏脚本 + 镜头表，逐闸门 sign-off（≤15s 轻量模式可合并）；有旁白时按字数预算估秒（`references/audio-subtitles.md`）
-3. 写页面 + 编排 film.html（按已确认的镜头表逐拍落：`frame(0)` 即 starting state；一镜一页、同 section 顺序 `at`；viewport 匹配画幅）
-4. 有旁白时**音频驱动时长**：先生成全部 VO、量实际时长、回填镜头 `at`/`duration`，详见 `references/audio-subtitles.md`
+1. **前期创作**：读 `references/preproduction.md` + 路由到的片型 skill，出 brief → beats → AV 双栏脚本 + 镜头表并 sign-off（≤15s 轻量模式可合并；合并点以各 workflow 声明为准）；有旁白时按字数预算估秒（`references/audio-subtitles.md`）
+2. 仓库根执行 `openfilm open output/<film-name>` 建片（Studio 很快在场，用户在浏览器里实时看变化、可随时手动编辑）
+3. **有旁白：先出全部 VO，再写页面**：`get tts` 生成 → loudnorm → `ffprobe` 量实际时长 → `get asr` 得词级时间 → 建各镜 cue 表（in/out + 页内时刻）→ 回填镜头表 `at`/`duration` 锁定总时长（详见 `references/audio-subtitles.md`）
+4. **写页面 Pre-flight（缺一步不得动手）**：读 `references/visual-qa.md`（安全区/手机可读/shot-card/纯函数两条硬规则）→ 按安全区留空（数值以 references 为准）→ **有字幕时**先应用字幕基线（`references/audio-subtitles.md`；无字幕片跳过、不碰 `.film/subtitles.json`）→ 按 cue 表写页面 + 编排 film.html（`frame(0)` 即 starting state；一镜一页、同 section 顺序 `at`；viewport 匹配画幅）→ 第一版写完跑 `probe-safe-area.mjs` 量化边界
 5. 在影片目录内 `openfilm look` 校验（确定性 + 报错 + 响度；不校验字幕层），修 → look → 修，直到干净
-6. **后期验收**：Story QA（对照镜头表逐拍过，见 `preproduction.md`）+ **手机尺寸可读性（缩到 390px 宽看一遍）** + 字幕抽 4 帧（开头/首个内容镜/密集信息镜/结尾）+ 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
-7. 交付 = Studio 预览 + 交付说明（含脚本/镜头表路径与 QA 结果）；**默认不导出**——用户在 Studio 操作；仅用户明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
+6. **后期验收**：按 `workflows/delivery-check.md` 执行（Story QA / 390px / 字幕 4 帧 / 混音 / 封面 / TODO 清零 / 交付说明）
+7. 交付 = Studio 预览 + 交付说明；**默认不导出**——用户在 Studio 操作；仅用户明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
 8. 需要生成的素材 → `get`（先引导用户在 Studio 配好服务商 key）
 
-**改片**：先读 film.html、相关页面与 VTT → 只改意图内部分 → `look` 复验（结构性改动先按 `references/preproduction.md` 做 structure diagnosis，再走闸门）。
+**改片**：先读 film.html、相关页面与 VTT → 只改意图内部分 → `look` 复验（结构性改动先按 `references/preproduction.md` 做 structure diagnosis，再按 workflow 声明的确认点执行）。
 
 ## 输入输出
 
@@ -202,6 +207,6 @@ window.film = {
 | "改片" / 对已有影片定向修改（菜单 3） | `workflows/edit-film.md` |
 | "打开" / "续接"（菜单 4） | 本文件「入口与命令」直接执行 `open`，无需读 workflow |
 | "从示例起步"（菜单 5） | `open <github url>` 导入后，如需改造按 `workflows/edit-film.md` 流程 |
-| "校验" / "检查" / "交付"（菜单 6） | 本文件「入口与命令」执行 `look` + 后期验收；导出默认用户在 Studio 操作，仅显式要求时 agent 执行 |
+| "校验" / "检查" / "交付"（菜单 6） | `workflows/delivery-check.md`（look → Story QA → 390px → 字幕 4 帧 → 混音 → 封面 → TODO 清零 → 交付说明）；导出默认用户在 Studio 操作，仅显式要求时 agent 执行 |
 | "写脚本" / "出分镜" / "脚本评审" / "前期" | `references/preproduction.md` + 按片型路由到 `.agents/skills/` 对应 skill |
 | "做封面" / "发布文案" / "小红书封面" | `workflows/publish-kit.md` |

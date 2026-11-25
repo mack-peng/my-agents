@@ -38,6 +38,7 @@ const opts = {
   transparent: false,
   alsoJpg: false,
   json: false,
+  minFont: undefined,
 };
 const positional = [];
 
@@ -58,6 +59,7 @@ for (let i = 0; i < argv.length; i += 1) {
   if (key === 'out') opts.out = value;
   else if (key === 'root') opts.root = value;
   else if (key === 'width') opts.width = Number(value);
+  else if (key === 'min-font') opts.minFont = Number(value);
   else if (key === 'height') opts.height = Number(value);
   else if (key === 'scale') opts.scale = Number(value);
   else if (key === 'format') opts.format = String(value).toLowerCase();
@@ -228,7 +230,7 @@ try {
   );
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
 
-  const report = await page.evaluate(({ canvasWidth, canvasHeight }) => {
+  const report = await page.evaluate(({ canvasWidth, canvasHeight, minFont }) => {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const label = (element) => {
@@ -331,6 +333,23 @@ try {
       }
     }
 
+    const smallText = [];
+    if (minFont > 0) {
+      const seenSmall = new Set();
+      const smallWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let node = smallWalker.nextNode(); node && smallText.length < 30; node = smallWalker.nextNode()) {
+        const element = node.parentElement;
+        if (!element || seenSmall.has(element) || !node.textContent.trim()) continue;
+        if (/^(SCRIPT|STYLE|NOSCRIPT|TITLE)$/.test(element.tagName)) continue;
+        seenSmall.add(element);
+        if (!visible(element)) continue;
+        const size = parseFloat(getComputedStyle(element).fontSize) || 0;
+        if (size < minFont) {
+          smallText.push({ selector: label(element), text: node.textContent.trim().slice(0, 30), size: Math.round(size) });
+        }
+      }
+    }
+
     const images = Array.from(document.images).map((image) => {
       const rect = image.getBoundingClientRect();
       return {
@@ -367,6 +386,7 @@ try {
     return {
       canvas: { width: canvasWidth, height: canvasHeight, viewportWidth: W, viewportHeight: H },
       clippedText,
+      smallText,
       clippedBoxes,
       overflow,
       bleedOverflow,
@@ -376,7 +396,7 @@ try {
       fontChecks,
       scroll,
     };
-  }, { canvasWidth: width, canvasHeight: height });
+  }, { canvasWidth: width, canvasHeight: height, minFont: opts.minFont ?? 0 });
 
   if (opts.selector) {
     const element = await page.$(opts.selector);
@@ -409,6 +429,7 @@ try {
   report.out = outPath;
   report.html = htmlPath;
   report.scale = opts.scale;
+  report.minFont = opts.minFont ?? null;
   report.output = {
     width: width * opts.scale,
     height: height * opts.scale,
@@ -427,6 +448,9 @@ try {
     else if (image.upscaled) {
       report.warnings.push(`image is lower than its display size: ${image.src} (${image.naturalWidth}px → ${image.width}px)`);
     }
+  }
+  if (opts.minFont && report.smallText.length) {
+    report.errors.push(`text smaller than ${opts.minFont}px: ${report.smallText.map((item) => `"${item.text}" ${item.size}px (${item.selector})`).join('; ')}`);
   }
   if (report.fontErrors.length) report.errors.push(`font failed to load: ${report.fontErrors.join(', ')}`);
   if (report.clippedText.length) {

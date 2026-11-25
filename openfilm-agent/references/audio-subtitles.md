@@ -8,17 +8,27 @@
 
 0. **分镜阶段的秒数预算**（sign-off 前估算用）：**中文按 5.5 字/秒**（实测 5.1–6.2，均值 5.8，取偏保守值；英文按 ~2.3 词/秒）+ 每镜 0.4s 余量；校准方法：拿既有 VO 的 `ffprobe` 时长 ÷ VTT 正文字数。只用于排分镜表，不写进锁定值
 1. 内容/分镜 sign-off 后，**先生成全部 VO**（`openfilm get tts`，一镜一条）
-2. `ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 <wav>` 量每条实际时长
-3. 回填各镜时长：**镜时长 = VO 时长 + 头部提前量（0.1–0.3s）+ 尾部余量（0.2–0.5s）**；结尾镜尾部留 2.5–3s 画面淡出，避免戛然而止
-4. 按新时长回填 `content.js` 的 `start`/`dur` 与 film.html 的 `at`，锁定总时长
-5. 改 VO / 换音色 = 重走 1–4（旧 VTT 全部失效重做）
+2. **loudnorm 到基线**（见「混音基线」；新文件必须重新 norm）
+3. `ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 <wav>` 量每条实际时长
+4. **建 cue 表**：有词级 VTT 直接取；fork 返回 none 时跑 `get asr --src` 取时间轴，文字以口播稿校正。每镜记 in/out，页内时刻 = cue + 0.35s 偏移
+5. 回填各镜时长：**镜时长 = VO 时长 + 头部提前量（0.1–0.3s）+ 尾部余量（0.2–0.5s）**；结尾镜尾部留 2.5–3s 画面淡出，避免戛然而止
+6. 按新时长回填 `content.js` 的 `start`/`dur` 与 film.html 的 `at`，锁定总时长
+7. 改 VO / 换音色 = 重走 1–6（旧 VTT 全部失效重做）
 
 **不硬凑时长**：内容多就长（实测周刊 101s），内容少就短；不为凑 60s/8s 裁内容。
 
 ## TTS 生成
 
-- 首选 `openfilm get tts --out <name> --text "<文案>" --voice <voiceId>`：返回 `src`/`dur`。**当前本地 fork 的百炼 provider 不带词级转写**（transcript 返回 `none`，提示 `get asr` 生成）→ 时间轴走 `get asr --src`，文字以口播稿校正；若上游恢复自带转写（词级时间）则免 asr
+- 首选 `openfilm get tts --out <name> --text "<文案>" --voice <voiceId>`：返回 `src`/`dur`。**上游 CLI 帮助称 tts 自带词级 VTT（"word timing is kept, so never run asr on it"）；本地 fork 的百炼 provider 实测 transcript 返回 `none`**，此时时间轴走 `get asr --src`、文字以口播稿校正。**以上游同步后的实跑结果为准**（有词级 VTT 就免 asr，返回 none 才跑）
 - 文件落 `assets/audio/vo/`；语义化命名 `vo-<序号>-<slug>.wav`
+- **TTS 时长漂移与停顿压缩**：同一文本多次生成时长会漂 1–2s（实测 6.96–9.68s）。若 take 超出预算，用 `silenceremove` 压句中停顿到 ~0.12s 再量时长（不改语义节奏）：
+
+  ```bash
+  ffmpeg -y -v error -i <raw.wav> -af "silenceremove=stop_periods=-1:stop_duration=0.12:stop_threshold=-38dB" -ac 1 -ar 48000 <norm.wav>
+  ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 <norm.wav>
+  ```
+  压完重新归一（见下），时间轴以压后实测为准。
+
 - **provider 报错先报告用户**（如本地 fork 曾报 `Alibaba Cloud Bailian could not be reached (fetch failed)`），不静默换服务商；用户同意后才走替代方案（如 DashScope 直连 `qwen3-tts-flash`），key 从 `~/.openfilm/providers.json` 读，**绝不打印/落盘 key**
 - 手写兜底 VTT：TTS 无词级时间时按口播稿分句手写（见下）
 
@@ -32,6 +42,11 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 | 1M | 一兆 | 本工作台口播约定（2026-10 用户确认入档） |
 | 10 月 19 日 | 10 月 19 号 | 日期口语，显示保留"日" |
 | $0.15 / $0.60 | 0.15 美元、0.60 美元 | 货币补全，首次出现点明"每百万词元"口径 |
+| 调研 | 吊研 | 「调」多音字，TTS 默认读 tiáo；「吊」只有 diào 一个读音，强制四声；显示稿仍写「调研」 |
+| Astra | Astra | 品牌名直接英文读音，勿写「阿斯特拉」音译 |
+| Qwen | 千问 | 用中文品牌名读音；显示稿仍写 Qwen |
+| GPT | G P T | 字母逐读；AA → A A |
+| Hy4 | H Y 四 flash | H Y 字母读 + 中文数字 |
 
 - VTT 文字按**显示稿**校正（专名/版本号/单位照书面形式），读音靠 TTS 输入稿保证
 - 读音改写只动"读法"——数字、事实、结论一个不动
@@ -48,9 +63,11 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 ## 字幕引擎行为（Studio 实测，Nº06 入档）
 
 - Studio 字幕是**按词块逐组同声渲染**：一屏显示"当前正在说的词组块"（约 9–12 字），底色框只包当前块——不是整条 cue 同时上屏。样式能调的只有 `pos.y / font.sizePct / box(opacity,padX,padY,radius)`，无法合并为一整段块
-- **VTT 必须保留词级内嵌时间标记**（`词<00:00:00.000>词…`，`get asr` 原生产物），只改文字、不动时间标签。手写成纯文本 cue 会让引擎自造节奏，抽帧常见"只显示半句"的怪异效果
+- **VTT 词级优先**：`get asr` 原生产物自带词级内嵌时间标记（`词<00:00:00.000>词…`），只改文字、不动时间标签
+- **词级导致字幕空档时的回退**：实测某 take 在 2.5s 处字幕消失 ~1s（inline 标签使引擎跳块）。修复方法：**改短语级 cue**（一段一行、无内嵌标签），从 `get asr` 的 cue 起止时间手写。这不是违规，是回退——交付前必须 Studio 抽帧确认短语级 cue 在整个 VO 时长内无空档
+- `check-vtt` 报「无内嵌时间标签」为 warning 不是 error——短语级是合法回退
 - 专名/型号 ASR 常听错（实测：Ripple→Repo、Hy4→Hi4/H4、版本号拆字符）——用**逐字替换清单**校正；数字按显示稿书面化（二十二→22、二点八万亿→2.8 万亿）
-- **位置换算**：`Δpx / 1920` 直接加到 `pos.y`（+50px = +0.026）；整体下移会推进 1620 平台描述安全线，先看视觉 QA 的安全区再动
+- **位置换算**：`Δpx / 1920` 直接加到 `pos.y`（+50px = +0.026）；整体下移会推进 1620 平台描述安全线（v3 基线 0.82 → 带 ~1502–1646），先看视觉 QA 的安全区再动
 - 字幕验证只能靠 Studio API 烧帧（`look` 不含字幕层），抽 4–7 帧 + 390px 手机模拟
 
 ## VTT 规则
@@ -66,14 +83,17 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
 - 每条 VO 生成后统一 loudnorm 到基线，再进 film.html。**重新生成/改文案 = 新文件，必须重新 norm**。**用两遍法**（单遍 dynamic 模式会在语音停顿处抽动）；zsh 内联拼 `measured_*` 参数会被 ffmpeg 进度符的 `\r` 干坏，必须先 `tr '\r' '\n'` 清洗——实测可跑脚本：
 
   ```bash
-  mkdir -p tmp   # 中间文件落工作台 tmp/（见根 AGENTS.md，禁止系统 /tmp/）
-  for f in 1 2 3 4 5 6 7 8; do
-    src="assets/audio/vo/$f.wav"; tmp="assets/audio/vo/.norm-$f.wav"
+  # 中间文件落工作台根 tmp/（根 AGENTS 约定，禁止系统 /tmp/ 或影片目录内的 tmp/）
+  TMP_DIR="$(git rev-parse --show-toplevel)/tmp"
+  mkdir -p "$TMP_DIR/ln"
+  for src in assets/audio/vo/*.wav; do
+    case "$src" in */.norm-*) continue;; esac
+    base="$(basename "$src" .wav)"; tmp="assets/audio/vo/.norm-$base.wav"
     ffmpeg -y -v info -i "$src" -af "loudnorm=I=-19:TP=-3.6:LRA=11:print_format=json" -f null /dev/null 2>&1 \
-      | tr '\r' '\n' | awk '/^\{$/{flag=1} flag{print} flag && /^\}$/{exit}' > tmp/ln-$f.json
-    MI=$(jq -r '."input_i"' tmp/ln-$f.json);   MT=$(jq -r '."input_tp"' tmp/ln-$f.json)
-    ML=$(jq -r '."input_lra"' tmp/ln-$f.json); MTH=$(jq -r '."input_thresh"' tmp/ln-$f.json)
-    MO=$(jq -r '."target_offset"' tmp/ln-$f.json)
+      | tr '\r' '\n' | awk '/^\{$/{flag=1} flag{print} flag && /^\}$/{exit}' > "$TMP_DIR/ln/$base.json"
+    MI=$(jq -r '."input_i"' "$TMP_DIR/ln/$base.json");   MT=$(jq -r '."input_tp"' "$TMP_DIR/ln/$base.json")
+    ML=$(jq -r '."input_lra"' "$TMP_DIR/ln/$base.json"); MTH=$(jq -r '."input_thresh"' "$TMP_DIR/ln/$base.json")
+    MO=$(jq -r '."target_offset"' "$TMP_DIR/ln/$base.json")
     ffmpeg -y -v error -i "$src" \
       -af "loudnorm=I=-19:TP=-3.6:LRA=11:measured_I=${MI}:measured_TP=${MT}:measured_LRA=${ML}:measured_thresh=${MTH}:offset=${MO}:linear=true" \
       -ac 1 -ar 48000 "$tmp" && mv "$tmp" "$src"
@@ -94,20 +114,26 @@ TTS 会把中文数字按"数值"读错（实测："2026 年"读成"两千零 26
     -ac 2 -ar 48000 assets/audio/music/music-bed.wav
   ```
 
-  **实测坑**：sidechain 输出长度 = 两个输入的较短者——VO 混合轨比全片短（最后一条 VO 结束即止），音乐床会被截短；必须给侧链链路加 `apad=whole_dur=<总时长>` 补静音。
+  **实测坑**：
+  - sidechain 输出长度 = 两个输入的较短者——VO 混合轨比全片短（最后一条 VO 结束即止），音乐床会被截短；必须给侧链链路加 `apad=whole_dur=<总时长>` 补静音
+  - **音乐独立 `<section>` 轨道**：`<section>` = 时间线轨道，音乐放 VO 同轨会报 `clips overlap on a track`；音乐单独一个 `<section>` 放最后
+  - **bed 响度目标 ~-25 LUFS**：`volume 0.56 / threshold 0.02 / ratio 6` 实测 bed 只有 -35 LUFS（几乎听不见）；改 `volume 0.8 / threshold 0.05 / ratio 4` → bed -25.4，mix -18.4（比 VO 基线 +0.6 dB）；目标 mix ≈ -19 ±0.6
+  - Mixkit 直链 `https://assets.mixkit.co/music/1167/1167.mp3`（上期工程素材可能被删，直链可重新下载）
 - 交付前 `openfilm look` 读输出里的 integrated LUFS / true peak，与基线比对；偏差大则调 `volume` 或重 norm，**不盲调**
 
 ## 字幕样式基线（竖屏 1080×1920）
 
 `.film/subtitles.json` 是 Studio 的领域，**禁止文本编辑器直接改**；用户明确要求调整时通过 Studio UI 或 Studio API（等同人在 Studio 操作），改前先读当前配置。
 
-**新项目默认不是基线**：Studio 竖屏默认 `pos.y=0.72`（字幕带 ~1345–1420），会压到内容。系列基线 0.80（带 ~1465–1607）必须显式应用：`PUT /api/projects/<id>/subtitles`，body 用 `{style: …}`（拿一个已用基线的工程 `.film/subtitles.json` 作模板），或 Studio UI。新片默认先应用基线，人的后续调整优先。
+**权宜例外（2026-11 实测）**：没有浏览器会话、消息里也无法走 Studio API 时，可按当前配置直接编辑 `.film/subtitles.json`——先备份原文件，只改 `pos.y` / `box` 等样式字段，改完在 Studio 预览抽帧确认。有会话时仍优先 Studio API/UI（人的改动不会被覆盖）。
+
+**新项目默认不是基线**：Studio 竖屏默认 `pos.y=0.72`（字幕带 ~1345–1420），会压到内容。系列基线 0.82（带 ~1502–1646）必须显式应用：`PUT /api/projects/<id>/subtitles`，body 用 `{style: …}`（拿一个已用基线的工程 `.film/subtitles.json` 作模板），或 Studio UI。新片默认先应用基线，人的后续调整优先。
 
 | 字段 | 基线值 | 说明 |
 |---|---|---|
-| `pos.y` | 0.80 | 相对比例，不写死像素；距底部约 384px |
+| `pos.y` | 0.82 | 相对比例，不写死像素；带 ~1502–1646 |
 | `font.sizePct` | 3.8 | 相对画幅高 |
-| `box.color` / `box.opacity` | `#000000` / 0.62 | 半透明黑底，亮背景可读（2026-11 用户确认加深） |
+| `box.color` / `box.opacity` | `#000000` / 深色片 0.25、浅色片 0.62 | 深色片轻框不压画面（2026-11 红框校准）；亮背景用 0.62 保可读 |
 | `box.radiusEm` | 0.22 | 圆角 |
 | `box.padXEm` / `padYEm` | 0.55 / 0.24 | 内边距 |
 | `stroke` / `shadow` | null | 不加描边阴影（box 已保证对比） |

@@ -31,6 +31,8 @@
 
 ## Step 2 设计方向（闸门 2）
 
+**先读 `references/cover-design.md`（必做）**：按内容类型选形式（大字报 / 图文结合 / 单图 / 拼贴 / 对比 / 海报 / 系列模板），写 **2 个候选主标题**（一个结果式、一个问题式）一起带进方向里给用户选——不给只是换了配色的伪选项。
+
 从 `references/art-direction.md` 选 3 个方向，每个写清：
 
 - 方向名 / lineage
@@ -111,6 +113,8 @@ bl image generate \
 ```bash
 node image-agent/scripts/shoot.mjs output/<slug>/<name>.html \
   --out output/<slug>/<name>.png --json
+# 小红书封面加 --min-font 90 强制字号 + feed 1:1 预览
+node image-agent/scripts/feed-preview.mjs output/<slug>/<name>.png
 ```
 
 6. 按 JSON 修：字体失败、图片缺失/低清、文字裁切、溢出、控制台错误。修完重跑。

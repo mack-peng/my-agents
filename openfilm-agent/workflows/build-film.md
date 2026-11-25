@@ -35,6 +35,8 @@
 
 ## Step 3 方案 sign-off（未确认不动手）
 
+**本流程把 `references/preproduction.md` 的闸门 1–3 合并为一次确认**（轻量模式再合并 promise + 镜头表）；闸门定义以 preproduction 为准。
+
 产出并等用户确认（列定义与轻量模式见 `references/preproduction.md`）：
 
 1. 一句话**promise**（看完记住什么，这支片子的 idea 为什么贴主题）
@@ -49,30 +51,35 @@
 
 ## Step 4 制作（确认后）
 
-按 AGENTS.md「标准工作流 · 做片」执行：
+**顺序固定：建工程 → 产出全部 VO → 写页面**（有旁白的片子若先写页面再补 VO，页内时刻表会全量重算）。
 
-1. `openfilm open output/<film-name>` 建片（Studio 先在场）
-2. 前期产物已过闸门（见 Step 3）：按镜头表逐拍写页面（`frame(0)` 即 starting state；一镜一页、同 section 用 `at` 硬切；viewport 匹配画幅）
-3. 有旁白时**音频驱动时长**：先生成全部 VO → 量实际时长 → 回填各镜 `at`/`duration` → 锁定总时长（分镜秒数是预算，不是锁定值，见 `references/audio-subtitles.md`）
-4. 影片目录内 `look` 循环校验，修到干净（同步勾 TODO）
-5. **第一版完成 → 展示接触表并等用户反馈**（"第一版完成，请确认（OK 继续 / 指出要改的）"），按反馈迭代，不自认为完成
-6. Studio 人机共编（保留 `overrides` 与 `locked` 轨道）
-7. **后期验收**：Story QA（对照镜头表逐拍过，见 `references/preproduction.md`）+ **手机尺寸检查（缩到 390px 宽看：字够大、不贴边、一屏一信息）** + 字幕抽 4 帧（基线 y=0.80 / box 62%） + 混音对基线（`references/audio-subtitles.md`）；封面按 `workflows/publish-kit.md`
-8. **默认不导出**：交付 = Studio 预览 + 交付说明；仅用户当次明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
+1. `openfilm open output/<film-name>` 建片（Studio 很快在场）
+2. **有旁白：先出全部 VO**：`get tts` 生成 → loudnorm → `ffprobe` 量实际时长 → `get asr` 词级时间 → 建各镜 cue 表（in/out；页内时刻 = cue + 0.35s 偏移）→ 回填镜头表 `at`/`duration` 锁定总时长（分镜秒数是预算，不是锁定值，见 `references/audio-subtitles.md`）。无旁白片跳过本步，按预算时长写。
+3. **写页面 Pre-flight（缺一步不得动手）**：
+   - 读 `references/visual-qa.md`（安全区/手机可读/shot-card/纯函数两条硬规则）
+   - **有字幕时**先应用字幕基线（见 `references/audio-subtitles.md`；无字幕片跳过，不碰 `.film/subtitles.json`）
+   - 按 cue 表逐拍写页面（`frame(0)` 即 starting state；一镜一页、同 section 用 `at` 硬切；viewport 匹配画幅）
+4. 第一版写完跑 `node openfilm-agent/scripts/probe-safe-area.mjs --overlap --strict output/<film-name>` 量化边界（通用探针，自动读 viewport）；越界先修再继续，改版后再跑
+5. 影片目录内 `look` 循环校验，修到干净（同步勾 TODO）
+6. **第一版完成 → 展示接触表并等用户反馈**（"第一版完成，请确认（OK 继续 / 指出要改的）"），按反馈迭代，不自认为完成
+7. Studio 人机共编（保留 `overrides` 与 `locked` 轨道）
+8. **后期验收**：按 `workflows/delivery-check.md` 执行（Story QA / 390px / 字幕 4 帧 / 混音 / 封面 / TODO 清零 / 交付说明）
+9. **默认不导出**：交付 = Studio 预览 + 交付说明；仅用户当次明确要求时 agent 执行（无字幕 `render`，带字幕 Studio 烧录）
 
 双版（横 + 竖）就建两个工程（如 `xxx` 与 `xxx-vertical`），页面同源改造、版面重排而非缩放。
 
 ## Step 5 交付说明
 
-- 构思与贴题理由（一两句）
-- 前期产物路径：影片工程 `preproduction/` 的 `script.md` / `shotlist.md`（用户要改文案从这里改）
-- Story QA 结果（逐拍过的结果，不凭印象）
-- 每个数字 / 事实的来源
-- 用户下一步能提供什么让片子更好（logo、真实截图、定稿文案）
-- 可改点：哪些文字 / 数字在页面里可直接改
-- 字幕：带字幕成片走 Studio 导出「烧录字幕」，交付前抽 4 帧确认不压字；`render` 不含字幕
-- 混音：记录 `look` 输出的 integrated LUFS / true peak，与基线比对（`references/audio-subtitles.md`）
-- 封面与发布文案：小红书默认 3:4（`workflows/publish-kit.md`）
+按 `workflows/delivery-check.md` 输出交付说明。本流程补充：构思与贴题理由、前期产物路径（工程 `preproduction/script.md` + `shotlist.md`，用户改文案从这里改）、用户下一步能提供什么（logo / 真实截图 / 定稿文案）、可改点（哪些文字/数字在页面里可直接改）。
+
+## 写页面 Heuristics（开写前扫一眼，`look` 修不掉的坑）
+
+- **截图当素材**：裁局部 + 讲解层，不整屏照搬；竖向裁切落在干净边界（标题后留白/hero 边界/Credit 行后），卡宽变化时同步换算 `img` 宽度
+- **同色渐隐掩断句**：截断处用页面同色渐变（fade）收口，别让半行字裸露
+- **卡片质感**：截图加 `contrast(1.04) saturate(1.04)` + 发丝内描边 + 统一圆角/阴影，否则嵌在深色页面里发灰
+- **`.chip` 定位**：绝对定位只用于宽卡；窄列用静态定位 + `margin-top:auto`（实测：flex 里 `position:absolute` 会叠成一团）
+- **图片页必须 `ready: window.__brief.readyImages()`**（等 `img.decode()` settle），否则 "media still seeking" 双绘不一致
+- **一屏一个信息、右界 ≤940、内容底 ≤1480**；字幕基线先应用再排版（不是做完再挪字幕）
 
 ## 反模式
 
@@ -83,4 +90,5 @@
 - ❌ 动 `locked` 轨道 / `overrides`；重编码媒体文件
 - ❌ 擅自下载大文件；声音服务未配 key 就假装能用
 - ❌ 把分镜秒数当锁定值直接开工（有旁白时以 VO 实际时长为准）；为凑时长硬裁内容
+- ❌ 有旁白时先写页面再生成 VO（页内时刻表会全量重算；VO 先行）
 - ❌ 自动导出 / 写 Desktop/Downloads；文本编辑器改 `.film/subtitles.json`
