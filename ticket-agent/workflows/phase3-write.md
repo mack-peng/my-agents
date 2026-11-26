@@ -76,6 +76,19 @@
 - **对齐同级实现**：先找同目录 / 同类型的错误处理范式（如 `CheckStatusJob` 的窄 rescue + `ExceptionGateway.alert`），再动手。
 - 有意的宽捕获必须在 Phase 3 sign-off 前单独列出并获用户确认。
 
+### 3e. Rails 后端影响面检查（仅 bobcat 后端/全栈改动）
+
+改动后端文件前，用 RailsInsight 核对 Rails 语义与影响面：
+
+- **影响面**：优先 `railsinsight_bobcat_get_review_context(files=[...], token_budget=2000)` 拿受控摘要；需要完整风险分级/受影响测试时用 `get_blast_radius(files=[...], max_depth=1)`（User depth=2 实测 215KB，易挤爆上下文）。用 `codegraph_impact` 交叉符号级影响
+- **model**：`railsinsight_bobcat_get_model(name)` → 确认 associations、validations、callbacks、concerns、columns；不要漏掉 through / polymorphic 关联（大 model 只摘关键字段）
+- **controller**：`railsinsight_bobcat_get_controller(name)` → 确认 actions、filters、strong params、rescue；继承 filter 需沿父 controller 链核对（如 `Admin::ApplicationController`）
+- **跨模块**：涉及鉴权 / Job / 邮件 / 存储 / API 时，用 `railsinsight_bobcat_get_subgraph` 或 `get_deep_analysis` 补上下文
+- **测试**：需要新增/调整 spec 时，`get_test_conventions` + `get_factory_registry`
+- **刷新**：改完代码后、最终验证前调 `railsinsight_bobcat_index_project`；再复查 `get_review_context`
+
+结果写入修改方案的「影响面」；RailsInsight 为实验性 regex 结果，关键结论用 codegraph / Read 复核。工具手册见 `references/railsinsight-tools.md`。
+
 ### 4. 编写代码
 
 注意事项：
@@ -124,6 +137,7 @@
 - [ ] 若含异常处理：已对齐同级实现的错误处理范式
 - [ ] 测试包含副作用 / 负向 / 异常传播断言，fixture 独立
 - [ ] spec 引用的常量 / gem 在 test 环境可用（核对 Gemfile 分组；环境不加载时注入替身而非直接引用，如 Bugsnag 仅 staging / production / uat 组）
+- [ ] bobcat 后端改动已用 `get_blast_radius` 核对影响面与受影响测试，改完后已 `index_project` 刷新
 - [ ] 已用工作台根 `references/bobcat-mr-final-review-be-template.md` 的 System Robustness 自审（如适用）
 - [ ] lint 不可用时已执行行宽 / 对齐 / `git diff --check` 人工兜底；未执行项未勾选
 - [ ] 已用 review 分诊标准自审 diff：是否超出工单范围、是否过度设计、是否引入历史问题

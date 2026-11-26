@@ -97,7 +97,7 @@ Jira 工单 URL 不适用本节：站点即 URL 的 Atlassian host，身份由 `
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress） |
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress 并指派给当前用户） |
 | 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（component-kit） | `workflows/phase4-commit.md` | 开发分支（仅源码）+ 测试 tag（源码 + 构建产物） |
@@ -110,7 +110,7 @@ Jira 工单 URL 不适用本节：站点即 URL 的 Atlassian host，身份由 `
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress） |
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress 并指派给当前用户） |
 | 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（bobcat） | `workflows/phase4-commit.md` | 分支 + commit |
@@ -142,12 +142,15 @@ git commit -m "fix(custom-form): prevent cursor jumping in input fields"
 - [ ] 如果工单涉及代码修改 → `.codegraph/` 存在 → 否则提示用户：`codegraph init -i`
 - [ ] 如果工单涉及样式修改 → `.cssgraph/` 存在 → 否则提示用户：`cssgraph init`（可选）
 - [ ] 如果工单涉及布局/滚动/定位 → `cssprobe-cli` 已安装（`npm install -g cssprobe-cli`）
+- [ ] 如果工单涉及 bobcat 后端/全栈 → `railsinsight_bobcat` MCP 可用（`railsinsight_bobcat_get_overview` 存在）；不可用则 fallback codegraph + Read，并在 Phase 2 记录阻塞
 - [ ] 工单后续需要回复 → `zcli-ticket -p <profile> config-show` 的 `oauthScope` 含 `tickets:write` → 否则 `config-set oauth-scope "tickets:read tickets:write"` + `oauth-login`
 - [ ] Jira 来源工单 → `acli jira auth status` 已认证 → 未认证时按 `acli-agent/AGENTS.md` 登录
 
 ### Phase 2 调研策略
 
 工单提供了 className 时，**优先使用 cssgraph**（`cssgraph_explore` / `cssgraph_callers`）定位组件代码文件，再用 codegraph 追踪逻辑。cssgraph 是 className → 组件文件的最短路径，避免盲目 grep。
+
+**bobcat 后端/全栈工单**：先调 `railsinsight_bobcat_get_overview` 建立 Rails 结构上下文，再按需用 `get_model` / `get_controller` / `get_routes` / `get_schema`；与 codegraph 的分工、配方和反模式见 `references/railsinsight-tools.md`。**纯前端 / component-kit-only 工单不启用 RailsInsight。**
 
 **BugSnag 来源工单**（描述含 BugSnag 项目名 / Dashboard 链接 / error id，或由 BugSnag 自动归档）→ 先执行 Phase 2-BN（`workflows/phase2-bugsnag.md`），完成取证后再进入代码调研。
 
@@ -176,12 +179,13 @@ Phase 2 步骤 2 判断为布局/滚动类问题时，**必须**执行运行时�
 
 ### Phase 2-BN: BugSnag 取证（仅 BugSnag 来源工单，Phase 2 判断后触发）
 
-Phase 2 步骤 2 判断为 BugSnag 来源工单时，**必须**先读 `workflows/phase2-bugsnag.md`，按「错误身份/变体 → 完整堆栈 → 影响面 → 趋势/发布基线 → 服务端核对 → 代码定位/复现」执行。未取得完整堆栈不得进入代码调研；无法定位时标 UNVERIFIABLE 并列出阻塞，不得猜根因。
+Phase 2 步骤 2 判断为 BugSnag 来源工单时，**必须**先读 `workflows/phase2-bugsnag.md`，按「错误身份/变体 → 完整堆栈 → 影响面 → 趋势/发布基线 → 服务端核对 → 代码定位/复现」执行。未取得完整堆栈不得进入代码调研；无法定位时标 UNVERIFIABLE 并列出阻塞，不得猜根因。代码定位阶段，堆栈帧属于 bobcat 后端 model/controller 时，可用 `railsinsight_bobcat_get_model` / `get_controller` 补充 Rails 结构（见 `references/railsinsight-tools.md`）。
 
 ### Phase 3: 代码编写原则
 
 - **复用优先**：先检查现有 helper、component、hook、service 是否可以复用。评估复用候选时必须检查实际实现和调用上下文，禁止仅凭名称或签名判断。
 - **项目 Heuristics**：颜色优先 `colors.less` 变量、基础控件优先 `component-kit`、LESS `calc()` 用 `~'calc(...)'` 转义、不新增 Angular/Haml legacy 代码——详见 `workflows/phase3-write.md`
+- **Rails 后端影响面**：bobcat 后端改动前用 `railsinsight_bobcat_get_review_context(files, token_budget=2000)` 或 `get_blast_radius(max_depth=1)` 核对影响面与受影响测试；改 model/controller 前用 `get_model` / `get_controller` 确认 associations、filters、strong params。改完后调 `index_project` 刷新索引，再复查影响面（详见 `references/railsinsight-tools.md`）
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
 - **重构准入**：仅在用户明确要求时执行，读工作台根 `references/refactor-admission.md`；动手前产出「改动前代码分支清单 → 改动后分支清单映射 → 等价性矩阵」，经用户确认；禁止用三元 / `&&` / optional chaining 吞掉 early-return 守卫。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。
@@ -313,6 +317,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 - [x] 陈述调研策略并获得确认
 - [x] 判断项目 heuristics 适用性。结果：...
 - [x] codegraph_explore 定位符号。结果：...
+- [x] railsinsight_bobcat_get_overview / get_model 核对 Rails 结构（仅 bobcat 后端）。结果：...
 - [x] 分析根因。结果：...
 ✅ Phase 2 Sign-off: 已确认
 
@@ -353,7 +358,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 每个 Phase 完成后：
 1. 输出总结，包含关键决策点
 2. 明确询问："Phase N 完成，请确认是否继续？（回复 OK 继续）"
-3. **Jira 来源 · Phase 1**：用户确认后，先执行状态联动 To Do → In Progress（先查后改，幂等）；失败如实报告且**不阻塞**后续流程。之后再按运行模式落盘 / 进入 Phase 2
+3. **Jira 来源 · Phase 1**：用户确认后，先执行状态联动 To Do → In Progress（先查后改，幂等），再指派给当前用户（`acli jira workitem assign --assignee "@me"`，结果幂等）；任一失败如实报告且**不阻塞**后续流程。之后再按运行模式落盘 / 进入 Phase 2
 4. **飞书模式**：用户确认后，先通过 feishu-agent 追加飞书文档，再进入下一 Phase
 5. **Session 模式**：用户确认后，在对话中记录本 Phase 摘要，直接进入下一 Phase
 6. 如用户提出修改意见，回到当前 Phase 的对应步骤
@@ -374,12 +379,13 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 - 本 agent 不直接使用 glab / zcli-ticket 命令
 - 需要工单数据 → `use zendesk-agent`
-- Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同；Phase 1 sign-off 后状态联动 To Do → In Progress（先查后改，幂等，失败不阻塞）
+- Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同；Phase 1 sign-off 后状态联动 To Do → In Progress（先查后改，幂等）并指派给当前用户（`--assignee "@me"`），失败不阻塞
 - Jira 工单回复：`acli jira workitem comment create --key <KEY>`；Jira 评论无公开/隐私之分，发送前同样需展示草稿并获得 sign-off
 - 需要监控平台数据（BugSnag 错误全景 / 单错误深度 / 事件对比 / 趋势 / 维度归因）→ `use bugsnag-agent`（只读；BugSnag 不提供请求延迟指标——p95 / 超时率等 APM 数据仍需服务端或监控平台，输出时如实标注外部依赖）
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use cssprobe-agent`，按 cssprobe-agent 流程交互式完成诊断
 - 需要 MR 操作 → `use gitlab-agent`；`glab mr` 命令必须在 `$BOBKAT_PATH` 目录下执行（依赖 git remote 解析 host）
 - 涉及 component-kit 源码修改 → 详见 `references/component-kit-workflow.md`
+- **RailsInsight（bobcat 后端/全栈）**：MCP server `railsinsight_bobcat`，静态模式（`--no-introspection`），仅用于 bobcat 后端/全栈工单；实验性工具，关键结论用 codegraph / Read 复核；改代码后调 `index_project` 刷新；禁用 `get_full_index`。工具手册见 `references/railsinsight-tools.md`
 - Git 操作在 `$BOBKAT_PATH` 目录执行
 - **飞书模式**：需要飞书操作 → `use feishu-agent`。跨机器时提供飞书文档 URL 即可续接
 - 需要回复工单（写操作）→ `use zendesk-agent`；`comment-create` 默认公开，内部备注必须显式 `--private`；`Submitted by` 取 `zendesk-agent/.env` 的 `SUBMITTED_BY`

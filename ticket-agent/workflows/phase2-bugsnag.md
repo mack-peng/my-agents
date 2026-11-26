@@ -136,6 +136,7 @@ bugsnag-cli --json release-group-list --project <slug> --release-stage-name prod
 - 压缩 bundle：用 chunk 文件名 + 行 / 列偏移反查源文件；核对产线 chunk 与工作区版本
 - 内联脚本：用 `ticket-agent/scripts/web-inline-map.mjs` 把文档相对 `line:col` 映射到 inline block，校验列号是否越界
 - 多实现并存：按技术栈演进 / git 信息 / 可达性确认「在用路径」
+- **bobcat 后端帧**：帧中的类对应 model/controller 时，用 `railsinsight_bobcat_get_model` / `get_controller` 补 associations、filters、strong params；帧涉及路由/URL 时用 `get_routes`。RailsInsight 只补结构，文件/行为仍以 codegraph + Read 为准
 - 定位不到、源码与产线不一致、事件时 HTML 不可得 → 标 UNVERIFIABLE，列阻塞，不得猜
 
 ### 8. 复现与验证
@@ -170,6 +171,7 @@ bugsnag-cli --json release-group-list --project <slug> --release-stage-name prod
 | ... | ... | ... | true/null | 一致 / 偏移 / 不一致 |
 
 - 责任归属：前端 / 服务端 / 第三方 / 未确认
+- RailsInsight 补充（bobcat 后端帧）：`get_model` / `get_controller` / `get_routes` 的关键结果；与 codegraph / Read 冲突时以源码为准
 
 ### 交叉核对
 - 服务端 / 日志 / 接口实测：...

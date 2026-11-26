@@ -19,7 +19,7 @@
 
 按 `[~]` → `[x]` 规则实时更新。Phase 2 sign-off 前确认 `[ ]` 和 `[~]` 已全部清零。
 
-Phase 2 TODO 至少包含：陈述调研策略并获确认 / 项目 heuristics 适用性判断 / 符号定位 / 根因分析。BugSnag 来源工单还必须包含：完整堆栈落表 / 同族变体拆分 / 趋势与发布基线 / 服务端核对。
+Phase 2 TODO 至少包含：陈述调研策略并获确认 / 项目 heuristics 适用性判断 / 符号定位 / 根因分析。BugSnag 来源工单还必须包含：完整堆栈落表 / 同族变体拆分 / 趋势与发布基线 / 服务端核对。**bobcat 后端/全栈工单**还必须包含：`railsinsight_bobcat_get_overview` / `get_model` 或 `get_controller`（按工单对象）以及 Rails 结构事实落表。
 
 ## 差异对比策略
 
@@ -146,7 +146,7 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 > **调研策略**：
 > - 关键词/符号：[列出要搜索的关键词]
-> - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_diagnose / cssgraph_explore]
+> - 搜索方式：[codegraph_explore / codegraph_search / cssgraph_diagnose / cssgraph_explore / railsinsight_bobcat_get_overview / get_model / get_controller / get_routes / get_schema]
 > - Heuristics：[对照「项目 Heuristics」列出拟参考的条目，如 bobcat 代码定位 / component-kit 复用 / 后端 IO]
 > - 取证手段：[运行时取证/验证方式，如注入 scrollTo 监听抓调用栈、route abort 修改加载时序、dom-report 等]
 > - 预期范围：[预估涉及的文件范围]
@@ -158,6 +158,9 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 | 规则 | 说明 |
 |------|------|
 | **cssgraph 优先定位组件** | 工单提供了 className 时，先用 `cssgraph_explore` / `cssgraph_callers` 定位引用该 className 的组件文件，再用 codegraph 追踪逻辑。cssgraph 是 className → 组件文件的最短路径 |
+| **Rails 语义先 get_overview** | bobcat 后端/全栈工单先调 `railsinsight_bobcat_get_overview`；再按对象用 `get_model` / `get_controller` / `get_routes` / `get_schema`。仅限 bobcat 后端/全栈 |
+| **RailsInsight 与 codegraph 分工** | Rails 约定（associations / filters / routes / schema）→ RailsInsight；符号定位、调用链、影响面 → codegraph；冲突时以源码 / Read 为准 |
+| **禁用 get_full_index** | 默认 12k token，容易挤爆上下文；用针对性工具替代 |
 | **codegraph_explore 优先** | 一次性获得相关符号和源码，减少 round-trip |
 | **maxFiles=8** | explore 的 maxFiles 默认 8，避免上下文爆炸 |
 | **禁止全量 grep** | 不执行无路径限制的 grep |
@@ -169,11 +172,17 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 #### 4.3 分层递进路径
 
 ```
+0. bobcat 后端/全栈：railsinsight_bobcat_get_overview
+   → get_model / get_controller / get_routes / get_schema（按对象）
+   ↓ 需要符号/调用链时
 1. codegraph_explore(query="关键词1 关键词2", maxFiles=8)
    ↓ 信息不足时
 2. codegraph_search(query="精确符号名") → codegraph_node(symbol, includeCode=true)
    ↓ 涉及调用链时
 3. codegraph_callers(symbol) / codegraph_callees(symbol)
+   ↓ bobcat 后端改动影响面时
+3b. railsinsight_bobcat_get_review_context(files=[...], token_budget=2000)
+    （完整风险分级用 get_blast_radius(files=[...], max_depth=1)；depth=2 输出可达数百 KB）→ codegraph_impact 交叉
    ↓ 样式问题时
 4. cssgraph_diagnose(className=".target", chain=[".wrapper .parent1", ".wrapper .parent2 .target"])
    ↓ 需要样式覆盖/引用信息时
@@ -188,6 +197,7 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 - **问题链路**：从触发点到出问题的完整路径
 - **根因定位**：具体文件、代码段、逻辑
+- **Rails 结构核对**：bobcat 后端/全栈工单核对 associations / validations / callbacks / filters / strong params / routes / schema 是否改变根因或影响面结论；RailsInsight 结果必须用 codegraph / Read 复核
 - **Heuristics 适用性**：对照「项目 Heuristics」判断适用条目是否改变根因或影响面结论；不适用的条目一句话说明理由
 - **影响范围**：哪些组件/页面/流程受影响
 - **数据类 bug 影响面**：根因是脏数据时，枚举该数据的全部写路径（`save!` / `update` / 导入）与副作用消费链路（cookie、job、callback 等下游读取），修复需覆盖所有会因同一脏数据抛错的调用点，不止于报错堆栈帧
@@ -200,8 +210,12 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 
 ### 调研策略
 - 搜索关键词: ...
-- 搜索方式: codegraph_explore / cssgraph_diagnose / cssgraph_explore
+- 搜索方式: codegraph_explore / cssgraph_diagnose / cssgraph_explore / railsinsight_bobcat_get_overview / get_model / get_controller / get_routes / get_schema
 - Heuristics: 适用条目及结论（不适用时给简短理由）
+
+### Rails 结构事实（仅 bobcat 后端/全栈）
+- 工具调用与关键事实（如 `get_overview` 的栈信息、`get_model User` 的 `has_many :sites`、`get_controller` 的 filters 及父 controller 链核对结果）
+- 交叉验证：codegraph / Read 的对应结果；若冲突，说明以源码为准
 
 ### 相关文件
 | 文件 | 说明 |

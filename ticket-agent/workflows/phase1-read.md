@@ -153,11 +153,11 @@ Jira 无数字工单 ID，标题用 `[工单 KEY] 标题`（如 `[SI-863] Ecomme
 - 如工单含视频附件，提醒用户人工查看录屏内容
 - 如问题描述不清晰，提出具体问题请用户补充
 - 如 livesite URL 缺失，请用户提供
-- Jira 来源：用户确认后会先执行 §6 的状态联动（To Do → In Progress），再落飞书 / 进入 Phase 2
+- Jira 来源：用户确认后会先执行 §6 的状态联动（To Do → In Progress）并指派给当前用户，再落飞书 / 进入 Phase 2
 
 ### 6. Sign-off 后
 
-**Jira 来源（飞书 / Session 模式通用）**：用户确认后先做状态联动，再按运行模式落盘 / 进入 Phase 2。
+**Jira 来源（飞书 / Session 模式通用）**：用户确认后先做状态联动 + 指派，再按运行模式落盘 / 进入 Phase 2。
 
 ```bash
 # 1. 幂等检查：已是 In Progress 则跳过
@@ -168,11 +168,17 @@ acli jira workitem transition --key <KEY> --status "In Progress" --yes
 
 # 3. 回查确认
 acli jira workitem view <KEY> --json | jq -r '.fields.status.name'
+
+# 4. 指派给当前用户（@me；结果幂等，已是我时重指派无副作用）
+acli jira workitem assign --key <KEY> --assignee "@me" --yes
+
+# 5. 回查确认
+acli jira workitem view <KEY> --json | jq -r '.fields.assignee.displayName'
 ```
 
 - 其他 Jira 项目状态名不同时，先确认实际名称再转（不猜）：
   `acli jira workitem search --jql "project = <PREFIX> AND statusCategory = 4" --limit 1 --json | jq -r '.[].fields.status.name'`
-- 转换失败（权限 / 工作流限制）→ 如实报告原因，**不阻塞**进入 Phase 2。
+- 转换 / 指派失败（权限 / 工作流限制）→ 如实报告原因，**不阻塞**进入 Phase 2。
 
 **飞书模式**：**Use feishu-agent** →
 
