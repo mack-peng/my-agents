@@ -78,6 +78,7 @@ glab mr create \
 
 ## MR Review 反馈处理
 
+0. 先按 `references/review-triage.md` 分诊每条评论：事实是否成立、是否本工单范围、是否过度设计；再决定接受 / 部分接受 / 另开票 / 拒绝。**禁止盲改或静默忽略**。
 1. 在开发分支上修改代码
 2. 推送新 commit（不 squash，不 force push）
 3. 在 MR 中回复 Reviewer
