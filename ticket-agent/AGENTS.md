@@ -185,7 +185,7 @@ Phase 2 步骤 2 判断为 BugSnag 来源工单时，**必须**先读 `workflows
 
 - **复用优先**：先检查现有 helper、component、hook、service 是否可以复用。评估复用候选时必须检查实际实现和调用上下文，禁止仅凭名称或签名判断。
 - **项目 Heuristics**：颜色优先 `colors.less` 变量、基础控件优先 `component-kit`、LESS `calc()` 用 `~'calc(...)'` 转义、不新增 Angular/Haml legacy 代码——详见 `workflows/phase3-write.md`
-- **Rails 后端影响面**：bobcat 后端改动前用 `railsinsight_bobcat_get_review_context(files, token_budget=2000)` 或 `get_blast_radius(max_depth=1)` 核对影响面与受影响测试；改 model/controller 前用 `get_model` / `get_controller` 确认 associations、filters、strong params。改完后调 `index_project` 刷新索引，再复查影响面（详见 `references/railsinsight-tools.md`）
+- **Rails 后端影响面**：bobcat 后端改动前用 `railsinsight_bobcat_get_review_context` 核对影响面与受影响测试，需要完整风险分级时用 `railsinsight_bobcat_get_blast_radius(max_depth=1)`；改 model/controller 前用 `railsinsight_bobcat_get_model` / `railsinsight_bobcat_get_controller` 确认 associations、filters、strong params。改完后调 `railsinsight_bobcat_index_project` 刷新索引，再复查影响面（token 预算与实测输出见 `references/railsinsight-tools.md`）
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
 - **重构准入**：仅在用户明确要求时执行，读工作台根 `references/refactor-admission.md`；动手前产出「改动前代码分支清单 → 改动后分支清单映射 → 等价性矩阵」，经用户确认；禁止用三元 / `&&` / optional chaining 吞掉 early-return 守卫。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。

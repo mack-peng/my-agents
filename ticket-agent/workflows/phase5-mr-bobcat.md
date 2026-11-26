@@ -87,7 +87,7 @@ glab mr create \
    # 列出 thread（取 discussion id、首条作者与时间）
    glab api "projects/<ns>%2F<repo>/merge_requests/<iid>/discussions?per_page=100" | \
      jq -r '.[] | select(.notes[0].system != true) | [.notes[0].created_at, .id, .notes[0].author.username, .notes[0].body[0:50]] | @tsv'
-   # 在对应 thread 内回复（每条 must / recommend 各一条，注明修复 commit 与对应改动）
+   # 在对应 thread 内回复（reviewer 每条评论 must / recommend 各回一条，注明修复 commit 与对应改动）
    glab api "projects/<ns>%2F<repo>/merge_requests/<iid>/discussions/<disc_id>/notes" -X POST -f body="<修复说明>"
    ```
 

@@ -8,9 +8,11 @@ bobcat 的 **Rails 语义层**。补充 codegraph 看不到的 Rails 约定：as
 
 - Server 名：`railsinsight_bobcat`
 - 工具名前缀：`railsinsight_bobcat_*`
+- 安装：`npm i -g @reinteractive/rails-insight`（实测 v1.0.48）
+- 配置：全局 `~/.config/opencode/opencode.json` 的 `mcp.railsinsight_bobcat`，local 模式，命令带 `-p <bobcat 绝对路径> --no-introspection`
 - 模式：静态解析（`--no-introspection`），不启动 Rails、不连数据库
 - 索引：启动时建立；bobcat 约 15,000 文件 / 9 秒
-- 启动：OpenCode 首次连接约 10-20 秒；已配置 60s startup timeout
+- 启动：OpenCode 首次连接约 10-20 秒；startup timeout 60s
 - 性质：实验性（7★），regex 提取；关键结论必须用 codegraph / Read 复核
 
 不可用时（`opencode mcp list` 无 connected，或工具不存在）：
@@ -51,6 +53,7 @@ bobcat 的 **Rails 语义层**。补充 codegraph 看不到的 Rails 约定：as
 | `get_review_context` | `files`、`base_ref`、`risk_filter`、`token_budget` | 按 token 预算给受影响 model/controller 结构摘要 | User 5.4KB（token_budget=2000） | 大范围影响面首选 |
 | `get_test_conventions` | 无 | spec 风格、let 风格、auth helper、factories、shared examples | 2.6KB | 写测试前 |
 | `get_factory_registry` | `model` | 某 model 的 factory、traits、sequences、associations | 0.3KB | 写 spec 前 |
+| `get_well_tested_examples` | `category`、`limit` | 结构性最强的现有 spec，作为风格参考 | 小 | 写 spec 需要范例时 |
 | `index_project` | `force` | 重新索引 | — | 改代码后刷新；约 9 秒 |
 
 **禁用**：`get_full_index`（默认 12k token，容易挤爆上下文）。除非用户明确要求，否则不调用。
@@ -86,7 +89,7 @@ bobcat 的 `User` 是超大 model，工具输出不可默认全量入上下文�
 
 1. `get_controller <Controller>` — actions、filters、strong params、rescue；继承 filter 需查父 controller
 2. filters 为空时，用 `get_controller` 查父 controller（如 `Admin::ApplicationController`）
-3. `get_routes` — 确认路由与 namespace（输出 254KB，仅路由问题使用，摘要后丢弃原文）
+3. 涉及路由 / namespace 时：`get_routes` — 确认路由与 namespace（输出 254KB，摘要后丢弃原文）
 4. `search_patterns`（如 `before_action`）— 查同类 controller 的写法
 5. `codegraph_explore` — 展开具体方法/调用链
 

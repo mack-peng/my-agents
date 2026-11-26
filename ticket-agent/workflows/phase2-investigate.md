@@ -180,9 +180,9 @@ bobcat 迭代多年，同一功能可能存在多个相似的 legacy 实现。**
 2. codegraph_search(query="精确符号名") → codegraph_node(symbol, includeCode=true)
    ↓ 涉及调用链时
 3. codegraph_callers(symbol) / codegraph_callees(symbol)
-   ↓ bobcat 后端改动影响面时
-3b. railsinsight_bobcat_get_review_context(files=[...], token_budget=2000)
-    （完整风险分级用 get_blast_radius(files=[...], max_depth=1)；depth=2 输出可达数百 KB）→ codegraph_impact 交叉
+   ↓ bobcat 后端改动影响面时（token 预算见 references/railsinsight-tools.md）
+   · railsinsight_bobcat_get_review_context(files=[...])
+     （完整风险分级用 get_blast_radius(files=[...], max_depth=1)）→ codegraph_impact 交叉
    ↓ 样式问题时
 4. cssgraph_diagnose(className=".target", chain=[".wrapper .parent1", ".wrapper .parent2 .target"])
    ↓ 需要样式覆盖/引用信息时
