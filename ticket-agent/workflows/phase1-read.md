@@ -153,8 +153,26 @@ Jira 无数字工单 ID，标题用 `[工单 KEY] 标题`（如 `[SI-863] Ecomme
 - 如工单含视频附件，提醒用户人工查看录屏内容
 - 如问题描述不清晰，提出具体问题请用户补充
 - 如 livesite URL 缺失，请用户提供
+- Jira 来源：用户确认后会先执行 §6 的状态联动（To Do → In Progress），再落飞书 / 进入 Phase 2
 
 ### 6. Sign-off 后
+
+**Jira 来源（飞书 / Session 模式通用）**：用户确认后先做状态联动，再按运行模式落盘 / 进入 Phase 2。
+
+```bash
+# 1. 幂等检查：已是 In Progress 则跳过
+acli jira workitem view <KEY> --json | jq -r '.fields.status.name'
+
+# 2. 非 In Progress 时转换（--yes 免交互）
+acli jira workitem transition --key <KEY> --status "In Progress" --yes
+
+# 3. 回查确认
+acli jira workitem view <KEY> --json | jq -r '.fields.status.name'
+```
+
+- 其他 Jira 项目状态名不同时，先确认实际名称再转（不猜）：
+  `acli jira workitem search --jql "project = <PREFIX> AND statusCategory = 4" --limit 1 --json | jq -r '.[].fields.status.name'`
+- 转换失败（权限 / 工作流限制）→ 如实报告原因，**不阻塞**进入 Phase 2。
 
 **飞书模式**：**Use feishu-agent** →
 

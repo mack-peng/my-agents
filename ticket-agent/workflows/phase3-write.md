@@ -27,6 +27,8 @@
 > - **Heuristics**: [适用条目及处理，如 colors.less 变量 / component-kit 复用 / LESS calc 转义]
 > - **影响面**: 这些改动会影响哪些功能
 
+**数据类 bug 修复范围**：根因是脏数据时，先列出该数据的全部写路径与副作用消费链路（cookie / job / callback），逐条确认是否需要同等防御或兜底；只修报错堆栈帧视为方案遗漏。
+
 ### 3b. CSS 改动影响面检查
 
 涉及 CSS 修改时，用 cssgraph 评估爆炸半径：
@@ -121,6 +123,7 @@
 - [ ] 若含异常处理：异常类型已收窄，未用大类兜底，吞掉后果已说明
 - [ ] 若含异常处理：已对齐同级实现的错误处理范式
 - [ ] 测试包含副作用 / 负向 / 异常传播断言，fixture 独立
+- [ ] spec 引用的常量 / gem 在 test 环境可用（核对 Gemfile 分组；环境不加载时注入替身而非直接引用，如 Bugsnag 仅 staging / production / uat 组）
 - [ ] 已用工作台根 `references/bobcat-mr-final-review-be-template.md` 的 System Robustness 自审（如适用）
 - [ ] lint 不可用时已执行行宽 / 对齐 / `git diff --check` 人工兜底；未执行项未勾选
 - [ ] 已用 review 分诊标准自审 diff：是否超出工单范围、是否过度设计、是否引入历史问题

@@ -97,7 +97,7 @@ Jira 工单 URL 不适用本节：站点即 URL 的 Atlassian host，身份由 `
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述 |
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress） |
 | 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（component-kit） | `workflows/phase4-commit.md` | 开发分支（仅源码）+ 测试 tag（源码 + 构建产物） |
@@ -110,7 +110,7 @@ Jira 工单 URL 不适用本节：站点即 URL 的 Atlassian host，身份由 `
 
 | # | 阶段 | 委托 | 产出 |
 |---|------|------|------|
-| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述 |
+| 1 | 阅读工单 | `workflows/phase1-read.md` | 问题描述（Jira：确认后转 In Progress） |
 | 2 | 调研分析 | `workflows/phase2-investigate.md` | 根因 + 代码路径 |
 | 3 | 代码编写 | `workflows/phase3-write.md` | 方案 + 影响面 |
 | 4 | 提交代码（bobcat） | `workflows/phase4-commit.md` | 分支 + commit |
@@ -185,6 +185,8 @@ Phase 2 步骤 2 判断为 BugSnag 来源工单时，**必须**先读 `workflows
 - **最小 diff**：修改现有文件时控制范围，不引入与根因无关的变更。如果确实需要较大改动，先向用户说明为什么小改动不够。
 - **重构准入**：仅在用户明确要求时执行，读工作台根 `references/refactor-admission.md`；动手前产出「改动前代码分支清单 → 改动后分支清单映射 → 等价性矩阵」，经用户确认；禁止用三元 / `&&` / optional chaining 吞掉 early-return 守卫。
 - **验证先行**：编码完成后先运行 `tsc --noEmit` / `eslint` 等检查，修完所有 error 再提交用户 sign-off。无法运行时记录阻塞原因。
+- **数据类 bug 修复覆盖**：根因是脏数据时，列出该数据全部写路径与副作用消费链路（cookie / job / callback），逐条确认防御范围，不止于报错堆栈帧
+- **spec 环境自检**：spec 引用的常量 / gem 须在 test 环境可用（核对 Gemfile 分组），不可用时注入替身
 - **不写注释**：用自描述的命名和结构表达意图；防御分支例外，需一行注释说明触发输入。
 
 ### Phase 4: 代码提交
@@ -351,12 +353,13 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 每个 Phase 完成后：
 1. 输出总结，包含关键决策点
 2. 明确询问："Phase N 完成，请确认是否继续？（回复 OK 继续）"
-3. **飞书模式**：用户确认后，先通过 feishu-agent 追加飞书文档，再进入下一 Phase
-4. **Session 模式**：用户确认后，在对话中记录本 Phase 摘要，直接进入下一 Phase
-5. 如用户提出修改意见，回到当前 Phase 的对应步骤
-6. **component-kit 变更时**：Phase 4 sign-off 后停止，等待用户通知是否进入 Phase 4b（bobcat 依赖更新）。用户说"跳过"则直接进入 Phase 5
-7. **component-kit 变更时**：Phase 5 sign-off（MR review 通过）后停止，等待用户通知是否进入 Phase 5b（生产 tag + bobcat MR）。用户说"跳过"则直接结束
-8. **Phase 6（工单回复）**：仅在用户明确说"回复工单"后执行；发送内部备注前必须展示完整草稿并获得 sign-off；发送后不自动公开回复、不改 status
+3. **Jira 来源 · Phase 1**：用户确认后，先执行状态联动 To Do → In Progress（先查后改，幂等）；失败如实报告且**不阻塞**后续流程。之后再按运行模式落盘 / 进入 Phase 2
+4. **飞书模式**：用户确认后，先通过 feishu-agent 追加飞书文档，再进入下一 Phase
+5. **Session 模式**：用户确认后，在对话中记录本 Phase 摘要，直接进入下一 Phase
+6. 如用户提出修改意见，回到当前 Phase 的对应步骤
+7. **component-kit 变更时**：Phase 4 sign-off 后停止，等待用户通知是否进入 Phase 4b（bobcat 依赖更新）。用户说"跳过"则直接进入 Phase 5
+8. **component-kit 变更时**：Phase 5 sign-off（MR review 通过）后停止，等待用户通知是否进入 Phase 5b（生产 tag + bobcat MR）。用户说"跳过"则直接结束
+9. **Phase 6（工单回复）**：仅在用户明确说"回复工单"后执行；发送内部备注前必须展示完整草稿并获得 sign-off；发送后不自动公开回复、不改 status
 
 ## Hard Stop
 
@@ -371,7 +374,7 @@ nodenv global 22.13.0 && lark-cli docs +fetch --doc "..."
 
 - 本 agent 不直接使用 glab / zcli-ticket 命令
 - 需要工单数据 → `use zendesk-agent`
-- Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同
+- Jira 来源工单：读取 / 评论经 `acli`（先读 `acli-agent/AGENTS.md`），Phase 2 起流程与 Zendesk 相同；Phase 1 sign-off 后状态联动 To Do → In Progress（先查后改，幂等，失败不阻塞）
 - Jira 工单回复：`acli jira workitem comment create --key <KEY>`；Jira 评论无公开/隐私之分，发送前同样需展示草稿并获得 sign-off
 - 需要监控平台数据（BugSnag 错误全景 / 单错误深度 / 事件对比 / 趋势 / 维度归因）→ `use bugsnag-agent`（只读；BugSnag 不提供请求延迟指标——p95 / 超时率等 APM 数据仍需服务端或监控平台，输出时如实标注外部依赖）
 - 需要浏览器操作（Phase 2 livesite 复现）→ `use cssprobe-agent`，按 cssprobe-agent 流程交互式完成诊断
