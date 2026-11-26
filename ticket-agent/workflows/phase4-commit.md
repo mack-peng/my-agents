@@ -17,6 +17,35 @@ Phase 3 sign-off 后，根据修改目标自动选择路径：
 - **独立提交**：重构必须使用独立 `refactor:` commit，禁止与 `fix:` / `feat:` 混提交。
 - **body 证据**：commit body 附 `references/refactor-admission.md` 要求的「旧→新代码分支清单映射」与「等价性矩阵」结论；无证据不得写 "No behavior change"。
 
+## 工作区隔离：worktree 场景（所有路径通用）
+
+提交前 `git status` 若发现**与本工单无关的文件变动**（他人/其他工作流的 staged WIP 或未暂存改动），禁止在主工作区直接 add/commit——会把他人 WIP 混进本工单 commit。改用 **git worktree** 隔离：
+
+```bash
+# 1. 基于 origin/develop 建 worktree + 本工单开发分支（worktree 路径放仓库同级，不放仓库内）
+git fetch origin develop
+git worktree add <repo>-<ticket-key> -b <branch-name> origin/develop
+
+# 2. 在 worktree 中只重新应用本工单改动并提交（禁止复制含他人 WIP 的文件；逐 hunk 确认）
+cd <repo>-<ticket-key>
+git add <only-this-ticket-files>
+git commit -m "fix(<area>): <简短描述>"
+git push origin <branch-name>
+
+# 3. 测试分支 cherry-pick（见下方 worktree 场景规则：先 fetch 再校验 HEAD）
+git fetch origin <test-branch>
+# 校验 worktree HEAD 与 origin/<test-branch> 一致后 cherry-pick / 推送
+
+# 4. 完成后清理（分支引用保留在主仓）
+cd <主仓>
+git worktree remove <repo>-<ticket-key>
+```
+
+规则：
+- worktree 内只允许出现本工单的改动；文件级复制前必须确认该文件无他人 WIP（如 spec 无 WIP 可整文件复制，controller 有 WIP 时逐行重新应用）
+- 他人 WIP 留在主工作区不动；不 stash、不 reset、不触碰 index
+- commit 前用 `git diff --cached` 核对 staged 内容只含本工单 hunk
+
 ---
 
 ## component-kit 路径
