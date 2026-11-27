@@ -104,7 +104,13 @@
 
 加载的清单来源、范围理由、逐条检查与关联 issue id 记入 artifact。项目特化清单按方向引用工作区模板（工单 → `../references/bobcat-mr-bugfix-{be,fe}-template.md`；项目 → `../references/bobcat-mr-final-review-{be,fe}-template.md`）。
 
-状态标记与 checklist 纪律见 `templates/review-artifacts.md`。**任何 plausible risk 必须进 issue 列表（Open / Needs confirmation），不得只埋在清单里。**
+状态标记与 checklist 纪律见 `templates/review-artifacts.md`。Phase 2–3 的候选发现先按下方准入规则判断，再进入 issue 列表。
+
+### 发现准入
+
+- **变更评审**：以实际 diff 的基线和已确认的验收目标为准。每条 issue 写明关联的变更或验收条款、可复核的触发条件、基线与当前行为的差异或验收缺口。可以沿调用链检查未改动的代码，发布时优先锚定导致问题的变更。
+- 本次变更引入、触发或放大的问题，以及当前交付的验收缺口，可以进入 issue 列表。如果有具体关联但关键事实待核验，标 `Needs confirmation`，写明所需证据。纯理论风险或已确认与本次变更和验收无关的存量问题，默认结束跟进。
+- **审计指定文件或项目**：用户明确要求评审存量代码时，以指定目标和范围判断发现是否相关，记录触发条件与现有行为。附有 MR 的文件路径仅作为定位时，仍使用变更评审判据。
 
 ---
 
@@ -120,7 +126,7 @@
 ## 失败与增量规则
 
 - **reviewer 失败 / 取消**：用相同 batch 编号与卡片路径重派，卡片覆盖写；`TASK_STATE.md` 记录 attempt 次数与失败原因；不新增 batch 编号
-- **round 2+ 触发**：MR 出现新 commit、或既有 issue 被上游修复推送变化时启动增量轮：新建 `review-round-delta.md`，只检查「新增/变更文件 + registry 中 Open / Needs confirmation 的 issue」，不重放历史；issue 更新状态（Fixed / Obsolete）而非删除
+- **round 2+ 触发**：MR 有新 commit、既有 issue 的上游修复有变化，或作者提供了可复核的新证据时，更新 `review-round-delta.md`。核对相关增量 diff 和受影响的 `Open` / `Needs confirmation` issue。即使 head 未变，也可在当前 head 对照基线复核作者的证据。风险已消除标 `Fixed`，证据显示原发现不适用于当前变更或验收时标 `Obsolete`，均记录对应依据。
 - **round 2+ 关闭讨论**：复核确认 `Fixed` / `Obsolete` 后，按 `workflows/publish.md`「修复后关闭讨论」resolve 对应行内 discussion；`Open` / `Needs confirmation` 保持 unresolved。验证以代码 / 测试 / 复现为准，不以作者声称修复为依据；resolve 结果写入 `review-round-delta.md`
 
 ---
@@ -148,6 +154,6 @@
 - 每个加载的 guideline scope 有对应 guideline-check artifact，或 index 记录不适用/阻塞理由
 - 结构化 checklist 完整：相关 spec/design 条目 + 每个加载的 guideline 子检查，逐项标记状态
 - issue 列表来自 registry + 详情文件，均有证据支撑并分级；重复评审更新状态而非删除
-- 任何 plausible risk / 可能 bug / 缺失证据 / 不清楚权衡都进入 issue 列表（Open / Needs confirmation）；只有明确安全项仅出现在清单中
+- issue 列表中的发现均符合准入规则，并附范围关联及证据。具有具体关联的待核验项记录所缺证据。阻塞列表只收录有证据支持的 `[must]`。
 - `review.md` 由 contract 声明的源清单机械拼装完成，未语义重读全部正文
 - 默认未发布任何评论，或仅经用户显式确认后发布；Round 2+ 的 `Fixed` / `Obsolete` issue 已按 `workflows/publish.md` resolve 对应 discussion，或记录了失败原因

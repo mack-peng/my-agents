@@ -6,7 +6,7 @@
 
 **判断优先**：以下均为提示性启发，不是硬规则。当偏离是更优解时，在 issue/card 里简短记录上下文理由。项目特定阈值（如监控路径、性能/IO 阈值、依赖体积）以目标项目 `AGENTS.md` 或规范为准。
 
-**Stance**：`[must]` 合并前必须处理｜`[recommend]` 强烈建议｜`[non-blocking]` 不阻塞。P1/P2 通常为 `[must]`。
+**Stance** 依据本次变更的影响和验收证据判断，定义见 [评审模板](../templates/review-artifacts.md)。
 
 ---
 

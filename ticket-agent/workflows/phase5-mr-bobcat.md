@@ -78,21 +78,19 @@ glab mr create \
 
 ## MR Review 反馈处理
 
-0. 先按 `references/review-triage.md` 分诊每条评论：事实是否成立、是否本工单范围、是否过度设计；再决定接受 / 部分接受 / 另开票 / 拒绝。**禁止盲改或静默忽略**。
-1. 在开发分支上修改代码
-2. 推送新 commit（不 squash，不 force push）
-3. **逐条行内回复** Reviewer 的每个 discussion thread（禁止只发一条 MR 总评论）：
+1. 按 ticket-agent 的 [Review 评论分诊](../references/review-triage.md) 核验并决定每条评论的处置。
+2. 仅在分诊确定需要本 MR 修复时，在开发分支做最小改动，回归验证后推送新 commit（不 squash，不 force push）。
+3. **逐条行内回复** Reviewer 的每个 discussion thread，说明证据和处置结论。已有修复时附提交 SHA 和对应改动。
 
    ```bash
    # 列出 thread（取 discussion id、首条作者与时间）
    glab api "projects/<ns>%2F<repo>/merge_requests/<iid>/discussions?per_page=100" | \
      jq -r '.[] | select(.notes[0].system != true) | [.notes[0].created_at, .id, .notes[0].author.username, .notes[0].body[0:50]] | @tsv'
-   # 在对应 thread 内回复（reviewer 每条评论 must / recommend 各回一条，注明修复 commit 与对应改动）
-   glab api "projects/<ns>%2F<repo>/merge_requests/<iid>/discussions/<disc_id>/notes" -X POST -f body="<修复说明>"
+   # 在对应 thread 内回复
+   glab api "projects/<ns>%2F<repo>/merge_requests/<iid>/discussions/<disc_id>/notes" -X POST -f body="<证据和处置结论>"
    ```
 
    - 回复用中文，技术标识（commit SHA、file:line）保持原样
    - reviewer 的独立评论（individual note）无法行内回复（HTTP 400 "Discussion is an individual note."）→ 用 MR 总评论兜底并 @reviewer
-4. **重新请求 review**（必做）：`glab mr update <iid> --reviewer <reviewer>`（GitLab 会发出 request review 通知），并提示对比 version diff
-5. 若追加的是 `refactor:` commit，reviewer 必须核对旧/新代码分支清单映射，确认没有未映射的删除分支
-6. Review 通过后 sign-off 结束
+4. 追加 commit 后，用 `glab mr update <iid> --reviewer <reviewer>` 或评论 @reviewer 请求复审，提示对比 version diff。仅回复证据且仍被标为阻塞时，按分诊规则请求 reviewer 核验。若追加的是 `refactor:` commit，reviewer 必须核对旧/新代码分支清单映射，确认没有未映射的删除分支。
+5. Review 通过后 sign-off 结束。

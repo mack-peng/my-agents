@@ -6,7 +6,7 @@
 
 **判断优先**：以下均为提示性启发，不是硬规则。项目特定阈值（如监控路径、移动端基线、依赖体积、小程序/平台约束）以目标项目 `AGENTS.md` 或规范为准。
 
-**Stance**：`[must]` 合并前必须处理｜`[recommend]` 强烈建议｜`[non-blocking]` 不阻塞。P1/P2 通常为 `[must]`。
+**Stance** 依据本次变更的影响和验收证据判断，定义见 [评审模板](../templates/review-artifacts.md)。
 
 ---
 

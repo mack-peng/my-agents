@@ -13,6 +13,7 @@
 3. agent 已重读将要发布的确切评论内容
 4. 每条评论包含问题简述 + 作者可复核的关键证据
 5. 评论不暴露 token、私有配置、无关本地路径，不把推测当作事实
+6. 每条评论满足发现准入。与当前变更和验收无关的存量问题默认不发布。`Needs confirmation` 如需发布，写成针对具体证据的核验请求，不列入合并阻塞。
 
 默认 review 阶段不发布任何内容。
 
@@ -28,7 +29,8 @@
 禁止用一条 summary note 代替本可定位到代码行的 issue。行级评论必须含：
 
 - stance + issue 摘要
-- 证据（spec/design 引用 + 代码路径或行号）
+- 范围证据（关联变更或验收条款、基线与当前行为的差异或验收缺口）
+- 可复核证据（触发条件、代码路径和行号等）
 - 影响与建议动作（不明显时）
 
 ### GitLab 行级 discussion payload
@@ -81,15 +83,15 @@
 
 - 在 `review.md` 的「发布计划」节回填已发布内容与失败项
 - 在 `issue-registry.md` 对应 issue 详情记录 discussion id / note id / `path:line`（供 Round 2+ 关闭）；模板见 `templates/review-artifacts.md`
-- 不改动 issue-registry 的状态语义（发布 ≠ 修复）；已解决问题由作者提交新版本后走重复评审（见 `workflows/review-phases.md` 的 round delta）
+- 发布评论后保留 issue-registry 状态。收到新版本或可复核的新证据后按 `workflows/review-phases.md` 的 round delta 更新。
 
 ## 修复后关闭讨论（Round 2+）
 
-**触发**：重复评审（新 commit / 上游修复）确认 issue 状态变为 `Fixed` 或 `Obsolete`，且该 issue 有本 agent 发布的行内 discussion。
+**触发**：增量复核确认 issue 状态变为 `Fixed` 或 `Obsolete`，且有本 agent 发布的行内 discussion。作者提供可核验的新证据时，即使没有新 commit，也可复核并关闭不再适用的讨论。
 
 **门禁**：
 
-1. 已在新 head 上复核修复（代码 / 测试 / 复现），不是只读作者回复
+1. 已在当前 head 核实修复或不适用的依据（代码 / 测试 / 复现 / 基线对照），并记录结论
 2. `issue-registry.md` 能映射到 discussion id（发布时记录；缺失时按 note id / body 反查）
 3. 只 resolve `Fixed` / `Obsolete`；`Open` / `Needs confirmation` 保持 unresolved
 4. 只处理本 agent 发布、且仍存在的行内 discussion；summary note 不适用

@@ -50,7 +50,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 - **证据驱动**。每条评审发现必须有 concrete evidence：代码文件路径 + 行号、工单/Spec 条目、Code Design 章节、测试结果或具体失败场景。禁止模糊的"感觉不好"式评论。
 - **区分事实与判断**。代码事实（行为、调用链、数据流）与工程判断（设计优劣、风险高低）分开陈述，不确定时明确标注 `Needs confirmation`。
 - **评审对齐**。设计一致性检查不得淹没清单检查；触及后端/前端清单类别的变更，必须在对应 guideline-check 里逐项给出结论，而不是只报 spec/design 偏差。
-- **外科手术式关注**。聚焦本次变更范围及直接关联的周边代码。不展开全局重构建议、不夹带与本次变更无关的代码风格偏好。
+- **外科手术式关注**。沿调用链核验影响，按 [发现准入](workflows/review-phases.md#发现准入) 决定是否形成 issue。已确认与本次 MR 和验收无关的存量问题，默认结束跟进。
 - **可操作的结果**。每条 issue 包含：严重级别、stance、影响描述、修复建议或需确认的问题。
 
 ## 评审方向（入口判断）
@@ -128,7 +128,7 @@ which zcli-ticket >/dev/null 2>&1 && echo "zcli-ticket: present" || echo "zcli-t
 
 ## Issue 分级与 Stance
 
-- Severity：`P1` / `P2` / `P3`；Stance：`[must]` / `[recommend]` / `[non-blocking]`（P1/P2 通常为 `[must]`）
+- Severity 衡量影响，Stance 决定是否阻塞当前变更，两者独立判定。
 - **完整定义与状态词表以 `templates/review-artifacts.md` 为唯一事实源**（本文件不重复定义，避免双处漂移）
 - issue 的唯一权威存储在 `issue-registry.md`；状态含 `Open / Needs confirmation / Fixed / Obsolete`，重复评审更新状态而非删除。
 

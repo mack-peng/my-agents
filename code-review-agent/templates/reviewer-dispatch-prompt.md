@@ -19,7 +19,7 @@
 - 测试契约（未改动，期望行为对照）: <spec 文件:行>
 - 关注点: <1-4 条，聚焦根因/回归/边界，不写泛泛清单>
 
-评审规范: issue 编号占用 ISSUE-<range>；severity P1/P2/P3；stance [must]/[recommend]/[non-blocking]；每条证据必须 file:line；区分事实与判断，不确定标 Needs confirmation。
+评审规范: issue 编号占用 ISSUE-<range>。先按共用流程的「发现准入」核对基线、当前行为和验收关联，再记录 file:line、severity 和 stance。具有具体关联但证据不足的发现标 Needs confirmation，并写明所缺证据。
 
 验证（可选；环境报错记 blocked；**每测试文件至多跑一次**）:
 - <验证命令，含环境前缀，如 `RBENV_VERSION=2.7.5 RAILS_ENV=test RUBYOPT='-W0' bundle exec rspec <spec>`>

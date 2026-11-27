@@ -147,6 +147,7 @@ compact 进度文件；不粘贴需求正文、完整 diff、长测试日志、�
 
 ## ISSUE-001 - <title>
 
+- Scope evidence: <关联变更或验收条款 + 触发条件 + 基线与当前行为的差异或验收缺口；审计填写指定范围和现有行为>
 - Evidence pointers:
 - Confirmation needed:
 - Impact:
@@ -174,11 +175,11 @@ compact 进度文件；不粘贴需求正文、完整 diff、长测试日志、�
 
 **Stance**
 
-- `[must]`：合并前必须处理
-- `[recommend]`：强烈建议；无合理权衡说明则合并前修
-- `[non-blocking]`：有用改进或后续项，本身不阻塞合并
+- `[must]`：证据表明本次变更引入、触发或放大了需要在合并前处理的问题，或遗漏了本次验收要求
+- `[recommend]`：与本次变更直接相关且值得采纳的建议，可接受有依据的权衡
+- `[non-blocking]`：与本次评审目标有关的低风险事项，可在当前变更之外处理
 
-P1 / P2 通常为 `[must]`，除非有明确理由。若 P1/P2 断言源自契约核对或高风险判断，须附**复现证据**（`references/review-contracts.md` C7）；无证据 → 降级 `Needs confirmation`。
+Severity 与 Stance 独立判定。只有有证据支持的 `[must]` 计入合并阻塞。P1/P2 的契约或高风险判断须附可复核的证据（`references/review-contracts.md` C7）。已有具体关联但证据不足时，标 `Needs confirmation` 并记录待验证项。
 
 ---
 
@@ -286,8 +287,8 @@ scope = `backend` / `frontend` / `project-heuristics`。记录加载的清单来
 **checklist 纪律**
 
 - 加载的每个类别及其子检查都要逐项标记；不得因未发现问题而省略条目
-- 任何 plausible risk、可能 bug、缺失证据、不清楚的权衡 → 进 issue 列表（Open / Needs confirmation），不得只埋在清单里
-- 只有明确安全的条目才允许仅出现在清单中
+- 先按 `workflows/review-phases.md` 的「发现准入」判断候选发现。进入 issue 列表的记录须写明关联变更或验收条款、触发条件及基线和当前行为的差异。对需求遗漏，记录验收缺口。
+- 与本次变更和验收无关的存量问题默认结束跟进。逐项清单检查可留结论，无需为其创建 issue。
 - 不得让 spec/design 一致性检查淹没 guideline 检查
 
 ---
@@ -449,6 +450,7 @@ scope = `backend` / `frontend` / `project-heuristics`。记录加载的清单来
 - First seen:
 - Last checked:
 - Source: Spec/ticket mismatch / Code Design mismatch / Backend guideline / Frontend guideline / Review contract Cn / General engineering judgment
+- Scope evidence:
 - Evidence:
 - Confirmation needed:
 - Impact:

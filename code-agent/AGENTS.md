@@ -53,6 +53,12 @@ Feature-level 前端开发 Agent。输入 Spec + Code Design → 在目标项目
 
 **流程**：走下方完整 Phase 0-4 工作流。
 
+### 分支 C：工单 Review 反馈
+
+**条件**：用户或 ticket-agent 要求核验或处理工单 MR 的 review 反馈。
+
+**流程**：按工作台的 [Review 评论分诊](../ticket-agent/references/review-triage.md) 核验事实、基线差异和验收影响。以工单已确认的范围为准，对分诊确认应修的事项做最小改动并回归验证。向发起方返回分诊结论、证据、变更和验证结果。由 ticket-agent 协调范围确认、评论回复和阶段推进。
+
 ---
 
 ## 工作流（Feature 分支）

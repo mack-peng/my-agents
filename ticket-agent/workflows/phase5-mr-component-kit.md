@@ -79,11 +79,10 @@ glab mr create \
 
 ### MR Review 反馈处理
 
-0. 先按 `references/review-triage.md` 分诊每条评论：事实是否成立、是否本工单范围、是否过度设计；再决定接受 / 部分接受 / 另开票 / 拒绝。**禁止盲改或静默忽略**。
-1. 在开发分支上修改代码
-2. 推送新 commit（不 squash，不 force push）
-3. 在 MR 中回复 Reviewer
-4. Review 通过后 sign-off 进入 Part B
+1. 按 ticket-agent 的 [Review 评论分诊](../references/review-triage.md) 核验并决定每条评论的处置。
+2. 仅在分诊确定需要本 MR 修复时，在开发分支做最小改动，回归验证后推送新 commit（不 squash，不 force push）。
+3. 按分诊规则在原 discussion 回复，并在需要时重新请求 review。若追加的是 `refactor:` commit，reviewer 必须核对旧/新代码分支清单映射，确认没有未映射的删除分支。
+4. Review 通过并完成 Phase 5 sign-off 后，等待用户通知再执行 Part B。
 
 ---
 
